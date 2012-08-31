@@ -6,6 +6,7 @@
 
 CS5467::CS5467(int _pin) {
   CSpin = _pin;
+  current_page = 255;
 }
 
 void CS5467::init() {
@@ -18,22 +19,45 @@ void CS5467::init() {
   pinMode(CSpin,OUTPUT);
   
   writereg(CTRL_REG, 3);  
+  
+
 }
 
+void CS5467::waitUntilReady() {
+  long stat = readreg(STATUS_REG);
+  while (!( stat & 0x800000 )) { 
+    stat = readreg(STATUS_REG);
+  }
+}  
+
+
+void CS5467::changePage(char address) {
+   char page = (0xFF & (address>>5));
+   if ( page != current_page ) {
+      writereg( PAGE_REG, page ); 
+      current_page = page;
+   }
+}
 
 long CS5467::readreg(char address) {
+    if( address != PAGE_REG ){
+       changePage(address); 
+    }
     long retval;
     digitalWrite(CSpin,LOW);
     SPI.transfer(((address&0x1F)<<1));
-    retval = SPI.transfer(0xFF) << 16;
-    retval |= (SPI.transfer(0xFF) << 8);
-    retval |= SPI.transfer(0xFF);
+    retval = (long)SPI.transfer(0xFF) << 16L;
+    retval |= (long)(SPI.transfer(0xFF) << 8L);
+    retval |= (long)SPI.transfer(0xFF);
     digitalWrite(CSpin,HIGH);
     return retval;
     
 }
 
 void CS5467::writereg(char address, long data) {
+    if( address != PAGE_REG ){
+       changePage(address); 
+    }
    digitalWrite(CSpin,LOW);
    SPI.transfer(((address&0x1F)<<1) | 0x40 );
    SPI.transfer((data>>16)&0xFF);
@@ -41,3 +65,63 @@ void CS5467::writereg(char address, long data) {
    SPI.transfer(data&0xFF);
    digitalWrite(CSpin,HIGH);
 } 
+
+void CS5467::calibrateDCOffset( char channel ) {
+   if ( channel == CAL_CHANNEL_I1 ) {
+      writereg(I1_GAIN_REG,1); 
+   } else if ( channel == CAL_CHANNEL_V1 ) {
+      writereg(V1_GAIN_REG,1);     
+   } else if ( channel == CAL_CHANNEL_I2 ) {
+      writereg(I2_GAIN_REG,1);     
+   } else if ( channel == CAL_CHANNEL_V2 ) {
+      writereg(V2_GAIN_REG,1);     
+   }
+   
+   digitalWrite(CSpin,LOW);
+   SPI.transfer(0x80 | channel);
+   digitalWrite(CSpin,HIGH);
+   
+   waitUntilReady();
+}
+void CS5467::calibrateACOffset( char channel ) {
+   if ( channel == CAL_CHANNEL_I1 ) {
+      writereg(I1_ACOFF_REG,0); 
+   } else if ( channel == CAL_CHANNEL_V1 ) {
+      writereg(V1_ACOFF_REG,0);     
+   } else if ( channel == CAL_CHANNEL_I2 ) {
+      writereg(I2_ACOFF_REG,0);     
+   } else if ( channel == CAL_CHANNEL_V2 ) {
+      writereg(V2_ACOFF_REG,0);     
+   }
+   
+   digitalWrite(CSpin,LOW);
+   SPI.transfer(0xA0 | channel);
+   digitalWrite(CSpin,HIGH);
+   
+   waitUntilReady();  
+}
+     
+void CS5467::calibrateDCGain( char channel ) { 
+   digitalWrite(CSpin,LOW);
+   SPI.transfer(0x90 | channel);
+   digitalWrite(CSpin,HIGH);
+   
+   waitUntilReady(); 
+}
+void CS5467::calibrateACGain( char channel ) {
+   if ( channel == CAL_CHANNEL_I1 ) {
+      writereg(I1_GAIN_REG,1); 
+   } else if ( channel == CAL_CHANNEL_V1 ) {
+      writereg(V1_GAIN_REG,1);     
+   } else if ( channel == CAL_CHANNEL_I2 ) {
+      writereg(I2_GAIN_REG,1);     
+   } else if ( channel == CAL_CHANNEL_V2 ) {
+      writereg(V2_GAIN_REG,1);     
+   }
+   
+   digitalWrite(CSpin,LOW);
+   SPI.transfer(0xB0 | channel);
+   digitalWrite(CSpin,HIGH);
+   
+   waitUntilReady();   
+}

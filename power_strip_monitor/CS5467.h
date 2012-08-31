@@ -102,6 +102,8 @@
 #define I2_FAULT_DUR_REG  (PAGE2 | 12)
 #define I2_FAULT_LEVEL_DUR  (PAGE2 | 13)
 
+#define T_MEAS_REG (PAGE5 | 26)
+
 class CS5467
 {
    public:
@@ -118,9 +120,14 @@ class CS5467
      
      void calibrateDCGain( char channel );
      void calibrateACGain( char channel );
+     
+     void waitUntilReady();
           
    private:
      int CSpin;
+     char current_page;
+     
+     void changePage(char address);
 };
  
  

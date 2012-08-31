@@ -27,7 +27,9 @@ void setup() {
   pinMode(nINT1, INPUT);
   pinMode(nINT2, INPUT);
   
+  Serial.println("Initialize IC1");
   ic1.init();
+  Serial.println("Initialize IC2");
   ic2.init();
   
 }
@@ -43,17 +45,12 @@ void printLong(long regval) {
 
 
 void loop() {
-
-  digitalWrite(LED1,HIGH);
-  digitalWrite(LED2,LOW);
-
-  printLong(ic1.readreg(STATUS_REG));
-
-  delay(1000);
-  digitalWrite(LED1,LOW);
-  digitalWrite(LED2,HIGH);
-
-  printLong(ic2.readreg(STATUS_REG));
-
-  delay(1000);
+  Serial.print("Forcing DC offset...");
+  ic1.writereg( V1_OFF_REG, 10 );
+  Serial.println(ic1.readreg( V1_OFF_REG ));
+  
+  Serial.print("Perform Calibration...");
+  ic1.calibrateDCOffset(CAL_CHANNEL_V1);
+  Serial.println(ic1.readreg( V1_OFF_REG ));
+  delay(2000);  
 }
