@@ -109,8 +109,8 @@ class CS5467
    public:
      CS5467(int CSpin);
      void init();
-     long readreg(char address) ;
-     void writereg(char address, long data);
+     unsigned long readreg(char address) ;
+     void writereg(char address, unsigned long data);
      
      void startConversion(char continuous);
      void powerCmd(char cmd);
@@ -120,6 +120,8 @@ class CS5467
      
      void calibrateDCGain( char channel );
      void calibrateACGain( char channel );
+     
+
      
      void waitUntilReady();
           

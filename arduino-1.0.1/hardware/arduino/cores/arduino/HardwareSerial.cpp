@@ -38,9 +38,9 @@
 // to which to write the next incoming character and tail is the index of the
 // location from which to read.
 #if (RAMEND < 1000)
-  #define SERIAL_BUFFER_SIZE 16
+  #define SERIAL_BUFFER_SIZE 32
 #else
-  #define SERIAL_BUFFER_SIZE 64
+  #define SERIAL_BUFFER_SIZE 128
 #endif
 
 struct ring_buffer

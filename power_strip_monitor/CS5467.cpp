@@ -18,9 +18,7 @@ void CS5467::init() {
   digitalWrite(CSpin,HIGH);
   pinMode(CSpin,OUTPUT);
   
-  writereg(CTRL_REG, 3);  
-  
-
+  writereg(CTRL_REG, (1<<5) | 3);// gain set to +/-50mV  
 }
 
 void CS5467::waitUntilReady() {
@@ -39,22 +37,22 @@ void CS5467::changePage(char address) {
    }
 }
 
-long CS5467::readreg(char address) {
+unsigned long CS5467::readreg(char address) {
     if( address != PAGE_REG ){
        changePage(address); 
     }
-    long retval;
+    unsigned long retval;
     digitalWrite(CSpin,LOW);
     SPI.transfer(((address&0x1F)<<1));
-    retval = (long)SPI.transfer(0xFF) << 16L;
-    retval |= (long)(SPI.transfer(0xFF) << 8L);
-    retval |= (long)SPI.transfer(0xFF);
+    retval = ((unsigned long)0xFF  & SPI.transfer(0xFF)) << (unsigned long)16L;
+    retval |= ((unsigned long)0xFF  & SPI.transfer(0xFF)) << (unsigned long)8L;
+    retval |= ((unsigned long)0xFF  & SPI.transfer(0xFF));
     digitalWrite(CSpin,HIGH);
     return retval;
     
 }
 
-void CS5467::writereg(char address, long data) {
+void CS5467::writereg(char address, unsigned long data) {
     if( address != PAGE_REG ){
        changePage(address); 
     }
@@ -125,3 +123,12 @@ void CS5467::calibrateACGain( char channel ) {
    
    waitUntilReady();   
 }
+
+void CS5467::startConversion(char continuous) {
+   digitalWrite(CSpin,LOW);
+   SPI.transfer(0b11100000 | (continuous<<3));
+   digitalWrite(CSpin,HIGH);
+   
+   waitUntilReady();
+}
+
