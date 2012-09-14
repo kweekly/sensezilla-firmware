@@ -205,31 +205,33 @@ uint32_t true_power[4];
 uint32_t RMS_voltage[4];
 uint32_t RMS_current[4];
 
+char phy_to_log_map[] = {2, 3, 0, 1};
+
 ISR(TIMER1_COMPA_vect)
 {
     time += 1;
     digitalWrite(LED2, !digitalRead(LED2));
     digitalWrite(LED1, HIGH);
-    true_power[0] = ic1.readreg(P1_AVG_REG);
-    true_power[1] = ic1.readreg(P2_AVG_REG);  
+    true_power[phy_to_log_map[0]] = ic1.readreg(P1_AVG_REG);
+    true_power[phy_to_log_map[1]] = ic1.readreg(P2_AVG_REG);  
     
-    RMS_voltage[0] = ic1.readreg(V1_RMS_REG);
-    RMS_voltage[1] = ic1.readreg(V2_RMS_REG); 
-    RMS_current[0] = ic1.readreg(I1_RMS_REG);
-    RMS_current[1] = ic1.readreg(I2_RMS_REG); 
+    RMS_voltage[phy_to_log_map[0]] = ic1.readreg(V1_RMS_REG);
+    RMS_voltage[phy_to_log_map[1]] = ic1.readreg(V2_RMS_REG); 
+    RMS_current[phy_to_log_map[0]] = ic1.readreg(I1_RMS_REG);
+    RMS_current[phy_to_log_map[1]] = ic1.readreg(I2_RMS_REG); 
     /*
     RMS_voltage[0] = ic1.readreg(V1_REG);
     RMS_voltage[1] = ic1.readreg(V2_REG); 
     RMS_current[0] = ic1.readreg(I1_REG);
     RMS_current[1] = ic1.readreg(I2_REG); 
     */
-    true_power[2] = ic2.readreg(P1_AVG_REG);
-    true_power[3] = ic2.readreg(P2_AVG_REG);   
+    true_power[phy_to_log_map[2]] = ic2.readreg(P1_AVG_REG);
+    true_power[phy_to_log_map[3]] = ic2.readreg(P2_AVG_REG);   
     
-    RMS_voltage[2] = ic2.readreg(V1_RMS_REG);
-    RMS_voltage[3] = ic2.readreg(V2_RMS_REG);     
-    RMS_current[2] = ic2.readreg(I1_RMS_REG);
-    RMS_current[3] = ic2.readreg(I2_RMS_REG); 
+    RMS_voltage[phy_to_log_map[2]] = ic2.readreg(V1_RMS_REG);
+    RMS_voltage[phy_to_log_map[3]] = ic2.readreg(V2_RMS_REG);     
+    RMS_current[phy_to_log_map[2]] = ic2.readreg(I1_RMS_REG);
+    RMS_current[phy_to_log_map[3]] = ic2.readreg(I2_RMS_REG); 
     
     /*
     RMS_voltage[2] = ic2.readreg(V1_REG);
@@ -242,7 +244,7 @@ ISR(TIMER1_COMPA_vect)
     send_pack = 1;
 }
 
-double itof(uint32_t reg, char sign_bit) {
+float itof(uint32_t reg, char sign_bit) {
   uint32_t rval = 0;
    char i = 0;
 
@@ -254,14 +256,14 @@ double itof(uint32_t reg, char sign_bit) {
    }
    if ( reg == 0 ) return 0;
 
+
    while ( !(reg & (uint32_t)0x00800000L) ) {
      reg <<= 1;
      i++;
    }
-   reg <<= 1;
    i++;
    rval = rval | ((uint32_t)(127-i)<<(uint32_t)23) | (reg & 0x7FFFFFL);
-   return *(double *)&rval;
+   return *(float *)&rval;
 }
 
 void makePacket() {

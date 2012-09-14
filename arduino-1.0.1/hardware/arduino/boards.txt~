@@ -66,7 +66,7 @@ powerstrip.name=Onboard Arduino on Power Strip Monitor
 
 powerstrip.upload.protocol=arduino
 powerstrip.upload.maximum_size=14336
-powerstrip.upload.speed=19200
+powerstrip.upload.speed=115200
 
 powerstrip.bootloader.low_fuses=0xac
 powerstrip.bootloader.high_fuses=0xdf
@@ -77,7 +77,7 @@ powerstrip.bootloader.unlock_bits=0x3F
 powerstrip.bootloader.lock_bits=0x0F
 
 powerstrip.build.mcu=atmega168
-powerstrip.build.f_cpu=4091000L
+powerstrip.build.f_cpu=4096000L
 powerstrip.build.core=arduino
 powerstrip.build.variant=standard
 
