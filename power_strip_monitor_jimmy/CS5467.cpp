@@ -109,3 +109,24 @@ void CS5467::softwareReset() {
   
   waitUntilReady();
 }
+
+void CS5467::highPassFilters(char channel, char state) {
+  unsigned long current = readreg(MODES_REG);
+  unsigned long mask;
+  switch (channel) {
+    case CAL_CHANNEL_I1:
+      mask = 0x20;
+      break;
+    case CAL_CHANNEL_V1:
+      mask = 0x40;
+      break;
+    case CAL_CHANNEL_I2:
+      mask = 0x80;
+      break;
+    case CAL_CHANNEL_V2:
+      mask = 0x100;
+      break;
+  }
+  current = (current & ~mask) | (state ? mask : 0);
+  writereg(MODES_REG, current);
+}

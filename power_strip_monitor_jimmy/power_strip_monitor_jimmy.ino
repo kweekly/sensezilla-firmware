@@ -2,6 +2,7 @@
 #include <SPI.h>
 #include "CS5467.h"
 
+
 int nINT1 = 14;
 int nINT2 = 15;
 
@@ -35,21 +36,10 @@ void setup() {
   ic2.init();
 }
 
-void waitComplete1() {
-  while((ic1.readreg( STATUS_REG ) >> 23) == 0) {
-    delay(500);
-  }
-}
-  
-void waitComplete2() {
-  while((ic2.readreg( STATUS_REG ) >> 23) == 0) {
-    delay(500);
-  }
-}
-
 void waitSerial() {
-  while(!Serial.available()) {
-    delay(500);
+  char status = 0;
+  while(!status) {
+    status = Serial.available();
   }
   Serial.read();
 }
@@ -67,28 +57,28 @@ void printLong(long regval) {
 void loop() {
   Serial.println("Software Reset Begin");
   ic1.softwareReset();
-  waitComplete1();
+  ic1.waitUntilReady();
   ic2.softwareReset();
-  waitComplete2();
+  ic2.waitUntilReady();
   Serial.println("Software Reset Complete");
 
   Serial.println("Perform DC Offset Calibration...");
   ic1.calibrateDCOffset(CAL_CHANNEL_I1);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateDCOffset(CAL_CHANNEL_V1);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateDCOffset(CAL_CHANNEL_I2);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateDCOffset(CAL_CHANNEL_V2);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic2.calibrateDCOffset(CAL_CHANNEL_I1);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateDCOffset(CAL_CHANNEL_V1);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateDCOffset(CAL_CHANNEL_I2);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateDCOffset(CAL_CHANNEL_V2);
-  waitComplete2();
+  ic2.waitUntilReady();
 
   Serial.println("Chip 1...");
   Serial.print("DC Offset I1: ");
@@ -114,22 +104,30 @@ void loop() {
   waitSerial();
   
   Serial.println("Perform AC Gain Calibration...");
+  ic1.highPassFilters(CAL_CHANNEL_I1, 1);
+  ic1.highPassFilters(CAL_CHANNEL_V1, 1);
+  ic1.highPassFilters(CAL_CHANNEL_I2, 1);
+  ic1.highPassFilters(CAL_CHANNEL_V2, 1);
+  ic2.highPassFilters(CAL_CHANNEL_I1, 1);
+  ic2.highPassFilters(CAL_CHANNEL_V1, 1);
+  ic2.highPassFilters(CAL_CHANNEL_I2, 1);
+  ic2.highPassFilters(CAL_CHANNEL_V2, 1);
   ic1.calibrateACGain(CAL_CHANNEL_I1);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateACGain(CAL_CHANNEL_V1);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateACGain(CAL_CHANNEL_I2);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateACGain(CAL_CHANNEL_V2);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic2.calibrateACGain(CAL_CHANNEL_I1);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateACGain(CAL_CHANNEL_V1);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateACGain(CAL_CHANNEL_I2);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateACGain(CAL_CHANNEL_V2);
-  waitComplete2();
+  ic2.waitUntilReady();
   
   Serial.println("Chip 1...");
   Serial.print("AC Gain I1: ");
@@ -156,21 +154,21 @@ void loop() {
   
   Serial.println("Perform AC Offset Calibration...");
   ic1.calibrateACOffset(CAL_CHANNEL_I1);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateACOffset(CAL_CHANNEL_V1);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateACOffset(CAL_CHANNEL_I2);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic1.calibrateACOffset(CAL_CHANNEL_V2);
-  waitComplete1();
+  ic1.waitUntilReady();
   ic2.calibrateACOffset(CAL_CHANNEL_I1);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateACOffset(CAL_CHANNEL_V1);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateACOffset(CAL_CHANNEL_I2);
-  waitComplete2();
+  ic2.waitUntilReady();
   ic2.calibrateACOffset(CAL_CHANNEL_V2);
-  waitComplete2();
+  ic2.waitUntilReady();
 
   Serial.println("Chip 1...");
   Serial.print("AC Offset I1: ");

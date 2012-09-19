@@ -121,8 +121,8 @@ class CS5467
      
      void calibrateDCGain( char channel );
      void calibrateACGain( char channel );
-     
 
+     void highPassFilters( char channel, char state );
      
      void waitUntilReady();
           
@@ -130,7 +130,7 @@ class CS5467
      int CSpin;
      char current_page;
      
-     void changePage(char address);
+     void changePage( char address );
 };
  
  
