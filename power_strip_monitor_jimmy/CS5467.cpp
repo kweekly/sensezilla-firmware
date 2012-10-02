@@ -65,16 +65,6 @@ void CS5467::writereg(char address, unsigned long data) {
 } 
 
 void CS5467::calibrateDCOffset( char channel ) {
-   if ( channel == CAL_CHANNEL_I1 ) {
-      writereg(I1_GAIN_REG,1); 
-   } else if ( channel == CAL_CHANNEL_V1 ) {
-      writereg(V1_GAIN_REG,1);     
-   } else if ( channel == CAL_CHANNEL_I2 ) {
-      writereg(I2_GAIN_REG,1);     
-   } else if ( channel == CAL_CHANNEL_V2 ) {
-      writereg(V2_GAIN_REG,1);     
-   }
-   
    digitalWrite(CSpin,LOW);
    SPI.transfer(0x80 | channel);
    digitalWrite(CSpin,HIGH);
@@ -82,16 +72,6 @@ void CS5467::calibrateDCOffset( char channel ) {
    waitUntilReady();
 }
 void CS5467::calibrateACOffset( char channel ) {
-   if ( channel == CAL_CHANNEL_I1 ) {
-      writereg(I1_ACOFF_REG,0); 
-   } else if ( channel == CAL_CHANNEL_V1 ) {
-      writereg(V1_ACOFF_REG,0);     
-   } else if ( channel == CAL_CHANNEL_I2 ) {
-      writereg(I2_ACOFF_REG,0);     
-   } else if ( channel == CAL_CHANNEL_V2 ) {
-      writereg(V2_ACOFF_REG,0);     
-   }
-   
    digitalWrite(CSpin,LOW);
    SPI.transfer(0xA0 | channel);
    digitalWrite(CSpin,HIGH);
@@ -107,16 +87,6 @@ void CS5467::calibrateDCGain( char channel ) {
    waitUntilReady(); 
 }
 void CS5467::calibrateACGain( char channel ) {
-   if ( channel == CAL_CHANNEL_I1 ) {
-      writereg(I1_GAIN_REG,1); 
-   } else if ( channel == CAL_CHANNEL_V1 ) {
-      writereg(V1_GAIN_REG,1);     
-   } else if ( channel == CAL_CHANNEL_I2 ) {
-      writereg(I2_GAIN_REG,1);     
-   } else if ( channel == CAL_CHANNEL_V2 ) {
-      writereg(V2_GAIN_REG,1);     
-   }
-   
    digitalWrite(CSpin,LOW);
    SPI.transfer(0xB0 | channel);
    digitalWrite(CSpin,HIGH);
@@ -138,4 +108,25 @@ void CS5467::softwareReset() {
   digitalWrite(CSpin,HIGH);
   
   waitUntilReady();
+}
+
+void CS5467::highPassFilters(char channel, char state) {
+  unsigned long current = readreg(MODES_REG);
+  unsigned long mask;
+  switch (channel) {
+    case CAL_CHANNEL_I1:
+      mask = 0x20;
+      break;
+    case CAL_CHANNEL_V1:
+      mask = 0x40;
+      break;
+    case CAL_CHANNEL_I2:
+      mask = 0x80;
+      break;
+    case CAL_CHANNEL_V2:
+      mask = 0x100;
+      break;
+  }
+  current = (current & ~mask) | (state ? mask : 0);
+  writereg(MODES_REG, current);
 }
