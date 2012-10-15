@@ -18,13 +18,28 @@ void CS5467::init() {
   digitalWrite(CSpin,HIGH);
   pinMode(CSpin,OUTPUT);
   
-  writereg(CTRL_REG, (1<<5) | 3);// gain set to +/-50mV  
+  writereg(CTRL_REG, (1L<<12L) | (1<<5) | 6);// gain set to +/-50mV  
+
+  
+  softwareReset();
+  
+  waitUntilReady();
+  
+}
+
+void CS5467::softwareReset() {
+  digitalWrite(CSpin,LOW);
+  SPI.transfer(0b10000000);
+  digitalWrite(CSpin,HIGH);
+  
+  waitUntilReady();
 }
 
 void CS5467::waitUntilReady() {
   long stat = readreg(STATUS_REG);
   while (!( stat & 0x800000 )) { 
     stat = readreg(STATUS_REG);
+    //Serial.println(stat,BIN);
   }
 }  
 
@@ -56,6 +71,7 @@ void CS5467::writereg(char address, unsigned long data) {
     if( address != PAGE_REG ){
        changePage(address); 
     }
+
    digitalWrite(CSpin,LOW);
    SPI.transfer(((address&0x1F)<<1) | 0x40 );
    SPI.transfer((data>>16)&0xFF);

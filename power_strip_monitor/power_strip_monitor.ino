@@ -42,15 +42,35 @@ uint32_t time;
 char send_pack;
 
 
-// by default, max current is 20A -> 28.28mVpp, so gain should be 1.7677669529664
-#define DEFAULT_I_GAIN 7414552
+// by default, max current is 20A -> 28.28mVpp, so gain should be 3.5360678925 / sqrt(2) = 2.50037758553
+// Calculated Values
+/*
+#define DEFAULT_I_GAIN 10487344
 #define DEFAULT_I_NORM 20.0
 #define DEFAULT_I_OFFSET 8
+*/
 
-// by default, max Voltage is 150V -> 225.4mVpp, gain should be 1.1089791351609
-#define DEFAULT_V_GAIN 4651396
+// Empirical Values
+#define DEFAULT_I_GAIN 10676955 // 1.8 * 2 / sqrt(2) = 2.54558441227
+#define DEFAULT_I_NORM 20.0
+#define DEFAULT_I_OFFSET 0
+
+// WITH 500 OHM R21
+// by default, max Voltage is 250V -> 187.9mVpp ( out of 500mVpp ), gain should be 2.66098988824 / sqrt(2) = 1.88160399464
+// Calculated Values
+
+#define DEFAULT_V_GAIN 7892019 
+#define DEFAULT_V_NORM 250.0
+#define DEFAULT_V_OFFSET 0
+
+/*
+#define DEFAULT_V_GAIN 4448731 // 1.5 / sqrt(2) = 1.06066017178
 #define DEFAULT_V_NORM 150.0
-#define DEFAULT_V_OFFSET 8
+#define DEFAULT_V_OFFSET 0
+*/
+
+#define EE_BYTE_0 0xDE
+#define EE_BYTE_1 0xF1
 
 void eesave24(char addr, uint32_t val) {
   char i = 0;
@@ -96,13 +116,14 @@ void setup() {
   
   #ifdef SERIAL_OUT
     Serial.begin(9600);
+    delay(500);
   #else
     xbee.begin(9600);
   #endif
   
   // check if EEPROM Initialized
   char off = 2;
-  if ( !(EEPROM.read(0) == 0xDE && EEPROM.read(1) == 0xED ) ) {
+  if ( !(EEPROM.read(0) == EE_BYTE_0 && EEPROM.read(1) == EE_BYTE_1 ) ) {
       eesave24(off,DEFAULT_I_GAIN);
       off += 3;
       eesavefloat(off,DEFAULT_I_NORM);
@@ -115,8 +136,8 @@ void setup() {
       off += 4;
       eesave24(off,DEFAULT_V_OFFSET);
       off += 3;
-      EEPROM.write(0,0xDE);
-      EEPROM.write(1,0xED);
+      EEPROM.write(0,EE_BYTE_0);
+      EEPROM.write(1,EE_BYTE_1);
   }
   
   off = 2;
@@ -149,21 +170,10 @@ void setup() {
   pinMode(nINT1, INPUT);
   pinMode(nINT2, INPUT);
   
- // Serial.println("Initialize IC1");
-  ic1.init();
-  ic1.writereg(MODES_REG,0x004001E1L); // HPF enabled, line frequency meas. enabled
-  ic1.writereg(I1_GAIN_REG,iGain);
-  ic1.writereg(I1_OFF_REG, iOffset);
-  ic1.writereg(V1_GAIN_REG,vGain);
-  ic1.writereg(V1_OFF_REG,vOffset);
-  ic1.writereg(I2_GAIN_REG,iGain);
-  ic1.writereg(I2_OFF_REG, iOffset);
-  ic1.writereg(V2_GAIN_REG,vGain);
-  ic1.writereg(V2_OFF_REG,vOffset);    
-  ic1.writereg(P1_OFF_REG,0);
-  ic1.writereg(P2_OFF_REG,0);
-  ic1.startConversion(1);
-
+    
+  #ifdef SERIAL_OUT
+  Serial.println("Initialize IC2");
+  #endif
   ic2.init();
   ic2.writereg(MODES_REG,0x004001E1L); // HPF enabled, line frequency meas. enabled
   ic2.writereg(I1_GAIN_REG,iGain);
@@ -178,6 +188,27 @@ void setup() {
   ic2.writereg(P2_OFF_REG,0);
   ic2.startConversion(1);
   
+  #ifdef SERIAL_OUT
+  Serial.println("Initialize IC1");
+  #endif
+  ic1.init();
+  ic1.writereg(MODES_REG,0x004001E1L); // HPF enabled, line frequency meas. enabled
+  ic1.writereg(I1_GAIN_REG,iGain);
+  ic1.writereg(I1_OFF_REG, iOffset);
+  ic1.writereg(V1_GAIN_REG,vGain);
+  ic1.writereg(V1_OFF_REG,vOffset);
+  ic1.writereg(I2_GAIN_REG,iGain);
+  ic1.writereg(I2_OFF_REG, iOffset);
+  ic1.writereg(V2_GAIN_REG,vGain);
+  ic1.writereg(V2_OFF_REG,vOffset);    
+  ic1.writereg(P1_OFF_REG,0);
+  ic1.writereg(P2_OFF_REG,0);
+  ic1.startConversion(1);
+
+  
+  #ifdef SERIAL_OUT
+  Serial.println("Initialize Timer");
+  #endif
   // Using Timer 1 for clock
   // clk = 4096000
   // clk/1024 = 4000
@@ -199,6 +230,9 @@ void setup() {
   
   time = 0;
   send_pack = 0;
+  #ifdef SERIAL_OUT
+  Serial.println("Done with initialization routines");
+  #endif
 }
 
 uint32_t true_power[4];
@@ -294,10 +328,12 @@ char ledon = 0;
 
 #ifndef SERIAL_OUT
 ZBRxResponse rx = ZBRxResponse();
+ZBTxRequest zbTx;
 #endif
 
 #define CMD_SYNC_TIME 0x01
-ZBTxRequest zbTx;
+
+
 void loop() {
    
    #ifndef SERIAL_OUT

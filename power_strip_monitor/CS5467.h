@@ -121,6 +121,7 @@ class CS5467
      void calibrateDCGain( char channel );
      void calibrateACGain( char channel );
      
+     void softwareReset();
 
      
      void waitUntilReady();
