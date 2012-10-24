@@ -11,8 +11,10 @@ import org.opencv.highgui.VideoCapture;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
@@ -30,7 +32,16 @@ public abstract class CameraView extends SurfaceView implements SurfaceHolder.Ca
     public boolean openCamera() {
         synchronized (this) {
 	        releaseCamera();
+	        
+	        Camera cam = Camera.open();
+	        List<Camera.Size> sizes = cam.getParameters().getSupportedPreviewSizes();
+	        cam.release();
+	        for (int s = 0; s < sizes.size(); s++) {
+	        	Log.d("CSIZE",sizes.get(s).width+"x"+sizes.get(s).height);
+	        }
+	        
 	        mCamera = new VideoCapture(Highgui.CV_CAP_ANDROID);
+
 	        if (!mCamera.isOpened()) {
 	            mCamera.release();
 	            mCamera = null;
@@ -57,6 +68,7 @@ public abstract class CameraView extends SurfaceView implements SurfaceHolder.Ca
                 int mFrameHeight = height;
 
                 // selecting optimal camera preview size
+                /*
                 {
                     double minDiff = Double.MAX_VALUE;
                     for (Size size : sizes) {
@@ -66,10 +78,14 @@ public abstract class CameraView extends SurfaceView implements SurfaceHolder.Ca
                             minDiff = Math.abs(size.height - height);
                         }
                     }
-                }
+                }*/
+                mFrameWidth = 640;
+                mFrameHeight = 480;
 
                 mCamera.set(Highgui.CV_CAP_PROP_FRAME_WIDTH, mFrameWidth);
                 mCamera.set(Highgui.CV_CAP_PROP_FRAME_HEIGHT, mFrameHeight);
+                mCamera.set(Highgui.CV_CAP_PROP_ANDROID_WHITE_BALANCE, Highgui.CV_CAP_ANDROID_WHITE_BALANCE_DAYLIGHT);
+                
             }
         }
 
@@ -87,12 +103,13 @@ public abstract class CameraView extends SurfaceView implements SurfaceHolder.Ca
         releaseCamera();
     }
 
-    protected abstract Bitmap processFrame(VideoCapture capture);
+    protected abstract void processFrame(VideoCapture capture, Canvas canvas);
 
     public void run() {
         while (true) {
-            Bitmap bmp = null;
+        	Canvas canvas = null;
 
+            
             synchronized (this) {
                 if (mCamera == null) {
                     break;
@@ -101,17 +118,14 @@ public abstract class CameraView extends SurfaceView implements SurfaceHolder.Ca
                 if (!mCamera.grab()) {
                     break;
                 }
-
-                bmp = processFrame(mCamera);
+                canvas = mHolder.lockCanvas();
+                if (canvas != null)
+                	processFrame(mCamera, canvas);
             }
 
-            if (bmp != null) {
-                Canvas canvas = mHolder.lockCanvas();
-                if (canvas != null) {
-                    canvas.drawBitmap(bmp, (canvas.getWidth() - bmp.getWidth()) / 2, (canvas.getHeight() - bmp.getHeight()), null);
-                    mHolder.unlockCanvasAndPost(canvas);
-                }
-                bmp.recycle();
+
+            if (canvas != null) {
+                 mHolder.unlockCanvasAndPost(canvas);
             }
         }
     }

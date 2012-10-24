@@ -2,8 +2,16 @@ package edu.berkeley.sensezilla.energyeyes;
 
 import java.io.IOException;
 
+
+import com.google.zxing.*;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.datamatrix.DataMatrixReader;
+import com.google.zxing.multi.qrcode.QRCodeMultiReader;
+import com.google.zxing.qrcode.QRCodeReader;
+
 import android.content.Context;
 import android.graphics.PixelFormat;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PreviewCallback;
@@ -13,10 +21,14 @@ import android.view.SurfaceHolder.Callback;
 import android.view.SurfaceView;
 
 public class CustomCameraView extends SurfaceView  implements Callback {
+	private static String TAG = CustomCameraView.class.getSimpleName(); 
     private Camera camera;
     
-    public CustomCameraView( Context context ) {
-        super( context );
+    EnergyActivity parent;
+    
+    public CustomCameraView( EnergyActivity p ) {
+        super( p );
+        parent = p;
         // We're implementing the Callback interface and want to get notified
         // about certain surface events.
         getHolder().addCallback( this );
@@ -53,8 +65,30 @@ public class CustomCameraView extends SurfaceView  implements Callback {
         camera.setPreviewCallback(new PreviewCallback() {
 			int troll = 0;
 			public void onPreviewFrame(byte[] data, Camera camera) {
-				if (troll % 30 == 0) {
-					Log.d("LOLOLOL","TROLOLOLOLO "+data.length+" "+troll);
+				if (troll % 10 == 0) {
+					Log.d(TAG,"TROLOLOLOLO "+data.length+" "+troll);
+					Parameters params = camera.getParameters();
+					PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(data, params.getPreviewSize().width, params.getPreviewSize().height, 
+															0, 0, params.getPreviewSize().width, params.getPreviewSize().height, false);
+					BinaryBitmap bbmap = new BinaryBitmap(new HybridBinarizer(source));
+					QRCodeMultiReader reader = new QRCodeMultiReader();
+					
+					try {
+						Result[] results = reader.decodeMultiple(bbmap);
+						for (int r = 0; r < results.length; r++ ) {
+							Log.d(TAG,"RESULT: "+results[r].getText());
+							for ( int rpi = 0; rpi < results[r].getResultPoints().length; rpi++) {
+								ResultPoint rp = results[r].getResultPoints()[rpi];
+								Log.d(TAG,"\t"+rp.getX()+","+rp.getY());
+							}
+						}
+						parent.newResults(results);
+					} catch (Exception e) {
+						Log.e(TAG, "ERROR", e);
+					}
+					
+					parent.energyView.invalidate(); 
+					
         		}
 				troll++;
 			}

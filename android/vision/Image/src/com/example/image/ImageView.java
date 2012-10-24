@@ -1,11 +1,15 @@
 package com.example.image;
 
+import java.util.ArrayList;
+
+
 import org.opencv.android.Utils;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.MatOfPoint3f;
@@ -13,13 +17,19 @@ import org.opencv.core.Point;
 import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.highgui.Highgui;
 import org.opencv.highgui.VideoCapture;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.KeyPoint;
 
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
@@ -28,7 +38,17 @@ public class ImageView extends CameraView{
 	private Size mSizeRgba;
     
     private Mat mRgba;
+    private Mat mRGBb;
     private Mat mIntermediateMat;
+    private Mat mH,mS,mV;
+    private Mat mHb, mSb, mVb;
+    
+    private Mat mTemp1, mTemp2, mTemp3;
+    private Mat mThresholded;
+    
+    private Mat dialateMat;
+    
+    private Mat templateMat;
     
     private Point gp,yp,bp,pp;
 
@@ -72,7 +92,26 @@ public class ImageView extends CameraView{
         synchronized (this) {
             // initialize Mats before usage
             mRgba = new Mat();
+            mRGBb = new Mat();
             mIntermediateMat = new Mat();
+            mH = new Mat();
+            mS = new Mat();
+            mV = new Mat();
+            mThresholded = new Mat();
+            mHb = new Mat();
+            mSb = new Mat();
+            mVb = new Mat();
+            mTemp1 = new Mat();
+            mTemp2 = new Mat();
+            mTemp3 = new Mat();
+            dialateMat = new Mat(5,5,CvType.CV_8U);
+            Core.circle(dialateMat, new Point(2,2), 2, new Scalar(255), -1);
+            
+            templateMat = new Mat();
+            Bitmap bmp = BitmapFactory.decodeResource(getResources(), R.raw.red_tiny );
+            Utils.bitmapToMat(bmp, mTemp1);
+            Imgproc.cvtColor(mTemp1, templateMat, Imgproc.COLOR_RGB2HSV_FULL);
+            
             objectPoints = new MatOfPoint3f();
             imagePoints = new MatOfPoint2f();
             cameraMatrix = new Mat(3, 3, CvType.CV_64FC1);
@@ -134,15 +173,96 @@ public class ImageView extends CameraView{
 	}
 
     @Override
-    protected Bitmap processFrame(VideoCapture capture) {
+    protected void processFrame(VideoCapture capture, Canvas canvas) {
 
         capture.retrieve(mRgba, Highgui.CV_CAP_ANDROID_COLOR_FRAME_RGBA);
         if (mSizeRgba == null)
             CreateAuxiliaryMats();
-            
+
+        int R_THRESH_RED = 125;
+        int G_THRESH_RED = 255;
+        int B_THRESH_RED = 255;
+        
+        Core.inRange(mRgba, new Scalar(0,0,R_THRESH_RED,0), new Scalar(B_THRESH_RED,G_THRESH_RED,255,255), mRGBb);
         Imgproc.cvtColor(mRgba, mIntermediateMat, Imgproc.COLOR_RGB2HSV_FULL);
+        Core.extractChannel(mIntermediateMat, mH, 0);
+        Core.extractChannel(mIntermediateMat, mS, 1);
+        Core.extractChannel(mIntermediateMat, mV, 2);
+        
+        
+/*        
+        //int H_THRESH_LOW_RED = 240;
+        //int H_THRESH_HIGH_RED = 20;
+        int H_THRESH_LOW_RED = 30;
+        int H_THRESH_HIGH_RED = 50;
+        int S_THRESH_LOW_RED = 0;
+        int S_THRESH_HIGH_RED = 100;
+        int V_THRESH_LOW_RED = 250;
+        int V_THRESH_HIGH_RED = 255;
+        
+        
+        //Core.inRange(mH, new Scalar(H_THRESH_HIGH_RED), new Scalar(H_THRESH_LOW_RED), mTemp1);
+        //Core.bitwise_not(mTemp1, mHb);
+        Core.inRange(mH,new Scalar(H_THRESH_LOW_RED),new Scalar(H_THRESH_HIGH_RED),mHb);
+        Core.inRange(mS, new Scalar(S_THRESH_LOW_RED), new Scalar(S_THRESH_HIGH_RED), mSb);
+        Core.inRange(mV, new Scalar(V_THRESH_LOW_RED), new Scalar(V_THRESH_HIGH_RED), mVb);
+        
+        Core.bitwise_and(mHb, mSb, mTemp1);
+        Core.bitwise_and(mTemp1, mVb, mTemp2);
+        
+        Imgproc.dilate(mTemp2, mThresholded, dialateMat);
+        */
+       // Imgproc.matchTemplate(mRgba, templateMat, mTemp1, Imgproc.TM_CCOEFF_NORMED );
+        Imgproc.matchTemplate(mIntermediateMat, templateMat, mTemp1, Imgproc.TM_CCOEFF_NORMED );
+        MinMaxLocResult locRes = Core.minMaxLoc(mTemp1);
+        Point maxpt = locRes.maxLoc;
+        
+        Core.normalize(mTemp1,mTemp2,0,255,Core.NORM_MINMAX,CvType.CV_8U);
+        
+        Core.rectangle(mTemp2, maxpt, new Point(maxpt.x + templateMat.cols(),maxpt.y + templateMat.rows()), new Scalar(255), 2);
+        
+        int w = mTemp1.cols();
+        int h = mTemp1.rows();
+        Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+        
+        int cw = canvas.getWidth();
+        int ch = canvas.getHeight();
+        try {
+        	
+        	Utils.matToBitmap(mTemp2, bmp);
+        	canvas.drawBitmap(bmp,null,new Rect(0,0,cw,ch),null);
+        	
+        	/*
+        	Utils.matToBitmap(mThresholded, bmp);
+        	canvas.drawBitmap(bmp,null,new Rect(0,0,cw/2,ch/2),null);
+        	Utils.matToBitmap(mHb, bmp);
+        	canvas.drawBitmap(bmp,null,new Rect(cw/2,0,cw,ch/2),null);
+        	Utils.matToBitmap(mS, bmp);
+        	canvas.drawBitmap(bmp,null,new Rect(0,ch/2,cw/2,ch),null);
+        	Utils.matToBitmap(mVb, bmp);
+        	canvas.drawBitmap(bmp,null,new Rect(cw/2,ch/2,cw,ch),null);
+        	Utils.matToBitmap(mRGBb, bmp);
+        	canvas.drawBitmap(bmp,null,new Rect(w/2,h/2,w,h),null);
+        	Utils.matToBitmap(mRgba, bmp);
+        	canvas.drawBitmap(bmp,null,new Rect(w,h/2,3*w/2,h),null);*/
+        } catch(Exception e) {
+        	Log.e("org.opencv.samples.puzzle15", "Dims :"+mTemp1.cols()+"x"+mTemp1.rows()+"x"+mTemp1.channels()+" "+w+"x"+h);
+        	Log.e("org.opencv.samples.puzzle15", "Utils.matToBitmap() throws an exception: " + e.getMessage());
+            bmp.recycle();
+        }        
+
+        /*
+        MatOfKeyPoint mkp = new MatOfKeyPoint();
+        FeatureDetector.create(FeatureDetector.FAST).detect(mThresholded, mkp);
+        KeyPoint[] points = mkp.toArray();
+        
+        Log.d("KEYPOINTS",""+points.length);
+        for (int i = 0; i < points.length; i++) {
+        	Core.circle(mRgba,points[i].pt,10,new Scalar(0,0,255,100),-1);
+        }
+        
         double [] data = new double[4];
-        int greeni = 0, yellowi = 0, bluei = 0, pinki = 0;
+        int greeni = 0, yellowi = 0, bluei = 0, pinki = 0; 
         int greenj = 0, yellowj = 0, bluej = 0, pinkj = 0;
         int greennum = 0, yellownum = 0, bluenum = 0, orangenum = 0, pinknum = 0;
         
@@ -218,17 +338,8 @@ public class ImageView extends CameraView{
         if(action==MotionEvent.ACTION_DOWN){
         	jumpflag = 1;
         }
-        
-        Bitmap bmp = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
+        */
 
-        try {
-        	Utils.matToBitmap(mRgba, bmp);
-            return bmp;
-        } catch(Exception e) {
-        	Log.e("org.opencv.samples.puzzle15", "Utils.matToBitmap() throws an exception: " + e.getMessage());
-            bmp.recycle();
-            return null;
-        }
     }
     
     private void DrawLine(Mat img){

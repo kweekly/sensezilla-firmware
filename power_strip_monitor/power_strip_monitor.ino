@@ -34,7 +34,7 @@ CS5467 ic2 = CS5467(CS2);
 #define PACKET_SIZE (4 + 12*4)
 uint8_t datapacket[PACKET_SIZE];
 #ifndef SERIAL_OUT
-XBeeAddress64 destaddr = XBeeAddress64(0x00000000, 0x00000000);
+XBeeAddress64 destaddr = XBeeAddress64(0x00000000, 0x0000FFFF);
 #endif
 
 uint32_t time;
@@ -169,6 +169,8 @@ void setup() {
   pinMode(LED2, OUTPUT);
   pinMode(nINT1, INPUT);
   pinMode(nINT2, INPUT);
+  pinMode(XB_RESET, OUTPUT);
+  digitalWrite(XB_RESET, HIGH);
   
     
   #ifdef SERIAL_OUT
@@ -321,14 +323,16 @@ void makePacket() {
       Serial.println(dpack[off + i*3 + 2],10);
       #endif
   }
+  #ifdef SERIAL_OUT
   Serial.println();
+  #endif
 }
 
 char ledon = 0;
 
 #ifndef SERIAL_OUT
-ZBRxResponse rx = ZBRxResponse();
-ZBTxRequest zbTx;
+Rx64Response xbrx = Rx64Response();
+Tx64Request xbtx;
 #endif
 
 #define CMD_SYNC_TIME 0x01
@@ -340,15 +344,16 @@ void loop() {
    xbee.readPacket();
 
    if ( xbee.getResponse().isAvailable() ) {
-       if ( xbee.getResponse().getApiId() == ZB_RX_RESPONSE) {
-           xbee.getResponse().getZBRxResponse(rx);
-           if ( rx.getData(0) == CMD_SYNC_TIME ) {
+       if ( xbee.getResponse().getApiId() == RX_64_RESPONSE) {
+           xbee.getResponse().getRx64Response(xbrx);
+           if ( xbrx.getData(0) == CMD_SYNC_TIME ) {
               for (char c = 0; c < 5; c++ ) {
-                 datapacket[c] = rx.getData(c); 
+                 datapacket[c] = xbrx.getData(c); 
               }
+              destaddr = xbrx.getRemoteAddress64();
               time = *(uint32_t *)(datapacket + 1);
-              zbTx = ZBTxRequest( destaddr, datapacket, 5);
-              xbee.send(zbTx);
+              xbtx = Tx64Request( destaddr, datapacket, 5);
+              xbee.send(xbtx);
            }
        }
    }
@@ -358,8 +363,10 @@ void loop() {
       makePacket();
       
       #ifndef SERIAL_OUT
-        zbTx = ZBTxRequest( destaddr, datapacket, sizeof(datapacket) );
-        xbee.send(zbTx);  
+        xbtx = Tx64Request( destaddr, datapacket, sizeof(datapacket) );
+/*        datapacket[0] = 0xAA;
+        xbtx = Tx64Request( destaddr, datapacket, 1 );*/
+        xbee.send(xbtx);  
       #endif
    
       send_pack = 0;
