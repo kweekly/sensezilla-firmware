@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.util.Log;
 import android.view.Menu;
 import android.view.ViewGroup.LayoutParams;
@@ -30,13 +31,15 @@ public class EnergyActivity extends Activity {
 				BufferedReader cin = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 				String buf;
 				while ( (buf = cin.readLine()) != null ) {
-					String[] pts = buf.split(":");
+					String[] pts = buf.split(";",3);
 					boolean found = false;
-					double val = Double.parseDouble(pts[1]);
+					String val = pts[2];
+					String link = pts[1];
 					synchronized(reslist) {
 						for (MutableResult res : reslist) {
 							if ( res.tag.equals(pts[0])) {
 								res.value = val;
+								res.link = link;
 								found = true;
 								break;
 							}
@@ -145,9 +148,12 @@ class MutableResult {
 	String tag;
 	long lastseen;
 	
-	double value;
+	String value;
+	String link;
 	
-	public MutableResult(String t, double v) {
+	Rect gfxbounds;
+	
+	public MutableResult(String t, String v) {
 		tag = t;
 		value = v;
 		x1 = x2 = y1 = y2 = 0;
