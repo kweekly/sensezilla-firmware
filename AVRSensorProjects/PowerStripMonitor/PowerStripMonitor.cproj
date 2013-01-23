@@ -1,0 +1,120 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>6.0</ProjectVersion>
+    <ToolchainName>com.Atmel.AVRGCC8</ToolchainName>
+    <ProjectGuid>{a03d3fa7-dfd8-4a9a-b83e-03668f879925}</ProjectGuid>
+    <avrdevice>ATmega644PA</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>C</Language>
+    <OutputFileName>$(MSBuildProjectName)</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <AssemblyName>PowerStripMonitor</AssemblyName>
+    <Name>PowerStripMonitor</Name>
+    <RootNamespace>PowerStripMonitor</RootNamespace>
+    <ToolchainFlavour>Native</ToolchainFlavour>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <OverrideVtorValue />
+    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <AsfVersion>3.1.3</AsfVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <ToolchainSettings>
+      <AvrGcc>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.linker.libraries.Libraries>
+    <ListValues>
+      <Value>m</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.Libraries>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <ToolchainSettings>
+      <AvrGcc>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.linker.libraries.Libraries>
+    <ListValues>
+      <Value>m</Value>
+    </ListValues>
+  </avrgcc.linker.libraries.Libraries>
+  <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\dust_api\include\dn_api_common.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\dn_api_common.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\dust_api\include\dn_api_local.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\dn_api_local.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\dust_api\include\dn_api_mgr_struct.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\dn_api_mgr_struct.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\dust_api\include\dn_api_param.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\dn_api_param.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\dust_api\include\dn_mesh.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\dn_mesh.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\dust_api\include\dn_mesh_const.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\dn_mesh_const.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\dust_api\include\dn_typedef_example.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\dn_typedef_example.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\examples\fcs.c">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\fcs.c</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\examples\fcs.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\fcs.h</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\examples\hdlc.c">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\hdlc.c</Link>
+    </Compile>
+    <Compile Include="..\..\SmartMeshSDK-1.0.1.21\api\examples\hdlc.h">
+      <SubType>compile</SubType>
+      <Link>SmartMeshSDK\hdlc.h</Link>
+    </Compile>
+    <Compile Include="PowerStripMonitor.c">
+      <SubType>compile</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="SmartMeshSDK" />
+  </ItemGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
+</Project>

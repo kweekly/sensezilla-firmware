@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Atmel Studio Solution File, Format Version 11.00
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "PowerStripMonitor", "PowerStripMonitor\PowerStripMonitor.cproj", "{A03D3FA7-DFD8-4A9A-B83E-03668F879925}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|AVR = Debug|AVR
+		Release|AVR = Release|AVR
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A03D3FA7-DFD8-4A9A-B83E-03668F879925}.Debug|AVR.ActiveCfg = Debug|AVR
+		{A03D3FA7-DFD8-4A9A-B83E-03668F879925}.Debug|AVR.Build.0 = Debug|AVR
+		{A03D3FA7-DFD8-4A9A-B83E-03668F879925}.Release|AVR.ActiveCfg = Release|AVR
+		{A03D3FA7-DFD8-4A9A-B83E-03668F879925}.Release|AVR.Build.0 = Release|AVR
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
