@@ -98,8 +98,11 @@ public class CustomCameraView extends SurfaceView  implements Callback {
     public void surfaceDestroyed( SurfaceHolder holder ) {
         // Once the surface gets destroyed, we stop the preview mode and release
         // the whole camera since we no longer need it.
-        camera.stopPreview();
-        camera.release();
-        camera = null;
+    	if (camera != null) {
+    		camera.stopPreview();
+    		camera.setPreviewCallback(null);
+    		camera.release();
+    		camera = null;
+    	}
     }
 }
