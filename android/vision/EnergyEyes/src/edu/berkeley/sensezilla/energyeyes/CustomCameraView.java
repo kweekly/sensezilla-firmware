@@ -66,7 +66,7 @@ public class CustomCameraView extends SurfaceView  implements Callback {
 			int troll = 0;
 			public void onPreviewFrame(byte[] data, Camera camera) {
 				if (troll % 10 == 0) {
-					Log.d(TAG,"TROLOLOLOLO "+data.length+" "+troll);
+					//Log.d(TAG,"TROLOLOLOLO "+data.length+" "+troll);
 					Parameters params = camera.getParameters();
 					PlanarYUVLuminanceSource source = new PlanarYUVLuminanceSource(data, params.getPreviewSize().width, params.getPreviewSize().height, 
 															0, 0, params.getPreviewSize().width, params.getPreviewSize().height, false);

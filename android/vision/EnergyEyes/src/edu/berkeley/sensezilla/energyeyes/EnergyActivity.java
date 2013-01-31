@@ -33,8 +33,14 @@ public class EnergyActivity extends Activity {
 				while ( (buf = cin.readLine()) != null ) {
 					String[] pts = buf.split(";",3);
 					boolean found = false;
-					String val = pts[2];
-					String link = pts[1];
+					String val = "";
+					String link = "";
+					if (pts.length == 3) {
+						val = pts[2];
+						link = pts[1];
+					} else {
+						val = pts[1];
+					}
 					synchronized(reslist) {
 						for (MutableResult res : reslist) {
 							if ( res.tag.equals(pts[0])) {
@@ -73,16 +79,41 @@ public class EnergyActivity extends Activity {
 	
 	public void newResults(Result[] results) {
 		synchronized (reslist) {
+			for (MutableResult r:reslist){
+				r.updated_this_round = false;
+			}
+			
+			float adx1 = 0,adx2 = 0,ady1 = 0,ady2 = 0;
+			int adn = 0;
+			
 			for (Result r :results ) {
 				MutableResult mr = new MutableResult(r);
 				boolean found = false;
 				for ( MutableResult m2 : reslist) {
 					if ( m2.update(mr) ) {
+						adx1 += m2.dx1;
+						adx2 += m2.dx2;
+						ady1 += m2.dy1;
+						ady2 += m2.dy2;
+						adn += 1;
 						found = true;
+						m2.updated_this_round = true;
 						break;
 					}
 				}
 			}
+			adx1 /= adn;
+			adx2 /= adn;
+			ady1 /= adn;
+			ady2 /= adn;
+			for (MutableResult r : reslist) {
+				if (!r.updated_this_round) {
+					r.x1 += adx1;
+					r.x2 += adx2;
+					r.y1 += ady1;
+					r.y2 += ady2;
+				}
+			}			
 		}
 	}
 	
@@ -144,7 +175,8 @@ public class EnergyActivity extends Activity {
 }
 
 class MutableResult {
-	int x1,y1,x2,y2;
+	float x1,y1,x2,y2;
+	float dx1,dy1,dx2,dy2;
 	String tag;
 	long lastseen;
 	
@@ -152,6 +184,9 @@ class MutableResult {
 	String link;
 	
 	Rect gfxbounds;
+	
+	// for movement interpolation
+	boolean updated_this_round;
 	
 	public MutableResult(String t, String v) {
 		tag = t;
@@ -195,13 +230,18 @@ class MutableResult {
 		if ( !tag.equals(m2.tag) )
 			return false;
 		else {
+			dx1 = m2.x1 - x1;
+			dx2 = m2.x2 - x2;
+			dy1 = m2.y1 - y1;
+			dy2 = m2.y2 - y2;
+			
 			x1 = m2.x1;
 			x2 = m2.x2;
 			y1 = m2.y1;
 			y2 = m2.y2;
+			
 			lastseen = System.currentTimeMillis();
 			return true;
 		}
-
 	}
 }
