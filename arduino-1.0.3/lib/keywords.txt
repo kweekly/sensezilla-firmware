@@ -63,6 +63,10 @@ unsigned	KEYWORD1
 void	KEYWORD1	Void
 while	KEYWORD1	While
 word	KEYWORD1	Word
+define KEYWORD1
+ifdef KEYWORD1
+undef KEYWORD1
+endif KEYWORD1
 
 # operators aren't highlighted, but may have documentation
 

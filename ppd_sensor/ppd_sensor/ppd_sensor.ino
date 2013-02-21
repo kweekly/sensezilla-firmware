@@ -13,12 +13,16 @@ uint8_t datapacket[PACKET_SIZE];
 XBeeAddress64 destaddr = XBeeAddress64(0x00000000, 0x0000FFFF);
 #endif
 
-unsigned int sample_period = 10*60;
+
+
+unsigned int sample_period = 10;
 unsigned int sample_countdown;
 
 uint32_t time;
 
-const int pulsePin = 2;    // pin that the interrupt is attached to
+const int resetPin = 2; // xbee reset pin
+const int pulsePin = 3;    // pin that the interrupt is attached to
+
 
 unsigned long pHighTime = 0;
 unsigned long pLowTime = 0;
@@ -52,19 +56,22 @@ void pulseISR() {
    if (falling) {
      falling_ts = millis();
      pHighTime += falling_ts - rising_ts;
-     attachInterrupt(0, pulseISR, RISING);
+     attachInterrupt(1, pulseISR, RISING);
    } else {
      rising_ts = millis();
      pLowTime += rising_ts - falling_ts;
-     attachInterrupt(0, pulseISR, FALLING);
+     attachInterrupt(1, pulseISR, FALLING);
    }
    falling = !falling;
 }
 
 void setup() {
   // initialize the pulse pin as a input:
+  pinMode(resetPin, OUTPUT);
+  digitalWrite(resetPin,HIGH);
+  
   pinMode(pulsePin, INPUT);
-  attachInterrupt(0, pulseISR, FALLING);
+  attachInterrupt(1, pulseISR, FALLING);
   falling = 1;
   pReady = 0;
   
@@ -77,14 +84,14 @@ void setup() {
   #endif
   
     // Using Timer 1 for clock
-  // clk = 16000000
-  // clk/256 = 62500
-  // CTC mode, period = 62500
+  // clk = 8000000
+  // clk/256 = 31250
+  // CTC mode, period = 31250
   TCCR1A = 0;     // set entire TCCR1A register to 0
   TCCR1B = 0;     // same for TCCR1B
  
   // set compare match register to desired timer count:
-  OCR1A = 62499;
+  OCR1A = 31249;
   // turn on CTC mode:
   TCCR1B |= (1 << WGM12);
   // Set CS10 bit for 256 prescaler:
