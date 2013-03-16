@@ -1,7 +1,8 @@
 #include <XBee.h>
 
 // this constant won't change:
-#undef SERIAL_OUT
+#define SERIAL_OUT
+#define LOGGER_MODE
 
 #ifndef SERIAL_OUT
 XBee xbee = XBee();
@@ -15,7 +16,7 @@ XBeeAddress64 destaddr = XBeeAddress64(0x00000000, 0x0000FFFF);
 
 
 
-unsigned int sample_period = 10;
+unsigned int sample_period = 1;
 unsigned int sample_countdown;
 
 uint32_t time;
@@ -34,6 +35,14 @@ unsigned long rising_ts = 0;
 
 char pReady = 0;
 
+#define LOGGER_LEN 10
+unsigned long loggerbuf[LOGGER_LEN];
+#define TYPE_FALL 2
+#define TYPE_RISE 1
+#define TYPE_NONE 0
+unsigned char logger_types[LOGGER_LEN];
+char log_start = 0;
+char log_end = 0;
 
 ISR(TIMER1_COMPA_vect)
 {
@@ -54,35 +63,59 @@ ISR(TIMER1_COMPA_vect)
 
 void pulseISR() {
    if (falling) {
+     #ifdef LOGGER_MODE
+     loggerbuf[log_end] = millis();
+     logger_types[log_end] = TYPE_FALL;
+     log_end = (log_end + 1) % LOGGER_LEN; 
+     #else
      falling_ts = millis();
      pHighTime += falling_ts - rising_ts;
+     #endif
      attachInterrupt(1, pulseISR, RISING);
    } else {
+     #ifdef LOGGER_MODE
+     loggerbuf[log_end] = millis();
+     logger_types[log_end] = TYPE_RISE;
+     log_end = (log_end + 1) % LOGGER_LEN;      
+     #else
      rising_ts = millis();
      pLowTime += rising_ts - falling_ts;
+     #endif
      attachInterrupt(1, pulseISR, FALLING);
    }
    falling = !falling;
 }
 
 void setup() {
+  log_start = log_end = 0;
+  for ( int c = 0; c < LOGGER_LEN; c++ ) {
+     logger_types[c] =  TYPE_NONE;
+  }  
+  
   // initialize the pulse pin as a input:
   pinMode(resetPin, OUTPUT);
   digitalWrite(resetPin,HIGH);
   
   pinMode(pulsePin, INPUT);
-  attachInterrupt(1, pulseISR, FALLING);
-  falling = 1;
+  if (digitalRead(pulsePin) == HIGH) {
+    attachInterrupt(1, pulseISR, FALLING);
+    falling = 1;
+  }
+  else {
+    attachInterrupt(1, pulseISR, RISING);
+    falling = 0;
+  }
   pReady = 0;
   
   // initialize serial communication:
   #ifdef SERIAL_OUT
-    Serial.begin(9600);
-    delay(500);
+    Serial.begin(38400,SERIAL_8N2);
+    delay(2000);
   #else
     xbee.begin(9600);
   #endif
-  
+ 
+  #ifndef LOGGER_MODE
     // Using Timer 1 for clock
   // clk = 8000000
   // clk/256 = 31250
@@ -98,10 +131,19 @@ void setup() {
   TCCR1B |= (1 << CS12);
   // enable timer compare interrupt:
   TIMSK1 |= (1 << OCIE1A);
+  #endif
   
   sample_countdown = 5;
   
   interrupts();
+  
+  #ifdef LOGGER_MODE
+  for (int c = 3; c > 0; c--) {
+    Serial.print("Logger mode starting, beginning in ");
+    Serial.println(c,DEC);
+    delay(1000); 
+  }
+  #endif
 }
 
 void makePacket() {
@@ -121,7 +163,20 @@ Tx64Request xbtx;
 
 
 void loop() {
-  
+   #ifdef LOGGER_MODE
+   if (log_start != log_end) {
+     Serial.print("t=");
+     Serial.print(loggerbuf[log_start],DEC);
+     if ( logger_types[log_start] == TYPE_FALL ) {
+       Serial.print(" FALLING");
+     } else if ( logger_types[log_start] == TYPE_RISE ) {
+       Serial.print(" RISING"); 
+     }
+     log_start = (log_start + 1)%LOGGER_LEN;
+     Serial.println();
+     delay(100);
+   }
+   #else
    #ifndef SERIAL_OUT
    xbee.readPacket();
 
@@ -162,6 +217,7 @@ void loop() {
 
     pHighTime = pLowTime = pReady = 0;  
   }
+  #endif
 }
 
 

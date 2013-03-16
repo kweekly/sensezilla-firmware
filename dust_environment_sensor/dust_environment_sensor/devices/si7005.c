@@ -39,7 +39,7 @@ humid_reading_t humid_read(void) {
 	b = 0b00000001; // start a RH conversion, no fast mode
 	if ( i2c_writereg(HUMID_ADDR, CONFIG, 1, &b) ) {
 		kputs("Error Starting humidity conversion");
-		return;
+		return retval;
 	}
 	
 	// wait for 35ms (typical)
@@ -55,7 +55,7 @@ humid_reading_t humid_read(void) {
 	b = 0b00010001; // start a Temp conversion, no fast mode
 	if ( i2c_writereg(HUMID_ADDR, CONFIG, 1, &b) ) {
 		kputs("Error Starting humidity conversion");
-		return;
+		return retval;
 	}
 		
 	// wait for 35ms (typical)
@@ -66,4 +66,6 @@ humid_reading_t humid_read(void) {
 
 	i2c_readreg(HUMID_ADDR, DATAh, 2, &buf );
 	retval.temperature = ((uint16_t)buf[0] << 8) | buf[1];
+	
+	return retval;
 }

@@ -32,11 +32,13 @@
 #define D1L	0x0E
 #define D1H	0x0F
 
-
 void light_init(void) {
+	unsigned char b;
 	light_sleep();	
 	
 	// configure integration rate and interrupt
+	b = 0b00000001; // 01 integ field, scale 0.252, time=101ms
+	i2c_writereg(LIGHT_ADDR, COMMAND_DEFAULT | TIMING, 1, &b);
 }
 
 light_reading_t light_read() {

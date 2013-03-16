@@ -14,10 +14,19 @@
 *~
 *.bak
 
+*.d
 
 # built application files
 *.apk
 *.ap_
+*.eep
+*.elf
+*.hex
+*.lss
+*.map
+*.srec
+*.mk
+
 
 # files for the dex VM
 *.dex
@@ -39,3 +48,8 @@ local.properties
 .lock
 .log
 
+
+*.dll
+atmel_software_framework.pdf
+dust_environment_sensor/dust_environment_sensor/Debug/Makefile
+dust_environment_sensor/dust_environment_sensor/Release/Makefile
