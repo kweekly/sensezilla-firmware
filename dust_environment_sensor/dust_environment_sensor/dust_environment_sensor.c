@@ -5,35 +5,21 @@
  *  Author: kweekly
  */ 
 
-
-
-#include <avr/io.h>
-#include <avr/sleep.h>
-#include <avr/pgmspace.h>
-#include <util/delay.h>
-#include <avr/interrupt.h>
-
-#include "drivers/uart.h"
-#include "drivers/i2cmaster.h"
-
-#include "devices/amn41121.h"
-#include "devices/l3gd20.h"
-#include "devices/lis3dh.h"
-#include "devices/si7005.h"
-#include "devices/tsl2560.h"
-
-#include "utils/scheduler.h"
-
-#include "devicedefs.h"
+#include "all.h"
 
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putc, NULL, _FDEV_SETUP_WRITE);
 
 
 void board_power_down_devices(void);
 void avr_doze(void);
+void avr_sleep(void);
 
 void task_led_blip_on(void);
 void task_led_blip_off(void);
+
+#define TASK_REPORTING 0x02
+void task_begin_report(void);
+void task_print_report(void);
 
 int main(void)
 {
@@ -54,13 +40,10 @@ int main(void)
 	kputs("Initializing i2c\n");
 	i2c_init();
 	
-	
-	kputs("Initializing Scheduler and tasks\n");
-	scheduler_init();
-	scheduler_add_task(LED_BLIP_TASK_ID, 0, &task_led_blip_on);
-	scheduler_add_task(LED_BLIP_TASK_ID, 500, &task_led_blip_off);
-	
-	
+	kputs("Initializing Reports\n");
+	report_init();
+		
+
 	kputs("Initializing Devices... Light,");
 	light_init();
 	kputs("Gyro, ");
@@ -74,12 +57,28 @@ int main(void)
 	
 	kputs("Powering down all devices\n");
 	board_power_down_devices();
+	
+	kputs("Initializing Scheduler and tasks\n");
+	scheduler_init();
+	scheduler_add_task(LED_BLIP_TASK_ID, 0, &task_led_blip_on);
+	scheduler_add_task(LED_BLIP_TASK_ID, 10, &task_led_blip_off);
+	
+	scheduler_add_task(TASK_REPORTING, 0, &task_begin_report);
+	humid_setup_reporting_schedule(1);
+	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
+	
 		
+	kputs("Starting RTC clock\n");
+	rtctimer_init();
+	rtctimer_set_periodic_alarm(2,&scheduler_start);
+	
     while(1)
     {
-		kputs("Gogo scheduler\n");
-		scheduler_start();
-		_delay_ms(1000);
+		if (rtctimer_check_alarm()) {
+			//printf("Time is now %d\n",rtctimer_read());
+		}
+		
+		avr_sleep();
     }
 }
 
@@ -89,6 +88,15 @@ void task_led_blip_on(void) {
 
 void task_led_blip_off(void) {
 	LED1 = 0;
+}
+
+void task_begin_report(void) {
+	report_new(rtctimer_read());	
+}
+
+void task_print_report(void) {
+	report_print_human(report_current());
+	report_poplast();
 }
 
 void board_power_down_devices(void) {
@@ -108,5 +116,15 @@ void avr_doze(void) {
 	set_sleep_mode(SLEEP_MODE_IDLE);
 	sleep_enable();
 	sleep_cpu();
-	sleep_disable();	
+	sleep_disable();
 }	
+
+void avr_sleep(void) {
+	uart_flush();
+	uart1_flush();
+	// go into sleep (only external interrupt or timer can wake us up)
+	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
+	sleep_enable();
+	sleep_cpu();
+	sleep_disable();
+}

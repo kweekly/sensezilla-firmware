@@ -5,13 +5,7 @@
  *  Author: kweekly
  */ 
 
-
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
-#include "drivers/i2cmaster.h"
-#include "devicedefs.h"
-#include "devices/lis3dh.h"
+#include "all.h"
 
 
 #define STATUS_REG_AUX 0x07

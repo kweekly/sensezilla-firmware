@@ -14,7 +14,8 @@
 void rtctimer_init();
 uint32_t rtctimer_read();
 void rtctimer_set_periodic_alarm(uint16_t period_s, void (* cb)(void));
-
+void rtctimer_write(uint32_t t);
+char rtctimer_check_alarm();
 
 
 #endif /* RTCTIMER_H_ */

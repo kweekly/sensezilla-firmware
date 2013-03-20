@@ -5,12 +5,7 @@
  *  Author: kweekly
  */ 
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
-#include "drivers/i2cmaster.h"
-#include "devicedefs.h"
-#include "devices/l3gd20.h"
+#include "all.h"
 
 #define WHO_AM_I			0x0F
 #define CTRL_REG1			0x20

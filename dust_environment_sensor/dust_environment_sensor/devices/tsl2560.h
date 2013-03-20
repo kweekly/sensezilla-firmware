@@ -20,6 +20,10 @@ light_reading_t light_read();
 void light_wake();
 void light_sleep();
 
+// for reporting framework
+void light_setup_reporting_schedule(uint16_t starttime);
+void _light_reporting_finish(void);
 
+void light_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str);
 
 #endif /* TSL2560_H_ */

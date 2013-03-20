@@ -4,9 +4,7 @@
  * Created: 3/15/2013 4:18:17 PM
  *  Author: kweekly
  */ 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
+#include "all.h"
 
 #define MAX_EVENTS 32
 
@@ -54,7 +52,15 @@ void scheduler_add_task(uint8_t task_id, uint16_t time_ms, void (*cb)(void)) {
 		return;
 	}
 	
-	uint16_t timeticks = (uint16_t)((uint32_t)1000*time_ms / 128);
+	uint16_t timeticks;
+	
+	if ( time_ms != SCHEDULER_LAST_EVENTS ) {
+		timeticks = (uint16_t)((uint32_t)1000*time_ms / 128);
+		if (timeticks >= maxtime) 
+			maxtime = timeticks;
+	} else {
+		timeticks = SCHEDULER_LAST_EVENTS;
+	}			
 
 	int8_t pos = numevents - 1;
 	while ( pos >= 0 && event_list[pos].time > timeticks  ) {
@@ -100,11 +106,16 @@ void scheduler_start() {
 	// set up for next events to run
 	while(1) {
 		_scheduler_run_tasks(); // run all tasks that need to be run
-		if ( eventpos >= numevents ) {
+		if ( eventpos >= numevents || event_list[eventpos].time == SCHEDULER_LAST_EVENTS) {
 			break;
 		}
 		OCR1A = event_list[eventpos].time; // set next alarm to wake up
 		avr_doze();
+	}
+	
+	while(eventpos < numevents) {
+		event_list[eventpos].callback();
+		eventpos++;
 	}
 	
 	TCCR1B = 0;

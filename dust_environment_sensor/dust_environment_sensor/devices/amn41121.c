@@ -5,12 +5,7 @@
  *  Author: kweekly
  */ 
 
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
-#include "drivers/i2cmaster.h"
-#include "devicedefs.h"
-#include "devices/si7005.h"
+#include "all.h"
 
 void pir_wake(void) {
 	PIR_VCC = 1;

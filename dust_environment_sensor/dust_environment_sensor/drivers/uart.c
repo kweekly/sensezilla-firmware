@@ -235,6 +235,7 @@ static volatile unsigned char UART_TxTail;
 static volatile unsigned char UART_RxHead;
 static volatile unsigned char UART_RxTail;
 static volatile unsigned char UART_LastRxError;
+static volatile unsigned char UART_NeedFlush;
 
 #if defined( ATMEGA_USART1 )
 static volatile unsigned char UART1_TxBuf[UART_TX_BUFFER_SIZE];
@@ -244,6 +245,7 @@ static volatile unsigned char UART1_TxTail;
 static volatile unsigned char UART1_RxHead;
 static volatile unsigned char UART1_RxTail;
 static volatile unsigned char UART1_LastRxError;
+static volatile unsigned char UART1_NeedFlush;
 #endif
 
 
@@ -304,7 +306,11 @@ Purpose:  called when the UART is ready to transmit the next byte
         /* calculate and store new buffer index */
         tmptail = (UART_TxTail + 1) & UART_TX_BUFFER_MASK;
         UART_TxTail = tmptail;
-        /* get one byte from buffer and write it to UART */
+        
+		// clear interrupt
+		UART0_STATUS |= _BV(6);
+		UART_NeedFlush = 1;
+		/* get one byte from buffer and write it to UART */
         UART0_DATA = UART_TxBuf[tmptail];  /* start transmission */
     }else{
         /* tx buffer empty, disable UDRE interrupt */
@@ -325,6 +331,7 @@ void uart_init(unsigned int baudrate)
     UART_TxTail = 0;
     UART_RxHead = 0;
     UART_RxTail = 0;
+	UART_NeedFlush = 0;
     
 #if defined( AT90_UART )
     /* set baud rate */
@@ -446,6 +453,13 @@ void uart_putc(unsigned char data)
 
 }/* uart_putc */
 
+void uart_flush() {
+	if ( UART_NeedFlush ) {
+		while ( UART_TxHead != UART_TxTail || (UART0_CONTROL & _BV(UART0_UDRIE)) );
+		while ( 0 == (UART0_STATUS & _BV(6))); // transmit complete interrupt
+	}		
+	UART_NeedFlush = 0;
+}
 
 /*************************************************************************
 Function: uart_puts()
@@ -530,6 +544,8 @@ Purpose:  called when the UART1 is ready to transmit the next byte
         /* calculate and store new buffer index */
         tmptail = (UART1_TxTail + 1) & UART_TX_BUFFER_MASK;
         UART1_TxTail = tmptail;
+		UART1_STATUS |= _BV(6); // clear interrupt
+		UART1_NeedFlush = 1;
         /* get one byte from buffer and write it to UART */
         UART1_DATA = UART1_TxBuf[tmptail];  /* start transmission */
     }else{
@@ -551,7 +567,7 @@ void uart1_init(unsigned int baudrate)
     UART1_TxTail = 0;
     UART1_RxHead = 0;
     UART1_RxTail = 0;
-    
+    UART1_NeedFlush = 0;
 
     /* Set baud rate */
     if ( baudrate & 0x8000 ) 
@@ -629,6 +645,13 @@ void uart1_putc(unsigned char data)
 
 }/* uart1_putc */
 
+void uart1_flush() {
+	if ( UART1_NeedFlush ) {
+		while( UART1_TxHead != UART1_TxTail || (UART1_CONTROL & _BV(UART1_UDRIE) ));
+		while ( 0 == (UART1_STATUS & _BV(6)) ); // transmit complete interrupt
+	}		
+	UART1_NeedFlush = 0;
+}
 
 /*************************************************************************
 Function: uart1_puts()

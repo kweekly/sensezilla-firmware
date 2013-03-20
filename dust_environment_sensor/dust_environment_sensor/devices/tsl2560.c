@@ -4,13 +4,7 @@
  * Created: 3/12/2013 5:48:52 PM
  *  Author: kweekly
  */ 
-
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
-#include "drivers/i2cmaster.h"
-#include "devices/tsl2560.h"
-#include "devicedefs.h"
+#include "all.h"
 
 
 #define COMMAND_DEFAULT	0x80
@@ -64,4 +58,16 @@ void light_sleep() {
 	if ( i2c_writereg(LIGHT_ADDR, COMMAND_DEFAULT | CONTROL, 1, &b) )   {
 		kputs("Error turning off light sensor\n");
 	}
+}
+
+void light_setup_reporting_schedule(uint16_t starttime) {
+	
+}
+
+void _light_reporting_finish(void) {
+	
+}
+
+void light_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str) {
+	
 }
