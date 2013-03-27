@@ -49,7 +49,15 @@ uint32_t rtctimer_read() {
 	return time_val;
 }
 
+uint8_t rtctimer_read_low() {
+	return TCNT2;
+}
+
 void rtctimer_set_periodic_alarm(uint16_t period_s, void (* cb)(void)) {
 	alarm_cb = cb;
 	alarm_reload_val = alarm_val = period_s;
+}
+
+uint16_t rtctimer_get_alarm_period() {
+	return alarm_reload_val;
 }

@@ -61,13 +61,32 @@ void light_sleep() {
 }
 
 void light_setup_reporting_schedule(uint16_t starttime) {
-	
+	scheduler_add_task(LIGHT_TASK_ID, starttime, &light_wake);
+	scheduler_add_task(LIGHT_TASK_ID, starttime += 105, &_light_reporting_finish); // change based on integration constant
 }
 
 void _light_reporting_finish(void) {
-	
+	report_current()->light = light_read();
+	report_current()->fields |= REPORT_TYPE_LIGHT;
+	light_sleep();
 }
 
-void light_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str) {
-	
+#define CHANNEL_SCALE 37177
+
+void light_fmt_reading(light_reading_t * reading, uint8_t maxlen, char * str) {
+	double lux = 0;
+	double ch0 = (double)reading->ch0 / (double)CHANNEL_SCALE, ch1 = (double)reading->ch1 / (double)CHANNEL_SCALE;
+	double ratio = ch1/ch0;
+	if ( ratio > 0 && ratio <= 0.52) {
+		lux = 0.0304*ch0 - 0.062*ch0*pow(ch1/ch0,1.4);
+	} else if (ratio > 0.52 && ratio <= 0.61 ) {
+		lux = 0.0224*ch0 - 0.031*ch1;
+	} else if (ratio > 0.61 && ratio <= 0.8 ) {
+		lux = 0.0128*ch0 - 0.0153*ch1;
+	} else if ( ratio > 0.8 && ratio <= 1.3 ) {
+		lux = 0.00146*ch0 - 0.00112*ch1;
+	} else {
+		lux = 0;
+	}
+	snprintf(str,maxlen,"mLux=%-8.3f",1e3*lux);
 }

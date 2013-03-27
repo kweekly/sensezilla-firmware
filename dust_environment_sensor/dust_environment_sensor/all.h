@@ -20,6 +20,7 @@
 #include "drivers/uart.h"
 #include "drivers/i2cmaster.h"
 #include "drivers/rtctimer.h"
+#include "drivers/pcint.h"
 
 #include "devices/amn41121.h"
 #include "devices/l3gd20.h"

@@ -56,19 +56,24 @@ typedef struct
 #define LED2		REGISTER_BIT(PORTD,4)
 
 // PIR sensor
+#define PIR_TASK_ID 0x11
 #define PIR_VCC		REGISTER_BIT(PORTA,7)
 #define PIR_OUT		REGISTER_BIT(PORTD,7)
+#define PIR_OUT_PCINT 31
 #define PIR_OUT_PIN	REGISTER_BIT(PIND,7)
 
 // Accelerometer LIS3DH
 #define ACCEL_TASK_ID 0x10
 #define ACCEL_ADDR	0b00110010
+#define ACCEL_INT1_PCINT 0
 #define ACCEL_INT1	REGISTER_BIT(PORTA,0)
+#define ACCEL_INT2_PCINT 1
 #define ACCEL_INT2	REGISTER_BIT(PORTA,1)
 
 // Gyro L3GD20
 #define GYRO_TASK_ID 0x20
 #define GYRO_ADDR	0b11010110
+#define GYRO_INT2_PCINT 11
 #define GYRO_INT2	REGISTER_BIT(PORTB,3)
 
 // Temp/Humid SI7005
@@ -81,6 +86,7 @@ typedef struct
 #define LIGHT_TASK_ID 0x50
 #define LIGHT_ADDR	0b01010010
 //#define LIGHT_ADDR	0b01010110
+#define LIGHT_INT_PCINT 6
 #define LIGHT_INT	REGISTER_BIT(PORTA,6)
 
 #ifndef sbi

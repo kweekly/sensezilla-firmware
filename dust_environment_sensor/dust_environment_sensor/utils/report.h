@@ -23,7 +23,7 @@ typedef struct {
 	uint16_t fields;
 	
 	humid_reading_t temphumid;	
-	uint8_t  occupancy;	
+	float  occupancy;	
 	light_reading_t light;
 	accel_reading_t accel;
 	gyro_reading_t gyro;

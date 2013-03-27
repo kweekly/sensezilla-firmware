@@ -37,6 +37,9 @@ int main(void)
 	DIDR0 = 0;
 	DIDR1 = 0;
 	
+	kputs("Initializing PCINT\n");
+	pcint_init();
+	
 	kputs("Initializing i2c\n");
 	i2c_init();
 	
@@ -55,8 +58,23 @@ int main(void)
 	kputs("PIR\n");
 	pir_init();
 	
+	/*
+	PIR_VCC = 1;
+	while(1) {
+		if(PIR_OUT_PIN) {
+			kputs("ON\n");
+		} else {
+			kputs("OFF\n");
+		}
+		_delay_ms(50);
+	}*/
+	
 	kputs("Powering down all devices\n");
 	board_power_down_devices();
+	
+	kputs("Turning on always-on devices\n");
+	pir_wake();
+	accel_wake();
 	
 	kputs("Initializing Scheduler and tasks\n");
 	scheduler_init();
@@ -65,6 +83,8 @@ int main(void)
 	
 	scheduler_add_task(TASK_REPORTING, 0, &task_begin_report);
 	humid_setup_reporting_schedule(1);
+	light_setup_reporting_schedule(1);
+	pir_setup_reporting_schedule(1);
 	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	
 		
@@ -74,10 +94,8 @@ int main(void)
 	
     while(1)
     {
-		if (rtctimer_check_alarm()) {
-			//printf("Time is now %d\n",rtctimer_read());
-		}
-		
+		pcint_check();
+		rtctimer_check_alarm();
 		avr_sleep();
     }
 }

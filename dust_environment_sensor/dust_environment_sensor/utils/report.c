@@ -13,7 +13,7 @@ typedef struct {
 	uint16_t fields;
 	
 	humid_reading_t temphumid;
-	uint8_t  occupancy;
+	float  occupancy;
 	light_reading_t light;
 	accel_reading_t accel;
 	gyro_reading_t gyro;
@@ -31,7 +31,7 @@ void report_print(report_t * rep) {
 		printf_P(PSTR(" humid=%04X"),rep->temphumid.humidity);
 		
 	if ( rep->fields & REPORT_TYPE_OCCUPANCY)
-		printf_P(PSTR(" occupancy=%d"),rep->occupancy);
+		printf_P(PSTR(" occupancy=%08X"),*((uint16_t *)(&rep->occupancy)));
 		
 	if ( rep->fields & REPORT_TYPE_LIGHT)
 		printf_P(PSTR(" light0=%04X light1=%04X"),rep->light.ch0,rep->light.ch1);
@@ -55,11 +55,17 @@ void report_print_human(report_t * rep) {
 		uart_puts(buf);
 	}		
 	
-	if ( rep->fields & REPORT_TYPE_OCCUPANCY)
-	printf_P(PSTR(" occupancy=%d"),rep->occupancy);
+	if ( rep->fields & REPORT_TYPE_OCCUPANCY) {
+		pir_fmt_reading(&(rep->occupancy),sizeof(buf),buf);
+		uart_putc(' ');
+		uart_puts(buf);	
+	}
 	
-	if ( rep->fields & REPORT_TYPE_LIGHT)
-	printf_P(PSTR(" light0=%04X light1=%04X"),rep->light.ch0,rep->light.ch1);
+	if ( rep->fields & REPORT_TYPE_LIGHT) {
+		light_fmt_reading(&(rep->light),sizeof(buf),buf);
+		uart_putc(' ');
+		uart_puts(buf);
+	}	
 	
 	if ( rep->fields & REPORT_TYPE_ACCEL)
 	printf_P(PSTR(" ax=%04X ay=%04X az=%04X"),rep->accel.X,rep->accel.Y,rep->accel.Z);
