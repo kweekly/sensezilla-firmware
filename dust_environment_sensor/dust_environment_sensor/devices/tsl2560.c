@@ -88,5 +88,5 @@ void light_fmt_reading(light_reading_t * reading, uint8_t maxlen, char * str) {
 	} else {
 		lux = 0;
 	}
-	snprintf(str,maxlen,"mLux=%-8.3f",1e3*lux);
+	snprintf(str,maxlen,"mLux=%-6.3f",1e3*lux);
 }

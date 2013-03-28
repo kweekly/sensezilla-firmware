@@ -11,14 +11,15 @@
 
 
 typedef struct  {
-	uint16_t X;
-	uint16_t Y;
-	uint16_t Z;
+	int16_t X;
+	int16_t Y;
+	int16_t Z;
 } accel_reading_t;
 
 void accel_init(void);
 void accel_wake(void);
 void accel_sleep(void);
+uint8_t accel_read_status(void);
 accel_reading_t accel_read(void);
 
 void accel_configure_click( void (*click_cb)(void) );
@@ -29,7 +30,16 @@ void accel_configure_click( void (*click_cb)(void) );
 #define ACCEL_ORIENTATION_YDOWN 0x04
 #define ACCEL_ORIENTATION_XUP	0x02
 #define ACCEL_ORIENTATION_XDOWN	0x01
+#define ACCEL_ORIENTATION_ALL 0x3F
 
 void accel_configure_orientation_detection( unsigned char detection_mask, void (*orient_cb)(unsigned char orientation) );
+
+void _accel_int1_cb();
+void _accel_int2_cb();
+
+void accel_fmt_reading(accel_reading_t * reading, uint8_t maxlen, char * str);
+
+void accel_setup_reporting_schedule(uint16_t starttime);
+void _accel_reporting_doread();
 
 #endif /* LIS3DH_H_ */

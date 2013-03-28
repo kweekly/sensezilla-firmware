@@ -37,7 +37,7 @@ void report_print(report_t * rep) {
 		printf_P(PSTR(" light0=%04X light1=%04X"),rep->light.ch0,rep->light.ch1);
 			
 	if ( rep->fields & REPORT_TYPE_ACCEL)
-		printf_P(PSTR(" ax=%04X ay=%04X az=%04X"),rep->accel.X,rep->accel.Y,rep->accel.Z);
+		printf_P(PSTR(" ax=%04d ay=%04d az=%04d"),rep->accel.X,rep->accel.Y,rep->accel.Z);
 		
 	if ( rep->fields & REPORT_TYPE_GYRO)
 		printf_P(PSTR(" gx=%04X gy=%04X gz=%04X"),rep->gyro.X,rep->gyro.Y,rep->gyro.Z);
@@ -46,7 +46,7 @@ void report_print(report_t * rep) {
 }
 
 void report_print_human(report_t * rep) {
-	char buf[32];
+	char buf[64];
 	printf_P(PSTR("t=%8d"),rep->time);
 	
 	if ( rep->fields & REPORT_TYPE_TEMP) {
@@ -67,11 +67,17 @@ void report_print_human(report_t * rep) {
 		uart_puts(buf);
 	}	
 	
-	if ( rep->fields & REPORT_TYPE_ACCEL)
-	printf_P(PSTR(" ax=%04X ay=%04X az=%04X"),rep->accel.X,rep->accel.Y,rep->accel.Z);
+	if ( rep->fields & REPORT_TYPE_ACCEL){
+		accel_fmt_reading(&(rep->accel),sizeof(buf),buf);
+		uart_putc(' ');
+		uart_puts(buf);
+	}
 	
-	if ( rep->fields & REPORT_TYPE_GYRO)
-	printf_P(PSTR(" gx=%04X gy=%04X gz=%04X"),rep->gyro.X,rep->gyro.Y,rep->gyro.Z);
+	if ( rep->fields & REPORT_TYPE_GYRO){
+		gyro_fmt_reading(&(rep->gyro),sizeof(buf),buf);
+		uart_putc(' ');
+		uart_puts(buf);
+	}
 	
 	printf_P(PSTR("\n"));
 }

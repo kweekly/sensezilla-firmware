@@ -25,7 +25,7 @@
 #define CTRL_REG5		0x24
 #define CTRL_REG6		0x25
 #define REFERENCE		0x26
-#define STATUS_REG2		0x27
+#define STATUS_REG		0x27
 #define OUT_X_L			0x28
 #define OUT_X_H			0x29
 #define OUT_Y_L			0x2A
@@ -45,6 +45,8 @@
 #define TIME_LATENCY	0x3C
 #define TIME_WINDOW		0x3D
 
+#define READ_MULTIPLE 0x80
+
 void (*click_cb)(void);
 void (*orient_cb)(unsigned char orientation);
 
@@ -52,9 +54,9 @@ void (*orient_cb)(unsigned char orientation);
 void accel_init(void) {
 	unsigned char b;
 	
-	accel_sleep();
+	accel_wake();
 	
-	b = 0b10001100; // HPF freq is 0.2Hz, enable HPF for data and click, but not AOI function
+	b = 0b00000100; // HPF freq is 0.2Hz, enable HPF for click, but not data or AOI function
 	i2c_writereg(ACCEL_ADDR, CTRL_REG2, 1, &b);
 	
 	b = 0b00000000; // no interrupts ( for now ?)
@@ -69,31 +71,48 @@ void accel_init(void) {
 	b = 0b00000000; 
 	i2c_writereg(ACCEL_ADDR, CTRL_REG6, 1, &b);
 	
+	click_cb = orient_cb = NULL;
 }
 
 void accel_wake(void) {
-	unsigned char b = 0b00101111; // low power mode, 10Hz
+	unsigned char b = 0x2F; // low power mode, 10Hz
 	if ( i2c_writereg(ACCEL_ADDR, CTRL_REG1, 1, &b ) ) {
 		kputs("Error turning on accel\n");
 	}	
 }
 
 void accel_sleep(void) {
+	
 	unsigned char b = 0b00001000;
 	if ( i2c_writereg(ACCEL_ADDR, CTRL_REG1, 1, &b ) ) {
 		kputs("Error turning off accel\n");
 	}
+	
+}
+
+uint8_t accel_read_status(void) {
+	unsigned char b;
+	if ( i2c_readreg(ACCEL_ADDR, STATUS_REG, 1, &b) ) {
+		kputs("Error reading status reg\n");
+	}
+	return b;
 }
 
 accel_reading_t accel_read(void) {
 	accel_reading_t retval;
 	unsigned char buf[6];
-	if ( i2c_readreg(ACCEL_ADDR, OUT_X_L, 6, buf ) ) {
+	
+	while ( (accel_read_status() & _BV(3)) == 0) {
+		kputs("Error: Accel not ready\n");
+	}
+	
+	if ( i2c_readreg(ACCEL_ADDR, READ_MULTIPLE | OUT_X_L, 6, buf ) ) {
 		kputs("Error reading from accel sensor\n");
 	}
-	retval.X = buf[0] | ((uint16_t)buf[1] << 8);
-	retval.Y = buf[2] | ((uint16_t)buf[3] << 8);
-	retval.Z = buf[4] | ((uint16_t)buf[5] << 8);
+	retval.X = *(int16_t *)(buf);
+	retval.Y = *(int16_t *)(buf+2);
+	retval.Z = *(int16_t *)(buf+4);
+	
 	return retval;	
 	
 }
@@ -108,14 +127,15 @@ void accel_configure_click( void (*c)(void) ) {
 	click_cb = c;
 	
 	// setup PCINT0
+	pcint_register(0,&_accel_int1_cb);
 }
 
-#define ACCEL_ORIENTATION_ZUP	0x20
-#define ACCEL_ORIENTATION_ZDOWN 0x10
-#define ACCEL_ORIENTATION_YUP	0x08
-#define ACCEL_ORIENTATION_YDOWN 0x04
-#define ACCEL_ORIENTATION_XUP	0x02
-#define ACCEL_ORIENTATION_XDOWN	0x01
+void _accel_int1_cb() {
+	if ( ACCEL_INT1_PIN && click_cb ) {
+		click_cb();
+	}
+}
+
 
 // uses INT2 -> PORTA.1 / PCINT1
 void accel_configure_orientation_detection( unsigned char detection_mask, void (*o)(unsigned char orientation) ) {
@@ -131,6 +151,36 @@ void accel_configure_orientation_detection( unsigned char detection_mask, void (
 	i2c_writereg(ACCEL_ADDR, INT1_THS, 1, &b );
 	
 	orient_cb = o;
+	
 	// setup PCINT1
+	pcint_register(1,&_accel_int2_cb);
 }
 
+void _accel_int2_cb() {
+	unsigned char b;
+	if ( ACCEL_INT2_PIN && orient_cb ) {
+		if ( i2c_readreg(ACCEL_ADDR, INT1_SOURCE, 1, &b) ) {
+			kputs("Error reading accel interrupt source\n");
+			return;
+		}
+		orient_cb(b&0x3F);
+	}
+}
+
+void accel_setup_reporting_schedule(uint16_t starttime) {
+	scheduler_add_task(ACCEL_TASK_ID,starttime,&_accel_reporting_doread);
+}
+
+void _accel_reporting_doread() {
+	report_current()->accel = accel_read();
+	report_current()->fields |= REPORT_TYPE_ACCEL;
+}
+
+#define ACCEL_SENSITIVITY 2.0
+
+void accel_fmt_reading(accel_reading_t * reading, uint8_t maxlen, char * str) {
+	float ax = reading->X / (float)(1<<15) * ACCEL_SENSITIVITY;
+	float ay = reading->Y / (float)(1<<15) * ACCEL_SENSITIVITY;
+	float az = reading->Z / (float)(1<<15) * ACCEL_SENSITIVITY;
+	snprintf_P(str,maxlen,PSTR("ax=%5.2fg ay=%5.2fg az=%5.2fg"),ax,ay,az);
+}

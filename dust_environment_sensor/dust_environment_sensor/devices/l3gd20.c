@@ -38,6 +38,7 @@
 
 #define DEFAULT_CTRL_REG1   0x00 // 95Hz Data Rate, 12.5 Hz Cut-Off freq
 
+#define READ_MULTIPLE 0x80
 
 void gyro_init(void) {
 	unsigned char b;
@@ -53,7 +54,7 @@ void gyro_init(void) {
 	i2c_writereg(GYRO_ADDR, CTRL_REG3, 1, &b);
 	
 	// configure data stuff
-	b = 0;
+	b = 0; // 250 dps scale
 	i2c_writereg(GYRO_ADDR, CTRL_REG4, 1, &b);
 	
 	// configure other stuff 
@@ -61,15 +62,28 @@ void gyro_init(void) {
 	i2c_writereg(GYRO_ADDR, CTRL_REG5, 1, &b); 
 }
 
+uint8_t gyro_read_status(void) {
+	unsigned char b;
+	if ( i2c_readreg(GYRO_ADDR, STATUS_REG, 1, &b) ) {
+		kputs("Error reading status reg\n");
+	}
+	return b;
+}
+
 gyro_reading_t gyro_read()  {
 	gyro_reading_t retval;
 	unsigned char buf[6];
-	if ( i2c_readreg(GYRO_ADDR, OUT_X_L, 6, buf ) ) {
+	
+	if ( (gyro_read_status() & _BV(3) ) == 0) {
+		kputs("Error: Gyro not ready\n");
+	}
+	
+	if ( i2c_readreg(GYRO_ADDR, READ_MULTIPLE | OUT_X_L, 6, buf ) ) {
 		kputs("Error reading from gyro sensor\n");
 	}
-	retval.X = buf[0] | ((uint16_t)buf[1] << 8);
-	retval.Y = buf[2] | ((uint16_t)buf[3] << 8);
-	retval.Z = buf[4] | ((uint16_t)buf[5] << 8);
+	retval.X = *(int16_t *)(buf);
+	retval.Y = *(int16_t *)(buf+2);
+	retval.Z = *(int16_t *)(buf+4);
 	return retval;
 }
 
@@ -87,3 +101,22 @@ void gyro_sleep(void) {
 	}	
 }
 
+#define GYRO_SENSITIVITY 250.0
+
+void gyro_fmt_reading(gyro_reading_t * reading, uint8_t maxlen, char * str) {
+	float gx = reading->X / (float)(1<<15) * GYRO_SENSITIVITY;
+	float gy = reading->Y / (float)(1<<15) * GYRO_SENSITIVITY;
+	float gz = reading->Z / (float)(1<<15) * GYRO_SENSITIVITY;
+	snprintf_P(str,maxlen,PSTR("gx=%5.2fdps gy=%5.2fdps gz=%5.2fdps"),gx,gy,gz);
+}
+
+void gyro_setup_reporting_schedule(uint16_t starttime) {
+	scheduler_add_task(GYRO_TASK_ID,starttime,&gyro_wake);
+	scheduler_add_task(GYRO_TASK_ID,starttime + 15,&_gyro_reporting_finish);
+}
+
+void _gyro_reporting_finish() {
+	report_current()->gyro = gyro_read();
+	report_current()->fields |= REPORT_TYPE_GYRO;
+	gyro_sleep();
+}

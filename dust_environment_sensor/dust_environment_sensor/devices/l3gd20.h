@@ -12,9 +12,9 @@
 
 
 typedef struct  {
-	uint16_t X;
-	uint16_t Y;
-	uint16_t Z;
+	int16_t X;
+	int16_t Y;
+	int16_t Z;
 } gyro_reading_t;
 
 void gyro_init(void);
@@ -22,8 +22,12 @@ gyro_reading_t gyro_read() ;
 
 void gyro_wake(void);
 void gyro_sleep(void);
+uint8_t gyro_read_status(void);
 
+void gyro_fmt_reading(gyro_reading_t * reading, uint8_t maxlen, char * str);
 
+void gyro_setup_reporting_schedule(uint16_t starttime);
+void _gyro_reporting_finish();
 
 
 

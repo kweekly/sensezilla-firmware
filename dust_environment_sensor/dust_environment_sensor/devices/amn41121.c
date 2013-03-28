@@ -69,5 +69,5 @@ void _pir_reporting_write_report() {
 }
 
 void pir_fmt_reading(float * reading, uint8_t maxlen, char * str) {
-	snprintf_P(str,maxlen,PSTR("Occupancy=%-4.1f%%"),(100.0* *reading));
+	snprintf_P(str,maxlen,PSTR("Occupancy=%-5.1f%%"),(100.0* *reading));
 }

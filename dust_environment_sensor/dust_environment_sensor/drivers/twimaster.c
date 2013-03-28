@@ -10,6 +10,7 @@
 #include <compat/twi.h>
 
 #include "i2cmaster.h"
+#include "all.h"
 
 
 /* define CPU frequency in Mhz here if not defined in Makefile */
@@ -147,8 +148,8 @@ void i2c_stop(void)
     /* send stop condition */
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
 	
-	// wait until stop condition is executed and bus released
-	while(TWCR & (1<<TWSTO));
+	// wait until stop condition is executed and bus released or there is an error
+	while(TWCR & (1<<TWSTO) && (TWSTA & 0xf8 != 0xf8));
 
 }/* i2c_stop */
 

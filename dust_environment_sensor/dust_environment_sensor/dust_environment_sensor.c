@@ -21,6 +21,9 @@ void task_led_blip_off(void);
 void task_begin_report(void);
 void task_print_report(void);
 
+void test_click(void);
+void test_orient(uint8_t orient);
+
 int main(void)
 {
 	cli();	
@@ -76,6 +79,10 @@ int main(void)
 	pir_wake();
 	accel_wake();
 	
+	kputs("Initialize interrupts\n");
+	accel_configure_click(&test_click);
+	accel_configure_orientation_detection(ACCEL_ORIENTATION_ALL,&test_orient);
+	
 	kputs("Initializing Scheduler and tasks\n");
 	scheduler_init();
 	scheduler_add_task(LED_BLIP_TASK_ID, 0, &task_led_blip_on);
@@ -85,12 +92,13 @@ int main(void)
 	humid_setup_reporting_schedule(1);
 	light_setup_reporting_schedule(1);
 	pir_setup_reporting_schedule(1);
+	accel_setup_reporting_schedule(5);
+	gyro_setup_reporting_schedule(1);
 	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	
-		
 	kputs("Starting RTC clock\n");
 	rtctimer_init();
-	rtctimer_set_periodic_alarm(2,&scheduler_start);
+	rtctimer_set_periodic_alarm(1,&scheduler_start);
 	
     while(1)
     {
@@ -145,4 +153,12 @@ void avr_sleep(void) {
 	sleep_enable();
 	sleep_cpu();
 	sleep_disable();
+}
+
+void test_click(void) {
+	kputs("Click\n");	
+}
+
+void test_orient(uint8_t orient) {
+	printf_P(PSTR("Orientation is now %02X\n"),orient);
 }
