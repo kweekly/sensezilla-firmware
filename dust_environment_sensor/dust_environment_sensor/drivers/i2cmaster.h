@@ -129,16 +129,6 @@ extern unsigned char i2c_start(unsigned char addr);
  */
 extern unsigned char i2c_rep_start(unsigned char addr);
 
-
-/**
- @brief Issues a start condition and sends address and transfer direction 
-   
- If device is busy, use ack polling to wait until device ready 
- @param    addr address and transfer direction of I2C device
- @return   none
- */
-extern void i2c_start_wait(unsigned char addr);
-
  
 /**
  @brief Send one byte to I2C device

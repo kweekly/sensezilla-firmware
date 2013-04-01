@@ -21,14 +21,14 @@ void task_led_blip_off(void);
 void task_begin_report(void);
 void task_print_report(void);
 
-void test_click(void);
+void test_click(unsigned char src);
 void test_orient(uint8_t orient);
 
 int main(void)
 {
 	cli();	
 	LED1 = 1;
-	uart_init(UART_BAUD_SELECT(9600,F_CPU));
+	uart_init(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
 	stdout = &mystdout;
 	sei();
 	
@@ -105,6 +105,7 @@ int main(void)
 		pcint_check();
 		rtctimer_check_alarm();
 		avr_sleep();
+		i2c_init(); // it appears we need to reset the i2c whenever we wake up
     }
 }
 
@@ -155,10 +156,47 @@ void avr_sleep(void) {
 	sleep_disable();
 }
 
-void test_click(void) {
-	kputs("Click\n");	
+void test_click(unsigned char src) {
+	kputs("Click ");
+	switch(src & 0x07) {
+		case 1:
+			kputs("X\n");
+			break;
+		case 2:
+			kputs("Y\n");
+			break;
+		case 4:
+			kputs("Z\n");
+			break;
+		default:
+			kputs("UKNOWN\n");
+			break;
+	}
 }
 
 void test_orient(uint8_t orient) {
-	printf_P(PSTR("Orientation is now %02X\n"),orient);
+	kputs("Orientation is now ");
+	switch(orient) {
+		case ACCEL_ORIENTATION_ZUP:
+			kputs("ZUP\n");
+			break;
+		case ACCEL_ORIENTATION_ZDOWN:
+			kputs("ZDOWN\n");
+			break;
+		case ACCEL_ORIENTATION_XUP:
+			kputs("XUP\n");
+			break;
+		case ACCEL_ORIENTATION_XDOWN:
+			kputs("XDOWN\n");
+			break;
+		case ACCEL_ORIENTATION_YUP:
+			kputs("YUP\n");
+			break;
+		case ACCEL_ORIENTATION_YDOWN:
+			kputs("YDOWN\n");
+			break;
+		default:
+			kputs("UNKNOWN\n");
+	}
+	
 }

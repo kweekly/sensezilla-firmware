@@ -30,5 +30,4 @@ void gyro_setup_reporting_schedule(uint16_t starttime);
 void _gyro_reporting_finish();
 
 
-
 #endif /* L3GD20_H_ */

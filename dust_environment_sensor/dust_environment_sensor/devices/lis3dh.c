@@ -47,7 +47,7 @@
 
 #define READ_MULTIPLE 0x80
 
-void (*click_cb)(void);
+void (*click_cb)(unsigned char src);
 void (*orient_cb)(unsigned char orientation);
 
 
@@ -56,7 +56,7 @@ void accel_init(void) {
 	
 	accel_wake();
 	
-	b = 0b00000100; // HPF freq is 0.2Hz, enable HPF for click, but not data or AOI function
+	b = 0b00000100; // HPF freq is 1Hz, enable HPF for click, but not data or AOI function
 	i2c_writereg(ACCEL_ADDR, CTRL_REG2, 1, &b);
 	
 	b = 0b00000000; // no interrupts ( for now ?)
@@ -75,7 +75,7 @@ void accel_init(void) {
 }
 
 void accel_wake(void) {
-	unsigned char b = 0x2F; // low power mode, 10Hz
+	unsigned char b = 0x4F; // low power mode, 50Hz
 	if ( i2c_writereg(ACCEL_ADDR, CTRL_REG1, 1, &b ) ) {
 		kputs("Error turning on accel\n");
 	}	
@@ -118,11 +118,21 @@ accel_reading_t accel_read(void) {
 }
 
 // Uses INT1 of accel -> PORTA.0 / PCINT0
-void accel_configure_click( void (*c)(void) ) {
-	unsigned char b = 0b1000000;
+void accel_configure_click( void (*c)(unsigned char) ) {
+	unsigned char b = 0b10000000; // click interrupt on INT1
 	if ( i2c_writereg(ACCEL_ADDR, CTRL_REG3, 1, &b ) ) {
 		kputs("Error configuring accel sensor\n");
 	}
+	
+	b = 0b00010101; // tap detect on all axis
+	i2c_writereg(ACCEL_ADDR, CLICK_CFG, 1, &b);
+	
+	b = 80; // approx 1.25g
+	i2c_writereg(ACCEL_ADDR, CLICK_THS, 1, &b);
+	
+	//b = 1; // at most 20ms of acceleration
+	b = 10; // at most 200ms of acceleration
+	i2c_writereg(ACCEL_ADDR, TIME_LIMIT, 1, &b);
 	
 	click_cb = c;
 	
@@ -131,8 +141,14 @@ void accel_configure_click( void (*c)(void) ) {
 }
 
 void _accel_int1_cb() {
+	unsigned char b;
 	if ( ACCEL_INT1_PIN && click_cb ) {
-		click_cb();
+		// read to clear status
+		if ( i2c_readreg(ACCEL_ADDR, CLICK_SRC, 1, &b) ) {
+			kputs("Error reading accel click source\n");
+			return;
+		}		
+		click_cb(b);
 	}
 }
 
@@ -147,8 +163,11 @@ void accel_configure_orientation_detection( unsigned char detection_mask, void (
 	b = 0b11000000 | detection_mask; // enable 6D motion detection
 	i2c_writereg(ACCEL_ADDR, INT1_CFG, 1, &b );
 	
-	b = 50; // Approx 0.8g
+	b = 0x21; // Approx 0.528g
 	i2c_writereg(ACCEL_ADDR, INT1_THS, 1, &b );
+	
+	b = 25; // must be active for half-second
+	i2c_writereg(ACCEL_ADDR, INT1_DURATION, 1, &b);
 	
 	orient_cb = o;
 	

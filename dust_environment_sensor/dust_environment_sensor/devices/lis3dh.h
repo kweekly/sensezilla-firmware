@@ -22,7 +22,7 @@ void accel_sleep(void);
 uint8_t accel_read_status(void);
 accel_reading_t accel_read(void);
 
-void accel_configure_click( void (*click_cb)(void) );
+void accel_configure_click( void (*click_cb)(unsigned char) );
 
 #define ACCEL_ORIENTATION_ZUP	0x20
 #define ACCEL_ORIENTATION_ZDOWN 0x10

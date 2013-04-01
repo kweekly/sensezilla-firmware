@@ -33,6 +33,9 @@ void i2c_init(void)
   TWSR = 0;                         /* no prescaler */
   TWBR = ((F_CPU/SCL_CLOCK)-16)/2;  /* must be > 10 for stable operation */
 
+  // reset
+  TWCR = 0;
+  
 }/* i2c_init */
 
 
@@ -77,55 +80,6 @@ unsigned char i2c_start(unsigned char address)
 
 
 /*************************************************************************
- Issues a start condition and sends address and transfer direction.
- If device is busy, use ack polling to wait until device is ready
- 
- Input:   address and transfer direction of I2C device
-*************************************************************************/
-void i2c_start_wait(unsigned char address)
-{
-    uint8_t   twst;
-
-
-    while ( 1 )
-    {
-	    // send START condition
-	    TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
-    
-    	// wait until transmission completed
-    	while(!(TWCR & (1<<TWINT)));
-    
-    	// check value of TWI Status Register. Mask prescaler bits.
-    	twst = TW_STATUS & 0xF8;
-    	if ( (twst != TW_START) && (twst != TW_REP_START)) continue;
-    
-    	// send device address
-    	TWDR = address;
-    	TWCR = (1<<TWINT) | (1<<TWEN);
-    
-    	// wail until transmission completed
-    	while(!(TWCR & (1<<TWINT)));
-    
-    	// check value of TWI Status Register. Mask prescaler bits.
-    	twst = TW_STATUS & 0xF8;
-    	if ( (twst == TW_MT_SLA_NACK )||(twst ==TW_MR_DATA_NACK) ) 
-    	{    	    
-    	    /* device busy, send stop condition to terminate write operation */
-	        TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
-	        
-	        // wait until stop condition is executed and bus released
-	        while(TWCR & (1<<TWSTO));
-	        
-    	    continue;
-    	}
-    	//if( twst != TW_MT_SLA_ACK) return 1;
-    	break;
-     }
-
-}/* i2c_start_wait */
-
-
-/*************************************************************************
  Issues a repeated start condition and sends address and transfer direction 
 
  Input:   address and transfer direction of I2C device
@@ -148,9 +102,15 @@ void i2c_stop(void)
     /* send stop condition */
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
 	
+	// assume stop condition finishes soon
+	
 	// wait until stop condition is executed and bus released or there is an error
-	while(TWCR & (1<<TWSTO) && (TWSTA & 0xf8 != 0xf8));
-
+	/*while(TWCR & (1<<TWSTO))  {
+		if ( TWSR & 0xF8 == 0x38 ) {
+			kputs("Bus collision!\n");
+			break;
+		}
+	}*/
 }/* i2c_stop */
 
 
@@ -188,7 +148,7 @@ unsigned char i2c_write( unsigned char data )
 unsigned char i2c_readAck(void)
 {
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA);
-	while(!(TWCR & (1<<TWINT)));    
+	while(!(TWCR & (1<<TWINT)));  
 
     return TWDR;
 
