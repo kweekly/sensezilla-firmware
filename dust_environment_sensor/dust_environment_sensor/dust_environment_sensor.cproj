@@ -186,6 +186,12 @@
     <Compile Include="dust_environment_sensor.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motes\xbee.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motes\xbee.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="utils\report.c">
       <SubType>compile</SubType>
     </Compile>
@@ -202,6 +208,7 @@
   <ItemGroup>
     <Folder Include="drivers" />
     <Folder Include="devices" />
+    <Folder Include="motes" />
     <Folder Include="utils" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

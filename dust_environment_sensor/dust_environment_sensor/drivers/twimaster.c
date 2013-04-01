@@ -103,6 +103,9 @@ void i2c_stop(void)
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
 	
 	// assume stop condition finishes soon
+	_delay_us(10);
+	
+	TWCR = 0; // reset TWI hardware
 	
 	// wait until stop condition is executed and bus released or there is an error
 	/*while(TWCR & (1<<TWSTO))  {

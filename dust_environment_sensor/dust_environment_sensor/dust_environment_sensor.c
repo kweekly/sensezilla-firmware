@@ -26,11 +26,22 @@ void test_orient(uint8_t orient);
 
 int main(void)
 {
+	char wdrst = 0;
+	if ( MCUSR & _BV(WDRF) ) {
+		wdrst = 1;
+		MCUSR = 0;
+	}	
+	wdt_disable();
+	
 	cli();	
 	LED1 = 1;
 	uart_init(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
 	stdout = &mystdout;
 	sei();
+	
+	if ( wdrst ) {
+		kputs("\n***WATCHDOG RESET***\n");
+	}
 	
 	kputs("Setting DDR registers\n");
 	DDRA = DDRA_SETTING;
@@ -98,14 +109,16 @@ int main(void)
 	
 	kputs("Starting RTC clock\n");
 	rtctimer_init();
-	rtctimer_set_periodic_alarm(1,&scheduler_start);
+	rtctimer_set_periodic_alarm(30,&scheduler_start);
 	
     while(1)
     {
+		wdt_enable(WDTO_250MS);
+		wdt_reset();
 		pcint_check();
 		rtctimer_check_alarm();
+		wdt_disable();
 		avr_sleep();
-		i2c_init(); // it appears we need to reset the i2c whenever we wake up
     }
 }
 
