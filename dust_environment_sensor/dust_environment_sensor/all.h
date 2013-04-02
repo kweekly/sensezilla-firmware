@@ -32,6 +32,8 @@
 #include "utils/scheduler.h"
 #include "utils/report.h"
 
+#include "motes/xbee.h"
+
 #include "devicedefs.h"
 
 #endif /* ALL_H_ */

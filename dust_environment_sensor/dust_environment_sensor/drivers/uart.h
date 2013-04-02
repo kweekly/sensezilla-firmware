@@ -155,6 +155,9 @@ extern void uart_putc(unsigned char data);
 extern void uart_puts(const char *s );
 
 
+/** @brief  Write data for transmitting @see uart_puts */
+extern void uart_write(unsigned int nBytes, const char *s );
+
 /**
  * @brief    Put string from program memory to ringbuffer for transmitting via UART.
  *
@@ -186,6 +189,8 @@ extern unsigned int uart1_getc(void);
 extern void uart1_putc(unsigned char data);
 /** @brief  Put string to ringbuffer for transmitting via USART1 (only available on selected ATmega) @see uart_puts */
 extern void uart1_puts(const char *s );
+/** @brief  Write data for transmitting via USART1 (only available on selected ATmega) @see uart_puts */
+extern void uart1_write(unsigned int nBytes, const char *s );
 /** @brief  Put string from program memory to ringbuffer for transmitting via USART1 (only available on selected ATmega) @see uart_puts_p */
 extern void uart1_puts_p(const char *s );
 /** @brief  Macro to automatically put a string constant into program memory */

@@ -49,8 +49,8 @@ typedef struct
 #define MOTE_TX_CTSN	REGISTER_BIT(PORTB,1)
 #define MOTE_RX_CTSN	REGISTER_BIT(PORTB,0)
 #define MOTE_RX_RTSN	REGISTER_BIT(PORTD,6)
-#define MOTE_UART_GETC  uart1_getc
-#define MOTE_UART_PUTS  uart1_puts
+#define MOTE_UART_GETC	uart1_getc
+#define MOTE_UART_WRITE uart1_write
 
 // LEDs
 #define LED_BLIP_TASK_ID 0x01

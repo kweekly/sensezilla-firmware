@@ -3,6 +3,25 @@
  *
  * Created: 3/12/2013 3:59:40 PM
  *  Author: kweekly
+ 
+ FUSE SETTINGS:
+ BODLEVEL = 2V7
+ OCDEN = [ ]
+ JTAGEN = [X]
+ SPIEN = [X]
+ WDTON = [ ]
+ EESAVE = [ ]
+ BOOTSZ = 4096W_F000
+ BOOTRST = [ ]
+ CKDIV8 = [ ]
+ CKOUT = [ ]
+ SUT_CKSEL = INTRCOSC_6CK_0MS
+
+ EXTENDED = 0xFD (valid)
+ HIGH = 0x99 (valid)
+ LOW = 0xC2 (valid)
+
+ 
  */ 
 
 #include "all.h"
@@ -109,7 +128,7 @@ int main(void)
 	
 	kputs("Starting RTC clock\n");
 	rtctimer_init();
-	rtctimer_set_periodic_alarm(30,&scheduler_start);
+	rtctimer_set_periodic_alarm(10,&scheduler_start);
 	
     while(1)
     {

@@ -474,6 +474,11 @@ void uart_puts(const char *s )
 
 }/* uart_puts */
 
+void uart_write(unsigned int nBytes, const char *s ) 
+{
+	while (nBytes--) 
+		uart_putc(*s++);
+}
 
 /*************************************************************************
 Function: uart_puts_p()
@@ -489,6 +494,8 @@ void uart_puts_p(const char *progmem_s )
       uart_putc(c);
 
 }/* uart_puts_p */
+
+
 
 
 /*
@@ -666,6 +673,10 @@ void uart1_puts(const char *s )
 
 }/* uart1_puts */
 
+void uart1_write(unsigned int nBytes, const char * s) {
+	while (nBytes++)
+		uart1_putc(*s++);
+}
 
 /*************************************************************************
 Function: uart1_puts_p()
