@@ -38,6 +38,7 @@ void _accel_int1_cb();
 void _accel_int2_cb();
 
 void accel_fmt_reading(accel_reading_t * reading, uint8_t maxlen, char * str);
+uint8_t accel_convert_real(accel_reading_t * reading, float * fltptr);
 
 void accel_setup_reporting_schedule(uint16_t starttime);
 void _accel_reporting_doread();

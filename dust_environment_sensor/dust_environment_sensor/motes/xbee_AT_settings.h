@@ -11,16 +11,14 @@
 
 const unsigned char XBEE_AT_SETTING_STR[] PROGMEM =  
  "ID\x12\x34"
+",D6\x1" // enable flow control RTS
 ",CH\xC"
 ",MY\xFF\xFF"
 ",MM\x0"
 ",RR\x2"
 ",RN\x3"
 ",CE\x0"
-",A1\x6"
-",A2\x6"
 ",EE\x0"
-",KY\x12\x34\x56\x78"
 ",SM\x1" // pin hibernate
 ",SO\x2" // supress IO samples
 ",AP\x2"

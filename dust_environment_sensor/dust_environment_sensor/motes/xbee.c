@@ -32,8 +32,9 @@ int8_t rx_at_cmd_status;
 void xbee_init() {
 	MOTE_RESETN = 1;
 	xbee_wake();
-	MOTE_RX_RTSN = 0;
+	MOTE_RX_RTSN = 0; // asserted
 	rx_client_buf = rx_callback = tx_callback = status_callback = NULL;
+
 	modem_status = XBEE_STATUS_HW_RESET;
 	frame_id = 1;
 	esc_char_recv = xbee_rx_api_buf_len = xbee_rx_api_buf_pos = 0;
@@ -132,10 +133,12 @@ void xbee_init() {
 }
 
 void xbee_sleep(){
+	MOTE_RX_RTSN = 1; // de-asserted
 	MOTE_SLEEPN = 1;
 }
 
 void xbee_wake() {
+	MOTE_RX_RTSN = 0; // asserted
 	MOTE_SLEEPN = 0;
 }
 
@@ -288,12 +291,17 @@ uint8_t xbee_send_packet_64( xbee_64b_address addr, uint16_t nBytes, uint8_t * d
 		kputs("Maximum packet size exceeded\n");
 		return 0;
 	}
+	
 	_xbee_start_API_frame();
 	_xbee_load_API_byte(0x00);
 	uint8_t retval = frame_id;
 	_xbee_load_API_byte(frame_id++);
 	if ( !frame_id ) frame_id++; // reset to 1 if wraparound
 	uint8_t * abytes = (uint8_t *)(&addr);
+	printf("Send to:");
+	for(int c =0 ;c < 8; c++)
+	printf("%02X",abytes[7-c]);
+	printf("\n");
 	_xbee_load_API_byte(abytes[7]);
 	_xbee_load_API_byte(abytes[6]);
 	_xbee_load_API_byte(abytes[5]);
@@ -317,10 +325,12 @@ uint8_t xbee_get_status() { return modem_status; }
 uint16_t xbee_tx_api_buf_len;
 uint16_t xbee_tx_api_buf_pos;
 uint8_t xbee_tx_api_buf[XBEE_TX_API_BUF_SIZE];
+uint8_t xbee_tx_api_buf_checksum;
 
 void _xbee_start_API_frame() {
 	xbee_tx_api_buf_len = 0;
 	xbee_tx_api_buf_pos = 3;
+	xbee_tx_api_buf_checksum = 0xFF;
 }
 
 void _xbee_load_API_byte(uint8_t b) {
@@ -329,6 +339,7 @@ void _xbee_load_API_byte(uint8_t b) {
 		kputs("XBEE API buffer overflow\n");
 		return;
 	}
+	xbee_tx_api_buf_checksum -= b;
 	if (b == 0x7E || b == 0x7D || b == 0x11 || b == 0x13) {
 		xbee_tx_api_buf[xbee_tx_api_buf_pos++] = 0x7d;
 		xbee_tx_api_buf[xbee_tx_api_buf_pos++] = b ^ 0x20;
@@ -348,9 +359,7 @@ void _xbee_send_API_frame() {
 	xbee_tx_api_buf[0] = 0x7E;
 	xbee_tx_api_buf[1] = (uint8_t)((xbee_tx_api_buf_len >> 8) & 0xFF);
 	xbee_tx_api_buf[2] = (uint8_t)((xbee_tx_api_buf_len) & 0xFF);
-	xbee_tx_api_buf[xbee_tx_api_buf_pos] = 0xFF;
-	for ( uint16_t c = 3; c < xbee_tx_api_buf_pos; c++)
-		xbee_tx_api_buf[xbee_tx_api_buf_pos] -= xbee_tx_api_buf[c];
+	xbee_tx_api_buf[xbee_tx_api_buf_pos] = xbee_tx_api_buf_checksum;
 	
 	MOTE_UART_WRITE(xbee_tx_api_buf_pos+1,xbee_tx_api_buf);
 }

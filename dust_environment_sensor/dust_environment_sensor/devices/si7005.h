@@ -27,4 +27,5 @@ void _humid_reporting_readt(void); // this saves the humidity as well
 void _humid_reporting_finish(void);
 
 void humid_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str);
+uint8_t humid_convert_real(humid_reading_t * reading, float * flt) ;
 #endif /* SI7005_H_ */

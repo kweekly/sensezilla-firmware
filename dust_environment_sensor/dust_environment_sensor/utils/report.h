@@ -34,6 +34,7 @@ void report_init();
 void report_new(uint32_t time);
 void report_print(report_t * rep);
 void report_print_human(report_t * rep);
+uint16_t report_populate_real(report_t * rep, uint8_t * buf);
 report_t * report_current();
 void report_poplast();
 

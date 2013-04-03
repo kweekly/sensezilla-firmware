@@ -25,5 +25,6 @@ void light_setup_reporting_schedule(uint16_t starttime);
 void _light_reporting_finish(void);
 
 void light_fmt_reading(light_reading_t * reading, uint8_t maxlen, char * str);
+uint8_t light_convert_real(light_reading_t * reading, float * fltptr);
 
 #endif /* TSL2560_H_ */

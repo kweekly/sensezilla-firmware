@@ -21,5 +21,4 @@ void _pir_reporting_write_report();
 
 void pir_fmt_reading(float * reading, uint8_t maxlen, char * str);
 
-
 #endif /* AMN41121_H_ */

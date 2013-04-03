@@ -25,6 +25,7 @@ void gyro_sleep(void);
 uint8_t gyro_read_status(void);
 
 void gyro_fmt_reading(gyro_reading_t * reading, uint8_t maxlen, char * str);
+uint8_t gyro_convert_real(gyro_reading_t * reading, float * fltptr);
 
 void gyro_setup_reporting_schedule(uint16_t starttime);
 void _gyro_reporting_finish();

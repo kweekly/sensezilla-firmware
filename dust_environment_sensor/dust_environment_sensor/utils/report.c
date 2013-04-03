@@ -22,7 +22,7 @@ typedef struct {
 
 
 void report_print(report_t * rep) {
-	printf_P(PSTR("t=%8d"),rep->time);
+	printf_P(PSTR("t=%10ld"),rep->time);
 	
 	if ( rep->fields & REPORT_TYPE_TEMP)
 		printf_P(PSTR(" temp=%04X"),rep->temphumid.temperature);
@@ -45,9 +45,33 @@ void report_print(report_t * rep) {
 	printf_P(PSTR("\n"));
 }
 
+uint16_t report_populate_real(report_t * rep, uint8_t * buf) {
+	uint8_t * oldbuf = buf;
+	*(uint32_t *)buf = rep->time;
+	*(uint16_t *)(buf += 4) = rep->fields;
+	float * fltptr = (float*)(buf += 2);
+	
+	if ( rep->fields & REPORT_TYPE_TEMP)  // also should have humidity
+		fltptr += humid_convert_real(&rep->temphumid,fltptr);	
+		
+	if ( rep->fields & REPORT_TYPE_OCCUPANCY) 
+		*(fltptr++) = rep->occupancy * 100.0;
+	
+	if ( rep->fields & REPORT_TYPE_LIGHT)
+		fltptr += light_convert_real(&rep->light,fltptr);
+	
+	if ( rep->fields & REPORT_TYPE_ACCEL)
+		fltptr += accel_convert_real(&rep->accel,fltptr);
+	
+	if ( rep->fields & REPORT_TYPE_GYRO)
+		fltptr += gyro_convert_real(&rep->gyro,fltptr);
+	
+	return (uint16_t)((uint8_t *)fltptr - oldbuf);
+}
+
 void report_print_human(report_t * rep) {
 	char buf[64];
-	printf_P(PSTR("t=%8d"),rep->time);
+	printf_P(PSTR("t=%10ld"),rep->time);
 	
 	if ( rep->fields & REPORT_TYPE_TEMP) {
 		humid_fmt_reading(&(rep->temphumid),sizeof(buf),buf);
@@ -132,5 +156,3 @@ void report_poplast() {
 		
 	report_list_remove = (report_list_remove + 1)%MAX_REPORTS;
 }
-
-

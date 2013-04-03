@@ -74,6 +74,13 @@ void _light_reporting_finish(void) {
 #define CHANNEL_SCALE 37177
 
 void light_fmt_reading(light_reading_t * reading, uint8_t maxlen, char * str) {
+	float flt;
+	light_convert_real(reading, &flt);
+	snprintf(str,maxlen,"mLux=%-6.3f",1e3*flt);
+}
+
+
+uint8_t light_convert_real(light_reading_t * reading, float * fltptr) {
 	double lux = 0;
 	double ch0 = (double)reading->ch0 / (double)CHANNEL_SCALE, ch1 = (double)reading->ch1 / (double)CHANNEL_SCALE;
 	double ratio = ch1/ch0;
@@ -88,5 +95,6 @@ void light_fmt_reading(light_reading_t * reading, uint8_t maxlen, char * str) {
 	} else {
 		lux = 0;
 	}
-	snprintf(str,maxlen,"mLux=%-6.3f",1e3*lux);
+	fltptr[0] = lux;
+	return 1;
 }

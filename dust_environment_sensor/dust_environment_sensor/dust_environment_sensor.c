@@ -26,6 +26,7 @@
 
 #include "all.h"
 
+
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putc, NULL, _FDEV_SETUP_WRITE);
 
 
@@ -44,12 +45,19 @@ void task_send_report(void);
 void test_click(unsigned char src);
 void test_orient(uint8_t orient);
 
-
-
-uint8_t * rx_packet_buf[128];
+uint8_t rx_packet_buf[128];
 void status_changed_cb(uint8_t status);
 void rx_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes);
 void tx_cb(uint8_t frame_id, uint8_t status);
+
+xbee_64b_address dest64;
+xbee_16b_address dest16;
+enum{
+	BROADCAST,
+	SEND64,
+	SEND16
+} dest_mode;
+
 
 int main(void)
 {
@@ -100,6 +108,7 @@ int main(void)
 	pir_init();
 	
 	kputs("Initializing wireless mote\n");
+	dest_mode = BROADCAST;
 	xbee_init();
 	xbee_set_modem_status_callback(&status_changed_cb);
 	xbee_set_tx_status_callback(&tx_cb);
@@ -175,9 +184,16 @@ void task_print_report(void) {
 }
 
 void task_send_report(void) {
+	uint8_t packetbuf[128];
 	xbee_tick();
-	report_t * curreport = report_current();
-	xbee_send_packet_64(XBEE_BROADCAST_64b_ADDR,sizeof(report_t),(uint8_t *)(curreport),XBEE_TX_OPTION_BROADCAST_PAN);
+	uint16_t len = report_populate_real(report_current(),packetbuf);
+	if (dest_mode == BROADCAST) {
+		xbee_send_packet_64(XBEE_BROADCAST_64b_ADDR,len,packetbuf,XBEE_TX_OPTION_BROADCAST_PAN);
+	} else if ( dest_mode == SEND16 ){
+		xbee_send_packet_16(dest16,len,packetbuf,0);
+	} else if (dest_mode == SEND64) {
+		xbee_send_packet_64(dest64,len,packetbuf,0);
+	}
 	report_poplast();
 	xbee_tick();
 }
@@ -186,7 +202,34 @@ void status_changed_cb(uint8_t status) {
 	printf_P(PSTR("Modem status is now %d\n"),status);
 }
 void rx_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes) {
-	printf_P(PSTR("Packet received\n"));
+	printf_P(PSTR("Packet received src16:%04X src64:"),addr_16b);
+	for ( int c = 0; c < 8; c++) {
+		printf("%02X",((char*)&addr_64b)[8-c-1]);
+	}
+	printf_P(PSTR(" rssi:-%ddBm data:"),rssi);
+	for ( int c = 0; c < nBytes; c++)
+		printf("%02X",rx_packet_buf[c]);
+	printf("\n");
+	
+	if ( nBytes == 0 ) return;
+	
+	uint32_t * timeptr;
+	switch(rx_packet_buf[0]){
+		case 0x01:
+			timeptr = (uint32_t *)(&(rx_packet_buf[1]));
+			printf_P(PSTR("Time is now: %ld\n"),*timeptr);
+			rtctimer_write(*timeptr);
+			if ( addr_16b != XBEE_UNKNOWN_16b_ADDR ) {
+				dest_mode = SEND16;
+				dest16 = addr_16b;
+			} else if ( addr_64b != XBEE_UNKNOWN_64b_ADDR ) {
+				dest_mode = SEND64;
+				dest64 = addr_64b;
+			}
+			break;
+		default:
+			printf_P(PSTR("Unknown remote command %02X\n"),rx_packet_buf[0]);
+	}
 }
 void tx_cb(uint8_t frame_id, uint8_t status){
 	printf_P(PSTR("Last TX message had error code %d\n"),status);

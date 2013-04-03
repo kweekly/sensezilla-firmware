@@ -110,6 +110,13 @@ void gyro_fmt_reading(gyro_reading_t * reading, uint8_t maxlen, char * str) {
 	snprintf_P(str,maxlen,PSTR("gx=%5.2fdps gy=%5.2fdps gz=%5.2fdps"),gx,gy,gz);
 }
 
+uint8_t gyro_convert_real(gyro_reading_t * reading, float * fltptr) {
+	fltptr[0] = reading->X / (float)(1<<15) * GYRO_SENSITIVITY;
+	fltptr[1]  = reading->Y / (float)(1<<15) * GYRO_SENSITIVITY;
+	fltptr[2]  = reading->Z / (float)(1<<15) * GYRO_SENSITIVITY;
+	return 3;	
+}
+
 void gyro_setup_reporting_schedule(uint16_t starttime) {
 	scheduler_add_task(GYRO_TASK_ID,starttime,&gyro_wake);
 	scheduler_add_task(GYRO_TASK_ID,starttime + 15,&_gyro_reporting_finish);

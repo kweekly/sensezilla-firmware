@@ -138,3 +138,13 @@ void humid_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str) {
 	double temp = (reading->temperature >> 2) / 32.0 - 50.0;
 	snprintf_P(str,maxlen,PSTR("RH=%5.2f%% T=%5.2fC"), rh,temp);
 }
+
+uint8_t humid_convert_real(humid_reading_t * reading, float * flt) {
+	float rh = (reading->humidity >> 4) / 16.0 - 24.0;
+	rh = rh - (rh*rh*-0.00393 + rh*0.4008 - 4.7844);
+	
+	float temp = (reading->temperature >> 2) / 32.0 - 50.0;
+	flt[0] = temp;
+	flt[1] = rh;
+	return 2;	
+}

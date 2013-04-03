@@ -203,3 +203,10 @@ void accel_fmt_reading(accel_reading_t * reading, uint8_t maxlen, char * str) {
 	float az = reading->Z / (float)(1<<15) * ACCEL_SENSITIVITY;
 	snprintf_P(str,maxlen,PSTR("ax=%5.2fg ay=%5.2fg az=%5.2fg"),ax,ay,az);
 }
+
+uint8_t accel_convert_real(accel_reading_t * reading, float * fltptr) {
+	fltptr[0] = reading->X / (float)(1<<15) * ACCEL_SENSITIVITY;
+	fltptr[1] = reading->Y / (float)(1<<15) * ACCEL_SENSITIVITY;
+	fltptr[2] = reading->Z / (float)(1<<15) * ACCEL_SENSITIVITY;	
+	return 3;
+}
