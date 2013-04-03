@@ -147,7 +147,7 @@ int main(void)
 	light_setup_reporting_schedule(1);
 	pir_setup_reporting_schedule(1);
 	accel_setup_reporting_schedule(5);
-	gyro_setup_reporting_schedule(1);
+	//gyro_setup_reporting_schedule(1);
 	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_send_report);
 	scheduler_add_task(MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &xbee_sleep);
@@ -202,6 +202,7 @@ void status_changed_cb(uint8_t status) {
 	printf_P(PSTR("Modem status is now %d\n"),status);
 }
 void rx_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes) {
+	/*
 	printf_P(PSTR("Packet received src16:%04X src64:"),addr_16b);
 	for ( int c = 0; c < 8; c++) {
 		printf("%02X",((char*)&addr_64b)[8-c-1]);
@@ -210,7 +211,7 @@ void rx_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, u
 	for ( int c = 0; c < nBytes; c++)
 		printf("%02X",rx_packet_buf[c]);
 	printf("\n");
-	
+	*/
 	if ( nBytes == 0 ) return;
 	
 	uint32_t * timeptr;
@@ -232,7 +233,7 @@ void rx_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, u
 	}
 }
 void tx_cb(uint8_t frame_id, uint8_t status){
-	printf_P(PSTR("Last TX message had error code %d\n"),status);
+	//printf_P(PSTR("Last TX message had error code %d\n"),status);
 }
 
 void board_power_down_devices(void) {

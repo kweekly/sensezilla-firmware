@@ -157,10 +157,12 @@ void xbee_tick() {
 }
 
 void _xbee_frame_recieved(uint16_t nBytes, uint8_t * b) {
+	/*
 	kputs("\nXB RCV: ");
 	for ( int c = 0; c < nBytes; c++)
 		printf("%02X",b[c]);
 	kputs("\n");
+	*/
 	
 	if ( nBytes == 0 ) return;
 	switch(b[0]) { // API ID byte
@@ -298,10 +300,12 @@ uint8_t xbee_send_packet_64( xbee_64b_address addr, uint16_t nBytes, uint8_t * d
 	_xbee_load_API_byte(frame_id++);
 	if ( !frame_id ) frame_id++; // reset to 1 if wraparound
 	uint8_t * abytes = (uint8_t *)(&addr);
+	/*
 	printf("Send to:");
 	for(int c =0 ;c < 8; c++)
 	printf("%02X",abytes[7-c]);
 	printf("\n");
+	*/
 	_xbee_load_API_byte(abytes[7]);
 	_xbee_load_API_byte(abytes[6]);
 	_xbee_load_API_byte(abytes[5]);
