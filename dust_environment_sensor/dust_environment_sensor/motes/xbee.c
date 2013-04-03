@@ -6,10 +6,11 @@
  */ 
 
 #include "all.h"
+#include "motes/xbee_AT_settings.h"
 
 #define XBEE_TX_API_BUF_SIZE 128
 #define XBEE_RX_API_BUF_SIZE 64
-#define XBEE_AT_RESP_TIMEOUT 5 // in 10ms periods
+#define XBEE_AT_RESP_TIMEOUT 2 // in 10ms periods
 
 uint8_t *rx_client_buf;
 void (*rx_callback)(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes);
@@ -27,12 +28,115 @@ uint8_t esc_char_recv;
 uint8_t *rx_at_cmd_buf;
 int8_t rx_at_cmd_status;
 
+
 void xbee_init() {
+	MOTE_RESETN = 1;
+	xbee_wake();
+	MOTE_RX_RTSN = 0;
 	rx_client_buf = rx_callback = tx_callback = status_callback = NULL;
 	modem_status = XBEE_STATUS_HW_RESET;
 	frame_id = 1;
 	esc_char_recv = xbee_rx_api_buf_len = xbee_rx_api_buf_pos = 0;
 	rx_at_cmd_status = 0;
+	
+	uint8_t try_AT = 0;
+	
+	// comms initialization
+	int8_t resp;
+	uint8_t buf[16];
+	do {	
+		kputs("\tAttempt communication at 9600...");
+		MOTE_UART_INIT(UART_BAUD_SELECT(9600,F_CPU));
+		_delay_ms(100);
+		resp = xbee_AT_get("VR",buf);
+		if ( resp > 0 ) { // success
+			kputs("success, changing to 115200...");
+			buf[0] = 7;
+			resp = xbee_AT_set_resp("BD",1,buf);
+			if ( resp >= 0 ) {
+				kputs("success.\n");
+			} else {
+				printf_P(PSTR("Error %d\n"),resp);
+			}
+			xbee_AT_set("CN",0,NULL);
+			xbee_AT_set("AC",0,NULL);
+			try_AT = 2;
+		} else if ( resp == XBEE_AT_TIMEOUT ) {
+			kputs("timeout. (OK)\n");
+		} else {
+			printf_P(PSTR("error %d\n"),resp);
+			try_AT = 2;
+		}
+	
+		kputs("\tAttempt communication at 115200...");
+		MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
+		_delay_ms(100);
+		resp = xbee_AT_get("VR",buf);
+		if ( resp > 0 ) { // success
+			kputs("success, communication established.\n");
+			try_AT = 2;
+		} else if ( resp == XBEE_AT_TIMEOUT ) {
+			kputs("timeout. (bad)\n");
+		} else {
+			printf_P(PSTR("error %d\n"),resp);
+			try_AT = 2;
+		}	
+	
+		if ( try_AT == 0 ) {
+			try_AT = 1;
+			kputs("Attempt to get out of AT mode at 9600...\n");
+			_delay_ms(1000);
+			MOTE_UART_INIT(UART_BAUD_SELECT(9600,F_CPU));
+			char cmd1[] = "+++";
+			MOTE_UART_WRITE(sizeof(cmd1)-1,cmd1);
+			_delay_ms(1000);
+			char cmd2[] = "ATAP2\x0d";
+			MOTE_UART_WRITE(sizeof(cmd2)-1,cmd2);
+			_delay_ms(100);
+		} else {
+			break;
+		}
+	} while(try_AT == 1);
+	
+	uint16_t pos = 0;
+	char atcmd[2];
+	uint8_t atbuf[16];
+	while ( pos < sizeof(XBEE_AT_SETTING_STR) ) {
+		// read atcmd
+		atcmd[0] = pgm_read_byte(&(XBEE_AT_SETTING_STR[pos]));
+		atcmd[1] = pgm_read_byte(&(XBEE_AT_SETTING_STR[pos+1]));
+		if ( atcmd[0] == 'X' && atcmd[1] == 'X') break;
+		// read value
+		pos = pos + 2;
+		uint8_t b,c;
+		c=0;
+		while(1){
+			b = pgm_read_byte(&(XBEE_AT_SETTING_STR[pos++]));
+			if ( b == ',') break;
+			atbuf[c++] = b;
+		}
+		printf_P(PSTR("\t%c%c <= "),atcmd[0],atcmd[1]);
+		for ( b = 0; b < c; b++ ) {
+			printf_P(PSTR("%02X"),atbuf[b]);
+		}
+		kputs(" ... ");
+		
+		resp = xbee_AT_set_resp(atcmd,c,atbuf);
+		if ( resp < 0 ) {
+			printf_P(PSTR("error %d\n"),resp);
+		} else {
+			printf_P(PSTR("success.\n"));
+		}
+		_delay_ms(200);
+	}
+}
+
+void xbee_sleep(){
+	MOTE_SLEEPN = 1;
+}
+
+void xbee_wake() {
+	MOTE_SLEEPN = 0;
 }
 
 void xbee_tick() {
@@ -40,7 +144,7 @@ void xbee_tick() {
 	
 	while(1) {	
 		ch = MOTE_UART_GETC();
-		if ( ch & 0xFF00 == 0 ) { // no errors
+		if ( (ch & 0xFF00) == 0 ) { // no errors
 			_xbee_process_byte(ch);
 		}
 		else {
@@ -50,13 +154,24 @@ void xbee_tick() {
 }
 
 void _xbee_frame_recieved(uint16_t nBytes, uint8_t * b) {
+	kputs("\nXB RCV: ");
+	for ( int c = 0; c < nBytes; c++)
+		printf("%02X",b[c]);
+	kputs("\n");
+	
 	if ( nBytes == 0 ) return;
 	switch(b[0]) { // API ID byte
 		case 0x88: // at command response
 			if ( rx_at_cmd_status == XBEE_AT_WAITING ) {
-				for ( uint8_t c = 0; c < nBytes - 5; c++ )
-					rx_at_cmd_buf[c] = b[c+5];
-				rx_at_cmd_status = -b[4];
+				if ( rx_at_cmd_buf ) {
+					for ( uint8_t c = 0; c < nBytes - 5; c++ )
+						rx_at_cmd_buf[c] = b[c+5];
+				}
+				if(b[4]) { // error
+					rx_at_cmd_status = -b[4];
+				} else {
+					rx_at_cmd_status = nBytes-5;
+				}					
 			}
 			break;
 		case 0x80: // rx 64b packet
@@ -74,7 +189,7 @@ void _xbee_frame_recieved(uint16_t nBytes, uint8_t * b) {
 				uint8_t rssi = b[9];
 				memcpy(rx_client_buf,b + 11,nBytes - 11);
 				rx_callback(XBEE_UNKNOWN_16b_ADDR, addr_64, rssi, nBytes - 11);
-			}				
+			}
 			break;
 		case 0x81: // rx 16b packet
 			if(rx_callback) {
@@ -91,6 +206,11 @@ void _xbee_frame_recieved(uint16_t nBytes, uint8_t * b) {
 			if ( tx_callback ) {
 				tx_callback(b[1],b[2]);
 			}
+			break;
+		case 0x8A:// modem status
+			modem_status = b[2];
+			status_changed_cb(b[2]);
+			break;
 		default:
 			printf_P(PSTR("API ID %02X not recognized or not implemented.\n"),b[0]);
 	}
@@ -106,27 +226,43 @@ void xbee_AT_set(char cmd[2], uint8_t nBytes,uint8_t * val) {
 	_xbee_send_API_frame();
 }
 
+int8_t _xbee_wait_for_AT_resp(uint8_t * buf) {
+	rx_at_cmd_buf = buf;
+	rx_at_cmd_status = XBEE_AT_WAITING;
+	
+	int8_t c = XBEE_AT_TIMEOUT;
+	while (c--) {
+		xbee_tick();
+		if ( rx_at_cmd_status != XBEE_AT_WAITING ){
+			return rx_at_cmd_status;
+		}
+		_delay_ms(10);
+	}
+	return XBEE_AT_TIMEOUT;	
+}
+
+int8_t xbee_AT_set_resp(char cmd[2], uint8_t nBytes,uint8_t * val) {
+	_xbee_start_API_frame();
+	_xbee_load_API_byte(0x08);
+	_xbee_load_API_byte(0x01); // frame ID is not 0
+	_xbee_load_API_byte(cmd[0]);
+	_xbee_load_API_byte(cmd[1]);
+	_xbee_load_API_bytes(nBytes, val);
+	_xbee_send_API_frame();
+	
+	return _xbee_wait_for_AT_resp(NULL);
+}
+
 // negative if error
 int8_t xbee_AT_get(char cmd[2], uint8_t * buf) {
-	rx_at_cmd_buf = buf;
-	
 	_xbee_start_API_frame();
 	_xbee_load_API_byte(0x08);
 	_xbee_load_API_byte(0x01); // frame ID is not 0
 	_xbee_load_API_byte(cmd[0]);
 	_xbee_load_API_byte(cmd[1]);
 	_xbee_send_API_frame();
-	rx_at_cmd_status = XBEE_AT_WAITING;
 	
-	uint8_t c = XBEE_AT_RESP_TIMEOUT;
-	while (c--) {
-		xbee_tick();
-		if ( rx_at_cmd_status != XBEE_AT_WAITING ){
-			return rx_at_cmd_status;
-		}			
-		_delay_ms(10);
-	}
-	return XBEE_AT_RESP_TIMEOUT;
+	return _xbee_wait_for_AT_resp(buf);
 }
 
 
@@ -220,6 +356,7 @@ void _xbee_send_API_frame() {
 }
 
 void _xbee_process_byte(uint8_t b) {
+	//printf("%02X",b);
 	if ( b == 0x7E ) { // restart reception no matter what ( since others are escaped )
 		xbee_rx_api_buf[0] = 0x7E;
 		xbee_rx_api_buf_pos = 1;
@@ -241,7 +378,7 @@ void _xbee_process_byte(uint8_t b) {
 			xbee_rx_api_buf_pos++;
 			if ( xbee_rx_api_buf_pos >= 3 && xbee_rx_api_buf_pos >= xbee_rx_api_buf_len + 4 ) {// packet finished
 				uint8_t checksum = 0;
-				for (uint16_t c = 3; c < xbee_rx_api_buf_len + 3; c++ ) {
+				for (uint16_t c = 3; c < xbee_rx_api_buf_len + 4; c++ ) {
 					checksum += xbee_rx_api_buf[c];
 				}
 				if ( checksum != 0xFF ) {

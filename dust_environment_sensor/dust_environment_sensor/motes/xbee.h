@@ -16,10 +16,12 @@
 typedef uint16_t xbee_16b_address;
 typedef uint64_t xbee_64b_address;
 
-// assume serial port is already initialized
 void xbee_init();
 void xbee_tick();
+void xbee_sleep();
+void xbee_wake();
 
+int8_t _xbee_wait_for_AT_resp(uint8_t * buf);
 void xbee_AT_set(char cmd[2], uint8_t nBytes,uint8_t * val);
 
 #define XBEE_AT_ERROR -1
@@ -27,6 +29,8 @@ void xbee_AT_set(char cmd[2], uint8_t nBytes,uint8_t * val);
 #define XBEE_AT_INVALID_PARAM -3
 #define XBEE_AT_TIMEOUT -4
 #define XBEE_AT_WAITING -10
+
+int8_t xbee_AT_set_resp(char cmd[2], uint8_t nBytes,uint8_t * val);
 int8_t xbee_AT_get(char cmd[2], uint8_t * buf);
 
 // returns frame identifier

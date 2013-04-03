@@ -39,9 +39,17 @@ void task_led_blip_off(void);
 #define TASK_REPORTING 0x02
 void task_begin_report(void);
 void task_print_report(void);
+void task_send_report(void);
 
 void test_click(unsigned char src);
 void test_orient(uint8_t orient);
+
+
+
+uint8_t * rx_packet_buf[128];
+void status_changed_cb(uint8_t status);
+void rx_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes);
+void tx_cb(uint8_t frame_id, uint8_t status);
 
 int main(void)
 {
@@ -78,7 +86,7 @@ int main(void)
 	
 	kputs("Initializing Reports\n");
 	report_init();
-		
+	
 
 	kputs("Initializing Devices... Light,");
 	light_init();
@@ -90,6 +98,12 @@ int main(void)
 	humid_init();
 	kputs("PIR\n");
 	pir_init();
+	
+	kputs("Initializing wireless mote\n");
+	xbee_init();
+	xbee_set_modem_status_callback(&status_changed_cb);
+	xbee_set_tx_status_callback(&tx_cb);
+	xbee_set_rx_callback(&rx_cb,rx_packet_buf);
 	
 	/*
 	PIR_VCC = 1;
@@ -119,16 +133,19 @@ int main(void)
 	scheduler_add_task(LED_BLIP_TASK_ID, 10, &task_led_blip_off);
 	
 	scheduler_add_task(TASK_REPORTING, 0, &task_begin_report);
+	scheduler_add_task(MOTE_TASK_ID, 1, &xbee_wake);
 	humid_setup_reporting_schedule(1);
 	light_setup_reporting_schedule(1);
 	pir_setup_reporting_schedule(1);
 	accel_setup_reporting_schedule(5);
 	gyro_setup_reporting_schedule(1);
 	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
+	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_send_report);
+	scheduler_add_task(MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &xbee_sleep);
 	
 	kputs("Starting RTC clock\n");
 	rtctimer_init();
-	rtctimer_set_periodic_alarm(10,&scheduler_start);
+	rtctimer_set_periodic_alarm(2,&scheduler_start);
 	
     while(1)
     {
@@ -155,7 +172,24 @@ void task_begin_report(void) {
 
 void task_print_report(void) {
 	report_print_human(report_current());
+}
+
+void task_send_report(void) {
+	xbee_tick();
+	report_t * curreport = report_current();
+	xbee_send_packet_64(XBEE_BROADCAST_64b_ADDR,sizeof(report_t),(uint8_t *)(curreport),XBEE_TX_OPTION_BROADCAST_PAN);
 	report_poplast();
+	xbee_tick();
+}
+
+void status_changed_cb(uint8_t status) {
+	printf_P(PSTR("Modem status is now %d\n"),status);
+}
+void rx_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes) {
+	printf_P(PSTR("Packet received\n"));
+}
+void tx_cb(uint8_t frame_id, uint8_t status){
+	printf_P(PSTR("Last TX message had error code %d\n"),status);
 }
 
 void board_power_down_devices(void) {
@@ -167,6 +201,7 @@ void board_power_down_devices(void) {
 	accel_sleep();
 	humid_sleep();
 	pir_sleep();
+	xbee_sleep();
 }
 
 
@@ -181,6 +216,7 @@ void avr_doze(void) {
 void avr_sleep(void) {
 	uart_flush();
 	uart1_flush();
+	xbee_tick();
 	// go into sleep (only external interrupt or timer can wake us up)
 	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 	sleep_enable();

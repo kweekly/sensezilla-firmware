@@ -192,6 +192,9 @@
     <Compile Include="motes\xbee.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="motes\xbee_AT_settings.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="utils\report.c">
       <SubType>compile</SubType>
     </Compile>

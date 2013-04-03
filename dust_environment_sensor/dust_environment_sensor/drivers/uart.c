@@ -346,7 +346,9 @@ void uart_init(unsigned int baudrate)
     {
     	 UART0_STATUS = (1<<U2X);  //Enable 2x speed 
     	 baudrate &= ~0x8000;
-    }
+    } else {
+		UART0_STATUS &= ~_BV(U2X1);
+	}
     UBRRH = (unsigned char)(baudrate>>8);
     UBRRL = (unsigned char) baudrate;
    
@@ -407,7 +409,7 @@ Returns:  lower byte:  received byte from ringbuffer
 unsigned int uart_getc(void)
 {    
     unsigned char tmptail;
-    unsigned char data;
+    unsigned int data;
 
 
     if ( UART_RxHead == UART_RxTail ) {
@@ -580,8 +582,10 @@ void uart1_init(unsigned int baudrate)
     if ( baudrate & 0x8000 ) 
     {
     	UART1_STATUS = (1<<U2X1);  //Enable 2x speed 
-      baudrate &= ~0x8000;
-    }
+		baudrate &= ~0x8000;
+    } else {
+		UART1_STATUS &= ~_BV(U2X1);
+	}
     UBRR1H = (unsigned char)(baudrate>>8);
     UBRR1L = (unsigned char) baudrate;
 
@@ -606,7 +610,7 @@ Returns:  lower byte:  received byte from ringbuffer
 unsigned int uart1_getc(void)
 {    
     unsigned char tmptail;
-    unsigned char data;
+    unsigned int data;
 
 
     if ( UART1_RxHead == UART1_RxTail ) {
@@ -674,7 +678,7 @@ void uart1_puts(const char *s )
 }/* uart1_puts */
 
 void uart1_write(unsigned int nBytes, const char * s) {
-	while (nBytes++)
+	while (nBytes--)
 		uart1_putc(*s++);
 }
 

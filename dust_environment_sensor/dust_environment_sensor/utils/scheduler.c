@@ -60,7 +60,7 @@ void scheduler_add_task(uint8_t task_id, uint16_t time_ms, void (*cb)(void)) {
 			maxtime = timeticks;
 	} else {
 		timeticks = SCHEDULER_LAST_EVENTS;
-	}			
+	}
 
 	int8_t pos = numevents - 1;
 	while ( pos >= 0 && event_list[pos].time > timeticks  ) {

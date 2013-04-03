@@ -25,7 +25,7 @@ typedef struct
 
 // DDRs
 #define DDRA_SETTING	0b10111100
-#define DDRB_SETTING	0b00000010
+#define DDRB_SETTING	0b00010010
 #define DDRC_SETTING	0b00000000 // hopefully automatically initialized by i2c port
 #define DDRD_SETTING	0b01111010
 
@@ -42,6 +42,7 @@ typedef struct
 #define EXP_CSN_DDR		REGISTER_BIT(DDRB,4)
 
 // Mote
+#define MOTE_TASK_ID	0x05
 #define MOTE_RESETN		EXP_CSN  // workaround
 #define MOTE_SLEEPN		REGISTER_BIT(PORTA,4)
 #define MOTE_TIMEN		REGISTER_BIT(PORTA,3)
@@ -51,6 +52,7 @@ typedef struct
 #define MOTE_RX_RTSN	REGISTER_BIT(PORTD,6)
 #define MOTE_UART_GETC	uart1_getc
 #define MOTE_UART_WRITE uart1_write
+#define MOTE_UART_INIT  uart1_init
 
 // LEDs
 #define LED_BLIP_TASK_ID 0x01
