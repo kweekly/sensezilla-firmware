@@ -144,7 +144,7 @@ uint8_t humid_convert_real(humid_reading_t * reading, float * flt) {
 	rh = rh - (rh*rh*-0.00393 + rh*0.4008 - 4.7844);
 	
 	float temp = (reading->temperature >> 2) / 32.0 - 50.0;
-	flt[0] = temp;
-	flt[1] = rh;
+	flt[0] = rh;
+	flt[1] = temp;
 	return 2;	
 }
