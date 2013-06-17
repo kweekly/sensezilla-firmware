@@ -193,9 +193,13 @@ unsigned char i2c_readreg(unsigned char addr, unsigned char reg, unsigned char n
 
 unsigned char i2c_writereg(unsigned char addr, unsigned char reg, unsigned char nBytes, unsigned char * buf) {
 	unsigned char c = 0;
+	//kputs("i2c_write\n");
 	//i2c_start_wait(addr + I2C_WRITE);
-	if ( i2c_start(addr + I2C_WRITE) ) return 1;
-	
+	if ( i2c_start(addr + I2C_WRITE) ) {
+		//kputs("fail\n");
+		return 1;
+	}		
+	//kputs("done\n");
 	i2c_write(reg);
 	while ( nBytes-- > 0 ) {
 		i2c_write(buf[c++]);		

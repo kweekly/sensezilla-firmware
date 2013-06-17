@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectVersion>6.0</ProjectVersion>
     <ToolchainName>com.Atmel.AVRGCC8</ToolchainName>
-    <ProjectGuid>{7455e16f-47d1-4783-a1ea-2ede9348a6ac}</ProjectGuid>
+    <ProjectGuid>{01c222cd-d6fe-4f10-b1ac-92b50cd8c4da}</ProjectGuid>
     <avrdevice>ATmega1284</avrdevice>
     <avrdeviceseries>none</avrdeviceseries>
     <OutputType>Executable</OutputType>
@@ -12,9 +12,9 @@
     <OutputFileName>$(MSBuildProjectName)</OutputFileName>
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
-    <AssemblyName>dust_environment_sensor</AssemblyName>
-    <Name>dust_environment_sensor</Name>
-    <RootNamespace>dust_environment_sensor</RootNamespace>
+    <AssemblyName>power_strip_monitor_v2.2</AssemblyName>
+    <Name>power_strip_monitor_v2.2</Name>
+    <RootNamespace>power_strip_monitor_v2.2</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
     <OverrideVtor>false</OverrideVtor>
@@ -24,19 +24,19 @@
     <avrtoolinterface>JTAG</avrtoolinterface>
     <avrtool>com.atmel.avrdbg.tool.avrdragon</avrtool>
     <com_atmel_avrdbg_tool_avrdragon>
-      <ToolType>com.atmel.avrdbg.tool.avrdragon</ToolType>
-      <ToolName>AVR Dragon</ToolName>
-      <ToolNumber>00A200039829</ToolNumber>
-      <KeepTimersRunning>true</KeepTimersRunning>
-      <OverrideVtor>false</OverrideVtor>
-      <OverrideVtorValue>
+      <ToolType xmlns="">com.atmel.avrdbg.tool.avrdragon</ToolType>
+      <ToolName xmlns="">AVR Dragon</ToolName>
+      <ToolNumber xmlns="">00A200039829</ToolNumber>
+      <KeepTimersRunning xmlns="">true</KeepTimersRunning>
+      <OverrideVtor xmlns="">false</OverrideVtor>
+      <OverrideVtorValue xmlns="">
       </OverrideVtorValue>
-      <Channel>
+      <Channel xmlns="">
         <host>127.0.0.1</host>
         <port>55247</port>
         <ssl>False</ssl>
       </Channel>
-      <ToolOptions>
+      <ToolOptions xmlns="">
         <InterfaceName>JTAG</InterfaceName>
         <InterfaceProperties>
           <JtagDbgClock>200000</JtagDbgClock>
@@ -63,27 +63,26 @@
         <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
         <avrgcc.compiler.symbols.DefSymbols>
           <ListValues>
-            <Value>F_CPU=8000000</Value>
+            <Value>F_CPU=16384000</Value>
           </ListValues>
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
             <Value>..</Value>
+            <Value>../../../dust_environment_sensor/dust_environment_sensor</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
-        <avrgcc.compiler.optimization.level>Optimize most (-O3)</avrgcc.compiler.optimization.level>
         <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
         <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
-        <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wno-format -fdiagnostics-show-option</avrgcc.compiler.miscellaneous.OtherFlags>
-        <avrgcc.linker.general.UseVprintfLibrary>True</avrgcc.linker.general.UseVprintfLibrary>
         <avrgcc.linker.libraries.Libraries>
           <ListValues>
             <Value>m</Value>
           </ListValues>
         </avrgcc.linker.libraries.Libraries>
-        <avrgcc.linker.optimization.GarbageCollectUnusedSections>True</avrgcc.linker.optimization.GarbageCollectUnusedSections>
-        <avrgcc.linker.miscellaneous.LinkerFlags>-lprintf_flt</avrgcc.linker.miscellaneous.LinkerFlags>
+        <avrgcc.linker.miscellaneous.LinkerFlags>-Wl,-u,vfprintf -lprintf_flt</avrgcc.linker.miscellaneous.LinkerFlags>
+        <avrgcc.linker.general.UseVprintfLibrary>True</avrgcc.linker.general.UseVprintfLibrary>
+        <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
       </AvrGcc>
     </ToolchainSettings>
   </PropertyGroup>
@@ -98,25 +97,25 @@
         <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
         <avrgcc.compiler.symbols.DefSymbols>
           <ListValues>
-            <Value>F_CPU=8000000</Value>
+            <Value>F_CPU=16384000</Value>
           </ListValues>
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
           <ListValues>
             <Value>..</Value>
+            <Value>../../../dust_environment_sensor/dust_environment_sensor</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
         <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
         <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
-        <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wno-format -fdiagnostics-show-option</avrgcc.compiler.miscellaneous.OtherFlags>
-        <avrgcc.linker.general.UseVprintfLibrary>True</avrgcc.linker.general.UseVprintfLibrary>
         <avrgcc.linker.libraries.Libraries>
           <ListValues>
             <Value>m</Value>
           </ListValues>
         </avrgcc.linker.libraries.Libraries>
-        <avrgcc.linker.miscellaneous.LinkerFlags>-lprintf_flt</avrgcc.linker.miscellaneous.LinkerFlags>
+        <avrgcc.linker.miscellaneous.LinkerFlags>-Wl,-u,vfprintf -lprintf_flt</avrgcc.linker.miscellaneous.LinkerFlags>
+        <avrgcc.linker.general.UseVprintfLibrary>True</avrgcc.linker.general.UseVprintfLibrary>
         <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
         <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
         <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
@@ -124,95 +123,86 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\drivers\pcint.c">
+      <SubType>compile</SubType>
+      <Link>drivers\pcint.c</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\drivers\pcint.h">
+      <SubType>compile</SubType>
+      <Link>drivers\pcint.h</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\drivers\uart.c">
+      <SubType>compile</SubType>
+      <Link>drivers\uart.c</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\drivers\uart.h">
+      <SubType>compile</SubType>
+      <Link>drivers\uart.h</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\motes\xbee.c">
+      <SubType>compile</SubType>
+      <Link>motes\xbee.c</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\motes\xbee.h">
+      <SubType>compile</SubType>
+      <Link>motes\xbee.h</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\motes\xbee_AT_settings.h">
+      <SubType>compile</SubType>
+      <Link>motes\xbee_AT_settings.h</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\utils\scheduler.c">
+      <SubType>compile</SubType>
+      <Link>utils\scheduler.c</Link>
+    </Compile>
+    <Compile Include="..\..\dust_environment_sensor\dust_environment_sensor\utils\scheduler.h">
+      <SubType>compile</SubType>
+      <Link>utils\scheduler.h</Link>
+    </Compile>
     <Compile Include="all.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="devicedefs.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\amn41121.c">
+    <Compile Include="devices\CS5467.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\amn41121.h">
+    <Compile Include="devices\CS5467.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\l3gd20.c">
+    <Compile Include="drivers\rtctimer_PSM.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\l3gd20.h">
+    <Compile Include="drivers\rtctimer_PSM.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\lis3dh.c">
+    <Compile Include="drivers\SPI.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\lis3dh.h">
+    <Compile Include="drivers\SPI.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\si7005.c">
+    <Compile Include="power_strip_monitor_v2.2.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\si7005.h">
+    <Compile Include="utils\console_PSM.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\tsl2560.c">
+    <Compile Include="utils\console_PSM.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="devices\tsl2560.h">
+    <Compile Include="utils\report_PSM.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="drivers\i2cmaster.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="drivers\pcint.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="drivers\pcint.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="drivers\rtctimer.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="drivers\rtctimer.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="drivers\twimaster.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="drivers\uart.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="drivers\uart.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="dust_environment_sensor.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motes\xbee.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motes\xbee.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="motes\xbee_AT_settings.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="utils\report.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="utils\report.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="utils\scheduler.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="utils\scheduler.h">
+    <Compile Include="utils\report_PSM.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="motes" />
     <Folder Include="drivers" />
     <Folder Include="devices" />
-    <Folder Include="motes" />
     <Folder Include="utils" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />

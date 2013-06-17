@@ -678,8 +678,10 @@ void uart1_puts(const char *s )
 }/* uart1_puts */
 
 void uart1_write(unsigned int nBytes, const char * s) {
-	while (nBytes--)
+	while (nBytes--) {
+		//uart_putc(*s);
 		uart1_putc(*s++);
+	}		
 }
 
 /*************************************************************************

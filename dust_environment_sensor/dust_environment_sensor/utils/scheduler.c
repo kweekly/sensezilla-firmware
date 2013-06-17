@@ -27,14 +27,13 @@ ISR(TIMER1_COMPA_vect, ISR_NAKED) { // entire purpose is just to wake up the chi
 }
 
 void scheduler_init() {
-	// configure for 1ms Resolution
 	TCCR1A = 0; // no outputs, normal mode
 	TCCR1B = 0; //clock disabled for now
 	TCCR1C = 0;
 	
 	// setup compare register
 	OCR1A = 0xFFFF;
-		
+
 	// enable interrupts for compare A
 	TIMSK1 = 0x02;
 	
@@ -55,7 +54,13 @@ void scheduler_add_task(uint8_t task_id, uint16_t time_ms, void (*cb)(void)) {
 	uint16_t timeticks;
 	
 	if ( time_ms != SCHEDULER_LAST_EVENTS ) {
-		timeticks = (uint16_t)((uint32_t)1000*time_ms / 128);
+		#if F_CPU==8000000L
+			timeticks = (uint16_t)((uint32_t)1000*time_ms / 128);
+		#elif F_CPU==16384000L
+			timeticks = (uint16_t)((uint32_t)10000*time_ms / 625);
+		#else
+			#error "F_CPU not defined!"
+		#endif
 		if (timeticks >= maxtime) 
 			maxtime = timeticks;
 	} else {
@@ -101,7 +106,7 @@ void scheduler_start() {
 	TCNT1 = 0; // start from scratch
 	eventpos = 0;
 	OCR1A = 0xFFFF;
-	TCCR1B = 0x05; // enable TC, 1024 prescaling ( each tick is 128uS , giving total period of 8.4s )
+	TCCR1B = 0x05; // enable TC, 1024 prescaling ( each tick is 128uS , giving total period of 8.4s (8MHz))
 	
 	// set up for next events to run
 	while(1) {

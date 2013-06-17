@@ -1,0 +1,12 @@
+
+Setting Gain and Offsets:
+	Current Max Vdrop_pk=212.13mV, set gain=1.18
+	Current Max Vsense_pk=195.37mV, set gain=1.28
+
+Determining load power measurements:
+	CHANNEL 1:
+		Power  (kW): 1
+		Current (A): 2
+		Voltage (V): 3
+[(1.0, 2.0, 3.0)]
+1.0

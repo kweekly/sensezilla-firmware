@@ -294,9 +294,19 @@ uint32_t true_power[NUM_IC*2];
 uint32_t RMS_voltage[NUM_IC*2];
 uint32_t RMS_current[NUM_IC*2];
 
+char pin_togged = 0;
+
 ISR(TIMER1_COMPA_vect)
 {
     time += 1;
+    
+    if (time % 10 == 0) {
+       PINB |= 0x1F;
+       PINC |= 0x80; 
+       pin_togged = 1;
+    }
+    
+    
     if (rbiv(LED2))
       cbiv(LED2);
     else
@@ -354,8 +364,6 @@ void makePacket() {
       #ifdef SERIAL_OUT
       Serial.print(i,DEC);
       Serial.print(": ");
-      Serial.print(true_power[i],BIN);
-      Serial.print(" ");
       Serial.print(dpack[off + i*3],10);
       Serial.print(" ");
       Serial.print(dpack[off + i*3 + 1],10);
@@ -380,6 +388,11 @@ Tx64Request xbtx;
 
 void loop() {
    
+   if (pin_togged) {
+      Serial.println("Power toggled");
+      pin_togged = 0; 
+   }
+  
    #ifdef XBEE_OUT
    xbee.readPacket();
 

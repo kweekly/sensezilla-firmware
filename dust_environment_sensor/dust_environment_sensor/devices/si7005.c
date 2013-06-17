@@ -19,10 +19,12 @@ void humid_init(void) { // nothing here since we cut power to the device normall
 
 void humid_sleep(void) {
 	HUMID_VCC = 0;
+	HUMID_CSN = 1;
 }
 
 void humid_wake(void) {
 	HUMID_VCC = 1; 
+	HUMID_CSN = 0;
 	// should now wait for 10ms
 }
 

@@ -10,12 +10,14 @@
 
 #define XBEE_TX_API_BUF_SIZE 128
 #define XBEE_RX_API_BUF_SIZE 64
-#define XBEE_AT_RESP_TIMEOUT 2 // in 10ms periods
+#define XBEE_AT_RESP_TIMEOUT 20 // in 10ms periods
 
 uint8_t *rx_client_buf;
 void (*rx_callback)(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes);
 void (*tx_callback)(uint8_t frame_id, uint8_t status);
 void (*status_callback)(uint8_t status);
+
+uint8_t xbee_hw_series;
 
 uint8_t modem_status;
 uint8_t frame_id;
@@ -30,6 +32,8 @@ int8_t rx_at_cmd_status;
 
 
 void xbee_init() {
+	xbee_hw_series = 0;
+	
 	MOTE_RESETN = 1;
 	xbee_wake();
 	MOTE_RX_RTSN = 0; // asserted
@@ -40,17 +44,45 @@ void xbee_init() {
 	esc_char_recv = xbee_rx_api_buf_len = xbee_rx_api_buf_pos = 0;
 	rx_at_cmd_status = 0;
 	
-	uint8_t try_AT = 0;
-	
 	// comms initialization
 	int8_t resp;
 	uint8_t buf[16];
-	do {	
+	
+	kputs("\tCheck if in AT mode...");
+	MOTE_UART_INIT(UART_BAUD_SELECT(9600,F_CPU));
+	_delay_ms(1000);
+	while( (MOTE_UART_GETC() & 0xFF00) == 0 ); // flush input buffer
+	char cmd1[] = "+++";
+	MOTE_UART_WRITE(sizeof(cmd1)-1,cmd1);
+	_delay_ms(1250);
+	char ch1 = MOTE_UART_GETC(), ch2 = MOTE_UART_GETC(), ch3 = MOTE_UART_GETC();
+	if (ch1 == 0x4F && ch2 == 0x4B && ch3 == 0x0D ) {// "OK" response
+		kputs("yes, attempt correction\n");
+		char cmd2[] = "ATBD7,AP2,WR,AC,CN\x0D";
+		MOTE_UART_WRITE(sizeof(cmd2)-1,cmd2);	
+		_delay_ms(500);
+		MOTE_RESETN = 0;
+		_delay_ms(100);
+		MOTE_RESETN = 1;
+		_delay_ms(500);
+	} else {
+		printf_P(PSTR("Maybe not %c%c%c\n"),ch1,ch2,ch3);
+	}
+	
+	kputs("\tAttempt communication at 115200...");
+	MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
+	_delay_ms(100);
+	resp = xbee_AT_get("VR",buf);
+	
+	if ( resp >= 0 ) { // success
+		kputs("success, communication established.\n");
+	} else if ( resp == XBEE_AT_TIMEOUT ) {
+		kputs("timeout. (attempt correction)\n");
 		kputs("\tAttempt communication at 9600...");
 		MOTE_UART_INIT(UART_BAUD_SELECT(9600,F_CPU));
 		_delay_ms(100);
 		resp = xbee_AT_get("VR",buf);
-		if ( resp > 0 ) { // success
+		if ( resp >= 0 ) { // success
 			kputs("success, changing to 115200...");
 			buf[0] = 7;
 			resp = xbee_AT_set_resp("BD",1,buf);
@@ -61,58 +93,67 @@ void xbee_init() {
 			}
 			xbee_AT_set("CN",0,NULL);
 			xbee_AT_set("AC",0,NULL);
-			try_AT = 2;
 		} else if ( resp == XBEE_AT_TIMEOUT ) {
 			kputs("timeout. (OK)\n");
 		} else {
 			printf_P(PSTR("error %d\n"),resp);
-			try_AT = 2;
 		}
 	
 		kputs("\tAttempt communication at 115200...");
 		MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
 		_delay_ms(100);
 		resp = xbee_AT_get("VR",buf);
-		if ( resp > 0 ) { // success
+		if ( resp >= 0 ) { // success
 			kputs("success, communication established.\n");
-			try_AT = 2;
 		} else if ( resp == XBEE_AT_TIMEOUT ) {
 			kputs("timeout. (bad)\n");
 		} else {
 			printf_P(PSTR("error %d\n"),resp);
-			try_AT = 2;
 		}	
+	}
 	
-		if ( try_AT == 0 ) {
-			try_AT = 1;
-			kputs("Attempt to get out of AT mode at 9600...\n");
-			_delay_ms(1000);
-			MOTE_UART_INIT(UART_BAUD_SELECT(9600,F_CPU));
-			char cmd1[] = "+++";
-			MOTE_UART_WRITE(sizeof(cmd1)-1,cmd1);
-			_delay_ms(1000);
-			char cmd2[] = "ATAP2\x0d";
-			MOTE_UART_WRITE(sizeof(cmd2)-1,cmd2);
-			_delay_ms(100);
-		} else {
-			break;
-		}
-	} while(try_AT == 1);
+	if ( resp < 0 ) {
+		return;		
+	}
+	
+	size_t settings_len;
+	char * settings_str PROGMEM;
+	
+	printf_P(PSTR("\tVR=%02X%02X "),buf[0],buf[1]);
+	if ( (buf[0] & 0xF0) == 0x10) {
+		xbee_hw_series = 1;
+		kputs("(XBee Series 1 802.15.4)\n");
+		settings_len = sizeof(XBEE_AT_SETTING_STR_S1);
+		settings_str = XBEE_AT_SETTING_STR_S1;
+	} else if ( (buf[0] & 0xF0) == 0x20 ) {
+		xbee_hw_series = 2;
+		kputs("(XBee Series 2 ZB)\n");
+		settings_len = sizeof(XBEE_AT_SETTING_STR_S2);
+		settings_str = XBEE_AT_SETTING_STR_S2;
+	} else if ( (buf[0] & 0xF0) == 0x60 ) {
+		xbee_hw_series = 6;
+		kputs("(XBee Series 6 WiFi)\n");
+		settings_len = sizeof(XBEE_AT_SETTING_STR_S6);
+		settings_str = XBEE_AT_SETTING_STR_S6;
+	} else {
+		kputs("(Unknown)");
+		return;
+	}
 	
 	uint16_t pos = 0;
 	char atcmd[2];
 	uint8_t atbuf[16];
-	while ( pos < sizeof(XBEE_AT_SETTING_STR) ) {
+	while ( pos < settings_len ) {
 		// read atcmd
-		atcmd[0] = pgm_read_byte(&(XBEE_AT_SETTING_STR[pos]));
-		atcmd[1] = pgm_read_byte(&(XBEE_AT_SETTING_STR[pos+1]));
+		atcmd[0] = pgm_read_byte(&(settings_str[pos]));
+		atcmd[1] = pgm_read_byte(&(settings_str[pos+1]));
 		if ( atcmd[0] == 'X' && atcmd[1] == 'X') break;
 		// read value
 		pos = pos + 2;
 		uint8_t b,c;
 		c=0;
 		while(1){
-			b = pgm_read_byte(&(XBEE_AT_SETTING_STR[pos++]));
+			b = pgm_read_byte(&(settings_str[pos++]));
 			if ( b == ',') break;
 			atbuf[c++] = b;
 		}
@@ -124,7 +165,13 @@ void xbee_init() {
 		
 		resp = xbee_AT_set_resp(atcmd,c,atbuf);
 		if ( resp < 0 ) {
-			printf_P(PSTR("error %d\n"),resp);
+			printf_P(PSTR("error %d, retry...\n"),resp);
+			resp = xbee_AT_set_resp(atcmd,c,atbuf);
+			if ( resp < 0 ) {
+				printf_P(PSTR("error %d, fail.\n"),resp);
+			} else {
+				kputs("success.\n");
+			}
 		} else {
 			printf_P(PSTR("success.\n"));
 		}
@@ -147,7 +194,7 @@ void xbee_tick() {
 	
 	while(1) {	
 		ch = MOTE_UART_GETC();
-		if ( (ch & 0xFF00) == 0 ) { // no errors
+		if ( (ch & 0xFF00) == 0 || (ch & 0xFF00) == 0x1000 ) { // no errors, or framing error ( sometimes OK)
 			_xbee_process_byte(ch);
 		}
 		else {
@@ -214,7 +261,7 @@ void _xbee_frame_recieved(uint16_t nBytes, uint8_t * b) {
 			break;
 		case 0x8A:// modem status
 			modem_status = b[2];
-			status_changed_cb(b[2]);
+			status_callback(b[2]);
 			break;
 		default:
 			printf_P(PSTR("API ID %02X not recognized or not implemented.\n"),b[0]);
@@ -235,7 +282,7 @@ int8_t _xbee_wait_for_AT_resp(uint8_t * buf) {
 	rx_at_cmd_buf = buf;
 	rx_at_cmd_status = XBEE_AT_WAITING;
 	
-	int8_t c = XBEE_AT_TIMEOUT;
+	int8_t c = XBEE_AT_RESP_TIMEOUT;
 	while (c--) {
 		xbee_tick();
 		if ( rx_at_cmd_status != XBEE_AT_WAITING ){

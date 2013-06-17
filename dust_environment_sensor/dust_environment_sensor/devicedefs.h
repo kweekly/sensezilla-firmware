@@ -23,9 +23,15 @@ typedef struct
 
 #define REGISTER_BIT(rg,bt) ((volatile _io_reg*)&rg)->bit##bt 
 
+#define HW_VERSION 2
+
 // DDRs
+#if HW_VERSION==1
+#define DDRB_SETTING	0b10010010
+#elif HW_VERSION==2
+#define DDRB_SETTING	0b10010000
+#endif
 #define DDRA_SETTING	0b10111100
-#define DDRB_SETTING	0b00010010
 #define DDRC_SETTING	0b00000000 // hopefully automatically initialized by i2c port
 #define DDRD_SETTING	0b01111010
 
@@ -43,16 +49,24 @@ typedef struct
 
 // Mote
 #define MOTE_TASK_ID	0x05
-#define MOTE_RESETN		EXP_CSN  // workaround
-#define MOTE_SLEEPN		REGISTER_BIT(PORTA,4)
+#define MOTE_SLEEPN		REGISTER_BIT(PORTA,5)
+#if HW_VERSION==1
 #define MOTE_TIMEN		REGISTER_BIT(PORTA,3)
 #define MOTE_TX_RTSN	REGISTER_BIT(PORTB,2)
-#define MOTE_TX_CTSN	REGISTER_BIT(PORTB,1)
 #define MOTE_RX_CTSN	REGISTER_BIT(PORTB,0)
+#define MOTE_TX_CTSN	REGISTER_BIT(PORTB,1)
+#define MOTE_RESETN		EXP_CSN  // workaround
+#elif HW_VERSION==2
+#define MOTE_STATUS		REGISTER_BIT(PORTB,2)
+#define MOTE_ASSOC		REGISTER_BIT(PORTB,1)
+#define MOTE_RESETN		REGISTER_BIT(PORTA,4)
+#endif
+#define MOTE_TX_CTSN	REGISTER_BIT(PORTB,0)
 #define MOTE_RX_RTSN	REGISTER_BIT(PORTD,6)
 #define MOTE_UART_GETC	uart1_getc
 #define MOTE_UART_WRITE uart1_write
 #define MOTE_UART_INIT  uart1_init
+#define XBEE_RTS_ENABLED
 
 // LEDs
 #define LED_BLIP_TASK_ID 0x01
@@ -87,7 +101,12 @@ typedef struct
 #define HUMID_TASK_ID 0x30
 #define TEMP_TASK_ID 0x40
 #define HUMID_ADDR	0b10000000
-#define HUMID_VCC	REGISTER_BIT(PORTA,2)
+#if HW_VERSION==1
+#define HUMID_VCC REGISTER_BIT(PORTA,2)
+#elif HW_VERSION==2
+#define HUMID_CSN  REGISTER_BIT(PORTA,2)
+#define HUMID_VCC	REGISTER_BIT(PORTA,3)
+#endif
 
 // Amb. Light
 #define LIGHT_TASK_ID 0x50
