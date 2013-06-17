@@ -42,6 +42,9 @@ void report_print(report_t * rep) {
 	if ( rep->fields & REPORT_TYPE_GYRO)
 		printf_P(PSTR(" gx=%04X gy=%04X gz=%04X"),rep->gyro.X,rep->gyro.Y,rep->gyro.Z);
 		
+	if ( rep->fields & REPORT_TYPE_RSSI)
+		printf_P(PSTR(" rssi=%02X"),rep->rssi);
+		
 	printf_P(PSTR("\n"));
 }
 
@@ -65,6 +68,9 @@ uint16_t report_populate_real(report_t * rep, uint8_t * buf) {
 	
 	if ( rep->fields & REPORT_TYPE_GYRO)
 		fltptr += gyro_convert_real(&rep->gyro,fltptr);
+		
+	if ( rep->fields & REPORT_TYPE_RSSI )
+		*(fltptr++) = rep->rssi*1.0;
 	
 	return (uint16_t)((uint8_t *)fltptr - oldbuf);
 }
@@ -99,6 +105,12 @@ void report_print_human(report_t * rep) {
 	
 	if ( rep->fields & REPORT_TYPE_GYRO){
 		gyro_fmt_reading(&(rep->gyro),sizeof(buf),buf);
+		uart_putc(' ');
+		uart_puts(buf);
+	}
+	
+	if ( rep->fields & REPORT_TYPE_RSSI) {
+		xbee_fmt_reading(&(rep->rssi),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);
 	}

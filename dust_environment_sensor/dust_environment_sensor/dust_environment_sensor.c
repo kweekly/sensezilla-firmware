@@ -52,10 +52,13 @@ void tx_cb(uint8_t frame_id, uint8_t status);
 
 xbee_64b_address dest64;
 xbee_16b_address dest16;
+xbee_ipv4_address destipv4;
 enum{
+	NO_SEND,
 	BROADCAST,
 	SEND64,
-	SEND16
+	SEND16,
+	WIFI_SEND
 } dest_mode;
 
 
@@ -114,7 +117,9 @@ int main(void)
 	xbee_set_modem_status_callback(&status_changed_cb);
 	xbee_set_tx_status_callback(&tx_cb);
 	xbee_set_rx_callback(&rx_cb,rx_packet_buf);
-	
+	if (xbee_get_type() == XBEE_TYPE_WIFI) {
+		dest_mode = WIFI_SEND;
+	}
 	
 	/*
 	PIR_VCC = 1;
@@ -144,7 +149,7 @@ int main(void)
 	scheduler_add_task(LED_BLIP_TASK_ID, 10, &task_led_blip_off);
 	
 	scheduler_add_task(TASK_REPORTING, 0, &task_begin_report);
-	scheduler_add_task(MOTE_TASK_ID, 1, &xbee_wake);
+	xbee_setup_reporting_schedule(1); // also tells xbee to wake-up
 	humid_setup_reporting_schedule(1);
 	light_setup_reporting_schedule(1);
 	pir_setup_reporting_schedule(1);
@@ -188,14 +193,42 @@ void task_print_report(void) {
 
 void task_send_report(void) {
 	uint8_t packetbuf[128];
+	int8_t resp;
 	xbee_tick();
-	uint16_t len = report_populate_real(report_current(),packetbuf);
-	if (dest_mode == BROADCAST) {
-		xbee_send_packet_64(XBEE_BROADCAST_64b_ADDR,len,packetbuf,XBEE_TX_OPTION_BROADCAST_PAN);
-	} else if ( dest_mode == SEND16 ){
-		xbee_send_packet_16(dest16,len,packetbuf,0);
-	} else if (dest_mode == SEND64) {
-		xbee_send_packet_64(dest64,len,packetbuf,0);
+	
+	redo_send:
+	if (xbee_get_status() == XBEE_STATUS_ASSOC) {
+		uint16_t len = report_populate_real(report_current(),packetbuf);
+		if (dest_mode == BROADCAST) {
+			xbee_send_packet_64(XBEE_BROADCAST_64b_ADDR,len,packetbuf,XBEE_TX_OPTION_BROADCAST_PAN);
+		} else if ( dest_mode == SEND16 ){
+			xbee_send_packet_16(dest16,len,packetbuf,0);
+		} else if (dest_mode == SEND64) {
+			xbee_send_packet_64(dest64,len,packetbuf,0);
+		} else if (dest_mode == WIFI_SEND) {
+			uint8_t ipbuf[4];
+			resp = xbee_AT_get("MY",ipbuf);
+			if ( resp < 0 ) {
+				kputs("Radio not responding");
+				return;
+			}
+			printf_P(PSTR("My IP address=%d.%d.%d.%d\n"),ipbuf[0],ipbuf[1],ipbuf[2],ipbuf[3]);
+			destipv4 = (ipbuf[0]<<24) | (ipbuf[1]<<16) | (ipbuf[2]<<8) | 1;
+			xbee_send_ipv4_packet(destipv4, len, packetbuf);
+		}
+	} else {
+		uint8_t buf[1];
+		resp = xbee_AT_get("AI",buf);
+		if ( resp < 0 ) {
+			kputs("Radio not responding.");
+			return;
+		}
+		if (buf[0] == 0) {
+			printf_P(PSTR("Radio ready, but did not send status update, correcting.\n"));
+			xbee_set_status(XBEE_STATUS_ASSOC);
+			goto redo_send;
+		}
+		else printf_P(PSTR("Radio not ready to send packet AI=%02X\n"),buf[0]);
 	}
 	xbee_tick();
 }

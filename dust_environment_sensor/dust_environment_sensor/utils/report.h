@@ -17,6 +17,7 @@
 #define REPORT_TYPE_LIGHT		0x08
 #define REPORT_TYPE_ACCEL		0x10
 #define REPORT_TYPE_GYRO		0x20
+#define REPORT_TYPE_RSSI		0x40
 
 typedef struct {
 	uint32_t time;
@@ -27,6 +28,7 @@ typedef struct {
 	light_reading_t light;
 	accel_reading_t accel;
 	gyro_reading_t gyro;
+	int8_t rssi;
 } report_t;
 
 

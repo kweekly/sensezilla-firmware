@@ -72,7 +72,7 @@ void xbee_init() {
 	kputs("\tAttempt communication at 115200...");
 	MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
 	_delay_ms(100);
-	resp = xbee_AT_get("VR",buf);
+	resp = xbee_AT_get("HV",buf);
 	
 	if ( resp >= 0 ) { // success
 		kputs("success, communication established.\n");
@@ -81,7 +81,7 @@ void xbee_init() {
 		kputs("\tAttempt communication at 9600...");
 		MOTE_UART_INIT(UART_BAUD_SELECT(9600,F_CPU));
 		_delay_ms(100);
-		resp = xbee_AT_get("VR",buf);
+		resp = xbee_AT_get("HV",buf);
 		if ( resp >= 0 ) { // success
 			kputs("success, changing to 115200...");
 			buf[0] = 7;
@@ -102,7 +102,7 @@ void xbee_init() {
 		kputs("\tAttempt communication at 115200...");
 		MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
 		_delay_ms(100);
-		resp = xbee_AT_get("VR",buf);
+		resp = xbee_AT_get("HV",buf);
 		if ( resp >= 0 ) { // success
 			kputs("success, communication established.\n");
 		} else if ( resp == XBEE_AT_TIMEOUT ) {
@@ -119,24 +119,24 @@ void xbee_init() {
 	size_t settings_len;
 	char * settings_str PROGMEM;
 	
-	printf_P(PSTR("\tVR=%02X%02X "),buf[0],buf[1]);
-	if ( (buf[0] & 0xF0) == 0x10) {
+	printf_P(PSTR("\tHV=%02X%02X "),buf[0],buf[1]);
+	if ( buf[0] == 0x17 ) {
 		xbee_hw_series = 1;
 		kputs("(XBee Series 1 802.15.4)\n");
 		settings_len = sizeof(XBEE_AT_SETTING_STR_S1);
 		settings_str = XBEE_AT_SETTING_STR_S1;
-	} else if ( (buf[0] & 0xF0) == 0x20 ) {
+	} else if ( buf[0] == 0x19 || buf[0] == 0x1A || buf[0] == 0x1E ) {
 		xbee_hw_series = 2;
 		kputs("(XBee Series 2 ZB)\n");
 		settings_len = sizeof(XBEE_AT_SETTING_STR_S2);
 		settings_str = XBEE_AT_SETTING_STR_S2;
-	} else if ( (buf[0] & 0xF0) == 0x60 ) {
+	} else if ( buf[0] == 0x1F || buf[0] == 0x27 ) {
 		xbee_hw_series = 6;
 		kputs("(XBee Series 6 WiFi)\n");
 		settings_len = sizeof(XBEE_AT_SETTING_STR_S6);
 		settings_str = XBEE_AT_SETTING_STR_S6;
 	} else {
-		kputs("(Unknown)");
+		kputs("(Unknown)\n");
 		return;
 	}
 	
@@ -165,7 +165,7 @@ void xbee_init() {
 		
 		resp = xbee_AT_set_resp(atcmd,c,atbuf);
 		if ( resp < 0 ) {
-			printf_P(PSTR("error %d, retry...\n"),resp);
+			printf_P(PSTR("error %d, retry..."),resp);
 			resp = xbee_AT_set_resp(atcmd,c,atbuf);
 			if ( resp < 0 ) {
 				printf_P(PSTR("error %d, fail.\n"),resp);
@@ -177,6 +177,10 @@ void xbee_init() {
 		}
 		_delay_ms(200);
 	}
+}
+
+uint8_t xbee_get_type() {
+	return xbee_hw_series;
 }
 
 void xbee_sleep(){
@@ -367,11 +371,38 @@ uint8_t xbee_send_packet_64( xbee_64b_address addr, uint16_t nBytes, uint8_t * d
 	return retval;
 }
 
+uint8_t xbee_send_ipv4_packet( xbee_ipv4_address addr, uint16_t nBytes, uint8_t * data ) {
+	if (nBytes > 1400) {
+		kputs("Maximum packet size exceeded\n");
+		return 0;
+	}
+	
+	_xbee_start_API_frame();
+	_xbee_load_API_byte(0x20);
+	uint8_t retval = frame_id;
+	_xbee_load_API_byte(frame_id++);
+	if ( !frame_id ) frame_id++; // reset to 1 if wraparound
+	uint8_t * abytes = (uint8_t *)(&addr);
+	_xbee_load_API_byte(abytes[3]);
+	_xbee_load_API_byte(abytes[2]);
+	_xbee_load_API_byte(abytes[1]);
+	_xbee_load_API_byte(abytes[0]);
+	_xbee_load_API_byte(0x1D);	
+	_xbee_load_API_byte(0x51); // remote port 7505
+	_xbee_load_API_byte(0x1D);
+	_xbee_load_API_byte(0x51); // source port 7505
+	_xbee_load_API_byte(0);//UDP
+	_xbee_load_API_byte(0); //ignored for UDP
+	_xbee_load_API_bytes(nBytes,data);
+	_xbee_send_API_frame();
+	return retval;
+}
+
 void xbee_set_tx_status_callback(void (*cb)(uint8_t frame_id, uint8_t status)) { tx_callback = cb;	}
 void xbee_set_rx_callback(void (*cb)(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes), uint8_t * dest_buf) { rx_callback = cb; rx_client_buf = dest_buf; }
 void xbee_set_modem_status_callback(void (*cb)(uint8_t status)) {status_callback = cb; }
 uint8_t xbee_get_status() { return modem_status; }
-
+void xbee_set_status(uint8_t stat){modem_status = stat;}
 
 uint16_t xbee_tx_api_buf_len;
 uint16_t xbee_tx_api_buf_pos;
@@ -450,4 +481,32 @@ void _xbee_process_byte(uint8_t b) {
 			}
 		}
 	}
+}
+
+
+void _xbee_read_rssi() {
+	uint8_t buf[1];
+	int8_t rssi;
+	int8_t retval;
+	if ( xbee_hw_series == 1 || xbee_hw_series == 2) {
+		retval = xbee_AT_get("DB",buf);
+		if ( retval < 0 ) return;
+		rssi = -buf[0];
+	} else if ( xbee_hw_series == 6 ) {
+		retval = xbee_AT_get("LM",buf);
+		if ( retval < 0) return;
+		rssi = buf[0];
+	}
+	
+	report_current()->rssi  = rssi;
+	report_current()->fields |= REPORT_TYPE_RSSI;	
+}
+
+void xbee_setup_reporting_schedule(uint16_t start_time) {
+	scheduler_add_task(MOTE_TASK_ID, 1, &xbee_wake);
+	scheduler_add_task(MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &_xbee_read_rssi);// ensure that this happens before the report is sent
+}
+
+void xbee_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {
+	snprintf_P(buf,bufsize,PSTR("RSSI=%4ddBm"),*reading);
 }
