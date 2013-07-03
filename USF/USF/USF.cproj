@@ -1,0 +1,215 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectVersion>6.0</ProjectVersion>
+    <ToolchainName>com.Atmel.AVRGCC8</ToolchainName>
+    <ProjectGuid>{4bc4d843-0811-43a9-b1c3-33c053040ca1}</ProjectGuid>
+    <avrdevice>ATmega1284</avrdevice>
+    <avrdeviceseries>none</avrdeviceseries>
+    <OutputType>Executable</OutputType>
+    <Language>C</Language>
+    <OutputFileName>$(MSBuildProjectName)</OutputFileName>
+    <OutputFileExtension>.elf</OutputFileExtension>
+    <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
+    <AssemblyName>USF</AssemblyName>
+    <Name>USF</Name>
+    <RootNamespace>USF</RootNamespace>
+    <ToolchainFlavour>Native</ToolchainFlavour>
+    <KeepTimersRunning>true</KeepTimersRunning>
+    <OverrideVtor>false</OverrideVtor>
+    <OverrideVtorValue />
+    <eraseonlaunchrule>0</eraseonlaunchrule>
+    <AsfVersion>3.5.0</AsfVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <ToolchainSettings>
+      <AvrGcc>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.directories.IncludePaths><ListValues>
+  <Value>..</Value>
+</ListValues></avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format</avrgcc.compiler.miscellaneous.OtherFlags>
+  <avrgcc.linker.libraries.Libraries><ListValues>
+  <Value>m</Value>
+</ListValues></avrgcc.linker.libraries.Libraries>
+  <avrgcc.compiler.optimization.level>Optimize for size (-Os)</avrgcc.compiler.optimization.level>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <ToolchainSettings>
+      <AvrGcc>
+  <avrgcc.common.outputfiles.hex>True</avrgcc.common.outputfiles.hex>
+  <avrgcc.common.outputfiles.lss>True</avrgcc.common.outputfiles.lss>
+  <avrgcc.common.outputfiles.eep>True</avrgcc.common.outputfiles.eep>
+  <avrgcc.common.outputfiles.srec>True</avrgcc.common.outputfiles.srec>
+  <avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>True</avrgcc.compiler.general.ChangeDefaultCharTypeUnsigned>
+  <avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>True</avrgcc.compiler.general.ChangeDefaultBitFieldUnsigned>
+  <avrgcc.compiler.directories.IncludePaths><ListValues>
+  <Value>..</Value>
+</ListValues></avrgcc.compiler.directories.IncludePaths>
+  <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
+  <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
+  <avrgcc.compiler.warnings.AllWarnings>True</avrgcc.compiler.warnings.AllWarnings>
+  <avrgcc.compiler.miscellaneous.OtherFlags>-std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format</avrgcc.compiler.miscellaneous.OtherFlags>
+  <avrgcc.linker.libraries.Libraries><ListValues>
+  <Value>m</Value>
+</ListValues></avrgcc.linker.libraries.Libraries>
+  <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
+  <avrgcc.compiler.optimization.DebugLevel>Default (-g2)</avrgcc.compiler.optimization.DebugLevel>
+  <avrgcc.assembler.debugging.DebugLevel>Default (-Wa,-g)</avrgcc.assembler.debugging.DebugLevel>
+</AvrGcc>
+    </ToolchainSettings>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="avrincludes.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devicedefs.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devicedefs_PSM.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\amn41121.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\amn41121.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\CS5467.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\CS5467.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\l3gd20.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\l3gd20.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\lis3dh.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\lis3dh.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\PN532.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\PN532.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\si7005.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\si7005.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\tsl2560.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\tsl2560.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="device_headers.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\i2cmaster.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\pcint.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\pcint.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\rtctimer.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\rtctimer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="drivers\rtctimer_PSM.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="drivers\rtctimer_PSM.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\SPI.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\SPI.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\twimaster.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\uart.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\uart.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="dust_environment_sensor.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="motes\xbee.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motes\xbee.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="motes\xbee_AT_settings.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="power_strip_monitor_v2.2.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="protocol\report.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="protocol\report.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="protocol\report_PSM.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="protocol\report_PSM.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="USF.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <None Include="utils\console_PSM.c">
+      <SubType>compile</SubType>
+    </None>
+    <Compile Include="utils\console_PSM.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utils\scheduler.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utils\scheduler.h">
+      <SubType>compile</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="devices" />
+    <Folder Include="drivers" />
+    <Folder Include="motes" />
+    <Folder Include="utils" />
+    <Folder Include="protocol" />
+  </ItemGroup>
+  <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
+</Project>
