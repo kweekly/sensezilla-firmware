@@ -148,6 +148,12 @@
     <Compile Include="devices\lis3dh.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="devices\PN532.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\PN532.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="devices\si7005.c">
       <SubType>compile</SubType>
     </Compile>
@@ -173,6 +179,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="drivers\rtctimer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\SPI.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\SPI.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="drivers\twimaster.c">

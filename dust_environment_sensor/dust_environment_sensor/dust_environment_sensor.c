@@ -24,8 +24,12 @@
  
  */ 
 
-#include "all.h"
+#undef PN532_ATTACHED
 
+#include "all.h"
+#ifdef PN532_ATTACHED
+#include "devices/PN532.h"
+#endif
 
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putc, NULL, _FDEV_SETUP_WRITE);
 
@@ -64,6 +68,7 @@ enum{
 
 int main(void)
 {
+	uint32_t versiondata;
 	char wdrst = 0;
 	if ( MCUSR & _BV(WDRF) ) {
 		wdrst = 1;
@@ -81,6 +86,8 @@ int main(void)
 		kputs("\n***WATCHDOG RESET***\n");
 	}
 	
+	wdt_enable(WDTO_8S);
+	wdt_reset();
 	kputs("Setting DDR registers\n");
 	DDRA = DDRA_SETTING;
 	DDRB = DDRB_SETTING;
@@ -110,6 +117,23 @@ int main(void)
 	kputs("PIR\n");
 	pir_init();
 	
+	#ifdef PN532_ATTACHED
+	kputs("Initializing RFID reader... \n");
+	rfid_init();
+	versiondata = rfid_get_firmware_version();
+	if ( !versiondata ) {
+		versiondata = rfid_get_firmware_version(); // 1 retry	
+	}
+	if ( !versiondata ) {
+		kputs("\tDidn't find board\n");
+	} else {
+		printf_P(PSTR("\tFound chip PN5%02X\n"),(uint8_t)(versiondata>>24));
+		printf_P(PSTR("\tFirmware Ver. %d.%d\n"),(uint8_t)(versiondata>>16),(uint8_t)(versiondata>>8));
+	}
+	if (!rfid_SAMConfig()) {
+		kputs("\tError putting in SAM mode.\n");
+	}
+	#endif
 	
 	kputs("Initializing wireless mote\n");
 	dest_mode = BROADCAST;
@@ -171,7 +195,18 @@ int main(void)
 		pcint_check();
 		rtctimer_check_alarm();
 		wdt_disable();
+		wdt_enable(WDTO_1S);
+		wdt_reset();
+		#ifdef PN532_ATTACHED
+		if(rfid_passive_scan()) {
+			
+		}
+		xbee_tick();
+		_delay_ms(100);
+		#else
 		avr_sleep();
+		#endif
+		wdt_disable();
     }
 }
 
@@ -213,7 +248,7 @@ void task_send_report(void) {
 				return;
 			}
 			printf_P(PSTR("My IP address=%d.%d.%d.%d\n"),ipbuf[0],ipbuf[1],ipbuf[2],ipbuf[3]);
-			destipv4 = (ipbuf[0]<<24) | (ipbuf[1]<<16) | (ipbuf[2]<<8) | 1;
+			destipv4 = (ipbuf[0]<<24UL) | (ipbuf[1]<<16UL) | (ipbuf[2]<<8UL) | 1;
 			xbee_send_ipv4_packet(destipv4, len, packetbuf);
 		}
 	} else {

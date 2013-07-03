@@ -10,7 +10,7 @@
 #define ALL_H_
 
 #include <stddef.h>
-#include <stdint.h>
+#include <inttypes.h>
 #include <avr/io.h>
 #include <avr/sleep.h>
 #include <avr/pgmspace.h>
@@ -22,6 +22,7 @@
 #include "drivers/i2cmaster.h"
 #include "drivers/rtctimer.h"
 #include "drivers/pcint.h"
+#include "drivers/SPI.h"
 
 #include "devices/amn41121.h"
 #include "devices/l3gd20.h"

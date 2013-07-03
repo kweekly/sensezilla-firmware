@@ -27,9 +27,9 @@ typedef struct
 
 // DDRs
 #if HW_VERSION==1
-#define DDRB_SETTING	0b10010010
+#define DDRB_SETTING	0b10110010
 #elif HW_VERSION==2
-#define DDRB_SETTING	0b10010000
+#define DDRB_SETTING	0b10110000
 #endif
 #define DDRA_SETTING	0b10111100
 #define DDRC_SETTING	0b00000000 // hopefully automatically initialized by i2c port
@@ -114,6 +114,11 @@ typedef struct
 //#define LIGHT_ADDR	0b01010110
 #define LIGHT_INT_PCINT 6
 #define LIGHT_INT	REGISTER_BIT(PORTA,6)
+
+// RFID Reader PN532
+#define RFID_TASK_ID 0x60
+#define RFID_CSN EXP_CSN
+
 
 #ifndef sbi
 #define sbi(X,Y) (X) |= _BV(Y)
