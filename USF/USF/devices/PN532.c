@@ -145,6 +145,20 @@ void rfid_init() {
   // not exactly sure why but we have to send a dummy command to get synced up
  /* pn532_packetbuffer[0] = PN532_COMMAND_GETFIRMWAREVERSION;
   rfid_send_command_check_ack(pn532_packetbuffer, 1);	*/
+ 
+ uint32_t versiondata = rfid_get_firmware_version();
+ if ( !versiondata ) {
+	 versiondata = rfid_get_firmware_version(); // 1 retry
+ }
+ if ( !versiondata ) {
+	 kputs("\tDidn't find board\n");
+ } else {
+	 printf_P(PSTR("\tFound chip PN5%02X\n"),(uint8_t)(versiondata>>24));
+	 printf_P(PSTR("\tFirmware Ver. %d.%d\n"),(uint8_t)(versiondata>>16),(uint8_t)(versiondata>>8));
+ }
+ if (!rfid_SAMConfig()) {
+	 kputs("\tError putting in SAM mode.\n");
+ }
 }
 
 uint8_t rfid_passive_scan() {

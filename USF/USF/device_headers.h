@@ -19,6 +19,7 @@
 	#include "devices/tsl2560.h"
 #elif defined(POWER_STRIP_MONITOR)
 	#include "devices/CS5467.h"
+	#include "devices/triacs.h"
 #endif
 
 #ifdef USE_PN532

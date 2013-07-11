@@ -7,7 +7,7 @@
 
 #include "devicedefs.h"
 #include "avrincludes.h"
-
+#include "motes/xbee.h"
 
 void avr_doze(void) {
 	// go into idle mode

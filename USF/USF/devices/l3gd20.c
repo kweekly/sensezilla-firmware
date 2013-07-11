@@ -82,7 +82,7 @@ uint8_t gyro_read_status(void) {
 
 gyro_reading_t gyro_read()  {
 	gyro_reading_t retval;
-	unsigned char buf[6];
+	uint8_t buf[6];
 	
 	if ( (gyro_read_status() & _BV(3) ) == 0) {
 		kputs("Error: Gyro not ready\n");

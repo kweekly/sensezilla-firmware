@@ -10,7 +10,8 @@
 #include "avrincludes.h"
 #include "devices/CS5467.h"
 #include "protocol/report.h"
-
+#include "drivers/SPI.h"
+#include "utils/scheduler.h"
 
 #define FORALLCHIPS(c) for (uint8_t c = 0; c < POWERMON_NUM_CHIPS; c++)
 
@@ -116,17 +117,17 @@
 #define T_MEAS_REG (PAGE5 | 26)
 
 // Empirical Values
-#define DEFAULT_I_GAIN 10676955 // 1.8 * 2 / sqrt(2) = 2.54558441227
+#define DEFAULT_I_GAIN 10676955L // 1.8 * 2 / sqrt(2) = 2.54558441227
 #define DEFAULT_I_NORM 20.0
-#define DEFAULT_I_OFFSET 0
+#define DEFAULT_I_OFFSET 0L
 
 // WITH 500 OHM R21
 // by default, max Voltage is 250V -> 187.9mVpp ( out of 500mVpp ), gain should be 2.66098988824 / sqrt(2) = 1.88160399464
 // Calculated Values
 
-#define DEFAULT_V_GAIN 7892019
+#define DEFAULT_V_GAIN 7892019L
 #define DEFAULT_V_NORM 250.0
-#define DEFAULT_V_OFFSET 0
+#define DEFAULT_V_OFFSET 0L
 
 
 uint8_t current_page[POWERMON_NUM_CHIPS];
@@ -140,21 +141,24 @@ void powermon_init() {
 	
 	// turn on clocks for ICs. CLK/4 on OC2A
 	// Compare mode, Toggle OC2A on compare match
-	TCCR2A = 0;
-	TCCR2B = 0;
 	OCR2A = 1;
-	  
-	// Toggle on compare match
-	TCCR2A |= (1<<COM2A0);
-	//turn on CTC mode
-	TCCR2A |= (1<< WGM21);
-	// no prescaler
-	TCCR2B |= (1<<CS20);
 	
+	// Toggle on compare match + turn on CTC mode
+	TCCR2A = (1<<COM2A0) | (1<<WGM21);
+		
+	// no prescaler
+	TCCR2B = (1<<CS20);
+	
+	_delay_ms(10); // give time to settle the clock
+
 	FORALLCHIPS(c) {
 		powermon_writereg(c, CTRL_REG, 0x00000006L);// gain set to +/-250mV
+		// clear status bit
+		powermon_writereg(c,STATUS_REG,0x800000);
 		powermon_reset(c);
+		_delay_ms(10); // give some time to settle
 		powermon_writereg(c, CTRL_REG, 0x00000006L);// gain set to +/-250mV
+		_delay_ms(10); // more time to settle
 		powermon_wait_until_ready(c);
 		
 		powermon_writereg(c, MODES_REG,0x004001E1L); // HPF enabled, line frequency meas. enabled
@@ -162,6 +166,7 @@ void powermon_init() {
 		powermon_writereg(c, P1_OFF_REG,0);
 		powermon_writereg(c, P2_OFF_REG,0);
 		powermon_startconversion(c,1);
+		powermon_wait_until_ready(c);
 	}
 }
 
@@ -178,47 +183,48 @@ void powermon_set_gains_and_offsets(uint32_t iGain, uint32_t iOffset, uint32_t v
 	}
 }
 
-powermon_reading_t powermon_read() {
-	powermon_reading_t retval;
+ void powermon_read(powermon_reading_t retval[POWERMON_NUM_CHANNELS]) {
 	
 	FORALLCHIPS(c) {
-      retval.true_power[c*2] = powermon_readreg(c, P1_AVG_REG);
-      retval.true_power[c*2+1] =  powermon_readreg(c, P2_AVG_REG);
+      retval[c*2].true_power = powermon_readreg(c, P1_AVG_REG);
+      retval[c*2+1].true_power =  powermon_readreg(c, P2_AVG_REG);
       
-      retval.RMS_voltage[c*2] =  powermon_readreg(c, V1_RMS_REG);
-      retval.RMS_voltage[c*2+1] =  powermon_readreg(c, V2_RMS_REG);
+      retval[c*2].RMS_voltage =  powermon_readreg(c, V1_RMS_REG);
+      retval[c*2+1].RMS_voltage =  powermon_readreg(c, V2_RMS_REG);
       
-      retval.RMS_current[c*2] =  powermon_readreg(c, I1_RMS_REG);
-      retval.RMS_current[c*2+1] =  powermon_readreg(c, I2_RMS_REG);
+      retval[c*2].RMS_current =  powermon_readreg(c, I1_RMS_REG);
+      retval[c*2+1].RMS_current =  powermon_readreg(c, I2_RMS_REG);
 	  
 	  //printf_P(PSTR("%d V1:%ld I1:%ld V2:%ld I2:%ld\n"),c,retval.RMS_voltage[c*2],retval.RMS_current[c*2],retval.RMS_voltage[c*2+1],retval.RMS_current[c*2+1]);
 	}
 	
-	return retval;
 }
 
 void powermon_reset(uint8_t chipno) {
 	_powermon_CSL(chipno);
 	spi_transfer(0b10000000);
 	_powermon_CSH(chipno);
-	
-	powermon_wait_until_ready(chipno);
 }
 
 void powermon_startconversion(uint8_t chipno, uint8_t continuous) {
    _powermon_CSL(chipno);
    spi_transfer(0b11100000 | (continuous<<3));
    _powermon_CSH(chipno);
-   
-   powermon_wait_until_ready(chipno);
 }
 
 void powermon_wait_until_ready(uint8_t chipno) {
 	uint32_t stat = powermon_readreg(chipno,STATUS_REG);
+	uint16_t cntr = 0;
 	while (!( stat & 0x800000 )) {
 		stat = powermon_readreg(chipno, STATUS_REG);
-		return;
+		if ( cntr++ % (1<<14L) == 0) {
+			//powermon_reset(chipno);
+			printf_P(PSTR("%d Still waiting for ready %08lX\n"),chipno, stat);	
+		}
 	}
+	printf_P(PSTR("\tPower chip %d status %08lX\n"),chipno+1,stat);
+	// clear status bit
+	powermon_writereg(chipno,STATUS_REG,0x800000);
 }
 
 void powermon_change_page(uint8_t chipno, uint8_t address) {
@@ -260,16 +266,13 @@ void powermon_setup_reporting_schedule(uint16_t starttime) {
 	scheduler_add_task(POWERMON_TASK_ID,starttime,&_powermon_write_report);
 }
 
-void powermon_fmt_reading(powermon_reading_t * reading,int16_t maxlen, char * str) {
+void powermon_fmt_reading(powermon_reading_t reading[POWERMON_NUM_CHANNELS],int16_t maxlen, char * str) {
 	float rval[POWERMON_NUM_CHANNELS * 3];
 	uint16_t len;
 	
-	powermon_convert_real(reading, &rval);
-	len = snprintf_P(str,maxlen,PSTR("\n"));
-	maxlen -= len;
-	str += len;
+	powermon_convert_real(reading, (float*)(&rval));
 	for(uint8_t c = 0; c < POWERMON_NUM_CHANNELS; c++ ) {	
-		len = snprintf_P(str,maxlen,PSTR("\tChannel %d : %.1fW %dmA %.0fV\n"),c+1,rval[c*3],(int)(1000*rval[c*3+1]+.5),rval[c*3+2]);
+		len = snprintf_P(str,maxlen,PSTR(" CH%d (%.1fW,%dmA,%.0fV)"),c+1,rval[c*3],(int)(1000*rval[c*3+1]+.5),rval[c*3+2]);
 		maxlen -= len;
 		str += len;
 		if (maxlen < 0) return;
@@ -277,18 +280,18 @@ void powermon_fmt_reading(powermon_reading_t * reading,int16_t maxlen, char * st
 	
 }
 
-uint8_t powermon_convert_real(powermon_reading_t * reading,float * fltptr) {
+uint8_t powermon_convert_real(powermon_reading_t reading[POWERMON_NUM_CHANNELS],float * fltptr) {
 	for (uint8_t c = 0; c < POWERMON_NUM_CHANNELS; c++ ) {
-		fltptr[c*3] =		DEFAULT_I_NORM * DEFAULT_V_NORM * _powermon_itof(reading->true_power[c],1);
-		fltptr[c*3 + 1] =	DEFAULT_I_NORM * _powermon_itof(reading->RMS_current[c],0);
-		fltptr[c*3 + 2] =	DEFAULT_V_NORM * _powermon_itof(reading->RMS_voltage[c],0);
+		fltptr[c*3] =		DEFAULT_I_NORM * DEFAULT_V_NORM * _powermon_itof(reading[c].true_power,1);
+		fltptr[c*3 + 1] =	DEFAULT_I_NORM * _powermon_itof(reading[c].RMS_current,0);
+		fltptr[c*3 + 2] =	DEFAULT_V_NORM * _powermon_itof(reading[c].RMS_voltage,0);
 	}	
-	return 6;
+	return 3*POWERMON_NUM_CHANNELS;
 }
 
 void _powermon_write_report() {
-	report_current()->power = powermon_read();
-	report_current()->fields |= REPORT_TYPE_POWER;
+	powermon_read(report_current()->power);
+	report_current()->fields |= ((1<<POWERMON_NUM_CHANNELS)-1); // power bits are the lower 6 (or 4) bits
 }
 
 void _powermon_CSL(uint8_t chipno) {

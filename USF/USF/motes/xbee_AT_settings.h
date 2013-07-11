@@ -14,14 +14,14 @@
 const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =  
  "ID\x12\x34"
 #ifdef XBEE_RTS_ENABLED
-",D6\x1" // enable flow control RTS
+	",D6\x1" // enable flow control RTS
 #else
-",D6\x0"
+	",D6\x0"
 #endif
 #ifdef XBEE_CTS_ENABLED
-",D7\x1" // enable flow control RTS
+	",D7\x1" // enable flow control RTS
 #else
-",D7\x0"
+	",D7\x0"
 #endif
 ",CH\xC"
 ",MY\xFF\xFF"
@@ -30,7 +30,11 @@ const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =
 ",RN\x3"
 ",CE\x0"
 ",EE\x0"
-",SM\x1" // pin hibernate
+#ifdef XBEE_PINSLEEP_ENABLED
+	",SM\x1" // pin hibernate
+#else
+	",SM\x0"
+#endif
 ",SO\x2" // supress IO samples
 ",AP\x2"
 ",XX"
@@ -39,14 +43,14 @@ const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =
 const unsigned char XBEE_AT_SETTING_STR_S2[] PROGMEM =
 "ID\x12\x34"
 #ifdef XBEE_RTS_ENABLED
-",D6\x1" // enable flow control RTS
+	",D6\x1" // enable flow control RTS
 #else
-",D6\x0"
+	",D6\x0"
 #endif
 #ifdef XBEE_CTS_ENABLED
-",D7\x1" // enable flow control RTS
+	",D7\x1" // enable flow control RTS
 #else
-",D7\x0"
+	",D7\x0"
 #endif
 ",CH\xC"
 ",MY\xFF\xFF"
@@ -55,7 +59,11 @@ const unsigned char XBEE_AT_SETTING_STR_S2[] PROGMEM =
 ",RN\x3"
 ",CE\x0"
 ",EE\x0"
-",SM\x1" // pin hibernate
+#ifdef XBEE_PINSLEEP_ENABLED
+	",SM\x1" // pin hibernate
+#else
+	",SM\x0"
+#endif
 ",SO\x2" // supress IO samples
 ",AP\x2"
 ",XX"
@@ -89,7 +97,11 @@ const unsigned char XBEE_AT_SETTING_STR_S6[] PROGMEM =
 #else
 ",D7\x0"
 #endif
-",SM\x1" // pin hibernate
+#ifdef XBEE_PINSLEEP_ENABLED
+	",SM\x1" // pin hibernate
+#else
+	",SM\x0"
+#endif
 ",XX"
 ;
 

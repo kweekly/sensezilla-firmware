@@ -58,7 +58,7 @@ void pir_sleep(void) {
 }
 
 void pir_init() {
-	pir_sleep();
+	pir_wake();
 	pir_accH = pir_accL = 0;
 }
 

@@ -26,96 +26,166 @@ typedef struct {
 void report_print(report_t * rep) {
 	printf_P(PSTR("t=%10ld"),rep->time);
 	
+	
+	/**************** ENV SENSOR *******************/
+	#ifdef REPORT_TYPE_TEMP
 	if ( rep->fields & REPORT_TYPE_TEMP)
 		printf_P(PSTR(" temp=%04X"),rep->temphumid.temperature);
-		
+	#endif
+	
+	#ifdef REPORT_TYPE_HUMID	
 	if ( rep->fields & REPORT_TYPE_HUMID)
 		printf_P(PSTR(" humid=%04X"),rep->temphumid.humidity);
-		
+	#endif
+	
+	#ifdef REPORT_TYPE_OCCUPANCY
 	if ( rep->fields & REPORT_TYPE_OCCUPANCY)
 		printf_P(PSTR(" occupancy=%08X"),*((uint16_t *)(&rep->occupancy)));
-		
+	#endif
+	
+	#ifdef REPORT_TYPE_LIGHT	
 	if ( rep->fields & REPORT_TYPE_LIGHT)
 		printf_P(PSTR(" light0=%04X light1=%04X"),rep->light.ch0,rep->light.ch1);
-			
+	#endif
+	
+	#ifdef REPORT_TYPE_ACCEL		
 	if ( rep->fields & REPORT_TYPE_ACCEL)
 		printf_P(PSTR(" ax=%04d ay=%04d az=%04d"),rep->accel.X,rep->accel.Y,rep->accel.Z);
-		
+	#endif
+	
+	#ifdef REPORT_TYPE_GYRO	
 	if ( rep->fields & REPORT_TYPE_GYRO)
 		printf_P(PSTR(" gx=%04X gy=%04X gz=%04X"),rep->gyro.X,rep->gyro.Y,rep->gyro.Z);
+	#endif
+	/**************** POWERMON *******************/
+	#ifdef REPORT_TYPE_POWER_CH0
+	if (rep->fields & REPORT_TYPE_POWER_CH0)
+		for ( int c = 0 ; c < POWERMON_NUM_CHANNELS; c++) {
+			powermon_reading_t reading = rep->power[c];
+			printf_P(PSTR(" P%d=%08lX I%d=%08lX V%d=%08lX"),c,reading.true_power,c,reading.RMS_current,c,reading.RMS_voltage);
+			
+		}			
+	#endif
+	
+	/**************** COMMON *******************/
 		
+	#ifdef REPORT_TYPE_RSSI
 	if ( rep->fields & REPORT_TYPE_RSSI)
 		printf_P(PSTR(" rssi=%02X"),rep->rssi);
+	#endif
 		
 	printf_P(PSTR("\n"));
 }
 
-uint16_t report_populate_real(report_t * rep, uint8_t * buf) {
+uint16_t report_populate_real_data(report_t * rep, uint8_t * buf) {
 	uint8_t * oldbuf = buf;
-	*(uint32_t *)buf = rep->time;
-	*(uint16_t *)(buf += 4) = rep->fields;
-	float * fltptr = (float*)(buf += 2);
+	float * fltptr = (float*)(buf);
 	
+	/**************** ENV SENSOR *******************/
+	#ifdef REPORT_TYPE_TEMP
 	if ( rep->fields & REPORT_TYPE_TEMP)  // also should have humidity
 		fltptr += humid_convert_real(&rep->temphumid,fltptr);	
-		
+	#endif
+	
+	#ifdef REPORT_TYPE_OCCUPANCY	
 	if ( rep->fields & REPORT_TYPE_OCCUPANCY) 
 		*(fltptr++) = rep->occupancy * 100.0;
+	#endif
 	
+	#ifdef REPORT_TYPE_LIGHT
 	if ( rep->fields & REPORT_TYPE_LIGHT)
 		fltptr += light_convert_real(&rep->light,fltptr);
+	#endif
 	
+	#ifdef REPORT_TYPE_ACCEL
 	if ( rep->fields & REPORT_TYPE_ACCEL)
 		fltptr += accel_convert_real(&rep->accel,fltptr);
+	#endif
 	
+	#ifdef REPORT_TYPE_GYRO
 	if ( rep->fields & REPORT_TYPE_GYRO)
 		fltptr += gyro_convert_real(&rep->gyro,fltptr);
-		
+	#endif
+	
+	/**************** POWERMON *******************/
+	#ifdef REPORT_TYPE_POWER_CH0
+	if ( rep->fields & REPORT_TYPE_POWER_CH0 )
+		fltptr += powermon_convert_real(rep->power,fltptr);
+	#endif
+	
+	
+	/**************** COMMON *******************/
+	
+	#ifdef REPORT_TYPE_RSSI	
 	if ( rep->fields & REPORT_TYPE_RSSI )
-		*(fltptr++) = rep->rssi*1.0;
+		*((int8_t *)fltptr) = rep->rssi;
+		fltptr = (float*)(((int8_t *)fltptr) + 1);
+	#endif
 	
 	return (uint16_t)((uint8_t *)fltptr - oldbuf);
 }
 
 void report_print_human(report_t * rep) {
-	char buf[64];
+	char buf[200];
 	printf_P(PSTR("t=%10ld"),rep->time);
 	
+	/**************** ENV SENSOR *******************/
+	#ifdef REPORT_TYPE_TEMP
 	if ( rep->fields & REPORT_TYPE_TEMP) {
 		humid_fmt_reading(&(rep->temphumid),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);
 	}		
+	#endif
 	
+	#ifdef REPORT_TYPE_OCCUPANCY
 	if ( rep->fields & REPORT_TYPE_OCCUPANCY) {
 		pir_fmt_reading(&(rep->occupancy),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);	
 	}
+	#endif
 	
+	#ifdef REPORT_TYPE_LIGHT
 	if ( rep->fields & REPORT_TYPE_LIGHT) {
 		light_fmt_reading(&(rep->light),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);
 	}	
+	#endif
 	
+	#ifdef REPORT_TYPE_ACCEL
 	if ( rep->fields & REPORT_TYPE_ACCEL){
 		accel_fmt_reading(&(rep->accel),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);
 	}
+	#endif
 	
+	#ifdef REPORT_TYPE_GYRO
 	if ( rep->fields & REPORT_TYPE_GYRO){
 		gyro_fmt_reading(&(rep->gyro),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);
 	}
+	#endif
 	
+	/**************** POWERMON *******************/
+	#ifdef REPORT_TYPE_POWER_CH0
+	if ( rep->fields & REPORT_TYPE_POWER_CH0 )
+		powermon_fmt_reading(rep->power,sizeof(buf),buf);
+		uart_putc(' ');
+		uart_puts(buf);
+	#endif
+		
+	/**************** COMMON *******************/
+	#ifdef REPORT_TYPE_RSSI	
 	if ( rep->fields & REPORT_TYPE_RSSI) {
 		xbee_fmt_reading(&(rep->rssi),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);
 	}
+	#endif
 	
 	printf_P(PSTR("\n"));
 }

@@ -32,7 +32,13 @@
 #define HW_VERSION 2
 
 /***************  POWER STRIP MONITOR (v2) *******************/ 
+/* Fuse Settings:
+Extended: FF
+High : 91
+Low D2
+*/
 //#define POWER_STRIP_MONITOR
+
 
 /***************  PM SENSOR *********************************/ 
 //#define PM_SENSOR
@@ -53,14 +59,14 @@ typedef struct
 #define REGISTER_BIT(rg,bt) ((volatile _io_reg*)&rg)->bit##bt 
 
 // FCPU
-#if defined(ENVIRONMENT_SENSOR)
+#if defined ENVIRONMENT_SENSOR
 	#define F_CPU 8000000L
-#elif defined(POWER_STRIP_MONTIOR)
-	#define F_CPU 8000000L
+#elif defined POWER_STRIP_MONITOR
+	#define F_CPU 16384000L
 #endif
 
 // DDRs
-#if defined(ENVIRONMENT_SENSOR)
+#if defined ENVIRONMENT_SENSOR
 	#if HW_VERSION==1
 	#define DDRB_SETTING	0b10110010
 	#elif HW_VERSION==2
@@ -69,7 +75,7 @@ typedef struct
 	#define DDRA_SETTING	0b10111100
 	#define DDRC_SETTING	0b00000000 // hopefully automatically initialized by i2c port
 	#define DDRD_SETTING	0b01111010
-#elif defined(POWER_STRIP_MONITOR)
+#elif defined POWER_STRIP_MONITOR 
 	#define DDRA_SETTING	0b11111111
 	#define DDRB_SETTING	0b10111111
 	#define DDRC_SETTING	0b11000010
@@ -105,6 +111,7 @@ typedef struct
 	#define MOTE_TX_CTSN	REGISTER_BIT(PORTB,0)
 	#define MOTE_RX_RTSN	REGISTER_BIT(PORTD,6)
 	#define XBEE_RTS_ENABLED
+	#define XBEE_PINSLEEP_ENABLED
 #elif defined(POWER_STRIP_MONITOR)
 	#define MOTE_TASK_ID	0x05
 	#define MOTE_RESETN		REGISTER_BIT(PORTC,1)
@@ -114,6 +121,7 @@ typedef struct
 	#define MOTE_TX_CTSN	REGISTER_BIT(PORTD,5)
 	#define MOTE_RX_CTSN	REGISTER_BIT(PORTC,0)
 	#define MOTE_RX_RTSN	REGISTER_BIT(PORTD,6)
+	#undef XBEE_PINSLEEP_ENABLED
 #endif
 
 #define MOTE_UART_GETC	uart1_getc
