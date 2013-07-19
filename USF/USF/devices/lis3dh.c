@@ -14,6 +14,7 @@
 #include "devices/lis3dh.h"
 #include "drivers/i2cmaster.h"
 #include "drivers/pcint.h"
+#include "drivers/rtctimer.h"
 #include "utils/scheduler.h"
 
 #define STATUS_REG_AUX 0x07
@@ -128,6 +129,11 @@ accel_reading_t accel_read(void) {
 // Uses INT1 of accel -> PORTA.0 / PCINT0
 void accel_configure_click( void (*c)(unsigned char) ) {
 	unsigned char b = 0b10000000; // click interrupt on INT1
+	if ( c == NULL ) {
+		pcint_unregister(0);
+		click_cb = c;
+		return;			
+	}
 	if ( i2c_writereg(ACCEL_ADDR, CTRL_REG3, 1, &b ) ) {
 		kputs("Error configuring accel sensor\n");
 	}
@@ -164,6 +170,11 @@ void _accel_int1_cb() {
 // uses INT2 -> PORTA.1 / PCINT1
 void accel_configure_orientation_detection( unsigned char detection_mask, void (*o)(unsigned char orientation) ) {
 	unsigned char b = 0b01000000; // active high, AOI interrupt enable
+	if ( o == NULL ) {
+		pcint_unregister(1);
+		orient_cb = NULL;
+		return;
+	}
 	if ( i2c_writereg(ACCEL_ADDR, CTRL_REG6, 1, &b ) ) {
 		kputs("Error configuring accel sensor\n");
 	}
@@ -195,7 +206,44 @@ void _accel_int2_cb() {
 }
 
 void accel_setup_reporting_schedule(uint16_t starttime) {
-	scheduler_add_task(ACCEL_TASK_ID,starttime,&_accel_reporting_doread);
+	accel_wake(); // accelerometer will be always-on
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,ACCEL_TASK_ID,starttime,&_accel_reporting_doread);
+}
+
+volatile unsigned char int_orientation_latch;
+volatile uint32_t int_start_latch;
+volatile uint8_t int_setup_time;
+
+void accel_setup_interrupt_schedule(uint16_t starttime) {
+	accel_configure_interrupt(5);
+	accel_wake();
+	accel_configure_orientation_detection(ACCEL_ORIENTATION_ALL, &_accel_interrupt_orient_cb);
+	int_orientation_latch = 0;
+	int_start_latch = 0;
+	scheduler_add_task(SCHEDULER_MONITOR_LIST, ACCEL_TASK_ID, starttime, &_accel_interrupt_check );
+}
+
+void accel_configure_interrupt(uint8_t setup_time) {
+	int_setup_time = setup_time;
+}
+
+void _accel_interrupt_check() {
+	volatile uint32_t curtime = rtctimer_read();
+	//printf_P(PSTR("OL=%02X curtime=%ld startlatch=%ld\n"),int_orientation_latch,curtime,int_start_latch);
+	if (int_orientation_latch && (curtime - int_start_latch > int_setup_time) ) {
+		// in one place for long enough
+		report_current()->fields |= REPORT_TYPE_ORIENTATION_CHANGED;
+		report_current()->orientation = int_orientation_latch;
+		int_orientation_latch = 0;
+	}
+}
+
+void _accel_interrupt_orient_cb(unsigned char orientation) {
+	//printf_P(PSTR("Orient=%02X\n"),orientation);
+	if ( orientation != int_orientation_latch ) {
+		int_orientation_latch = orientation;
+		int_start_latch = rtctimer_read();
+	}		
 }
 
 void _accel_reporting_doread() {

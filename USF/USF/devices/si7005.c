@@ -25,7 +25,7 @@ void humid_init(void) { // nothing here since we cut power to the device normall
 }
 
 void humid_sleep(void) {
-	HUMID_VCC = 0;
+	HUMID_VCC = 1; // Don't change!  Otherwise, current will drain out of AH pins
 	HUMID_CSN = 1;
 }
 
@@ -77,10 +77,10 @@ humid_reading_t humid_read(void) {
 uint8_t humid_reporting_error_occurred;
 
 void humid_setup_reporting_schedule(uint16_t curtime) {
-	scheduler_add_task(HUMID_TASK_ID, curtime, &humid_wake);
-	scheduler_add_task(HUMID_TASK_ID, curtime += 10, &_humid_reporting_readh);
-	scheduler_add_task(HUMID_TASK_ID, curtime += 35, &_humid_reporting_readt);
-	scheduler_add_task(HUMID_TASK_ID, curtime += 35, &_humid_reporting_finish);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,HUMID_TASK_ID, curtime, &humid_wake);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,HUMID_TASK_ID, curtime += 10, &_humid_reporting_readh);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,HUMID_TASK_ID, curtime += 35, &_humid_reporting_readt);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,HUMID_TASK_ID, curtime += 35, &_humid_reporting_finish);
 	humid_reporting_error_occurred = 0;
 }
 

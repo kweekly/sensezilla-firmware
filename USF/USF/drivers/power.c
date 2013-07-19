@@ -18,6 +18,7 @@ void avr_doze(void) {
 }
 
 void avr_sleep(void) {
+//	kputs("I go to sleep.\n");
 	uart_flush();
 	uart1_flush();
 	xbee_tick();
@@ -26,4 +27,5 @@ void avr_sleep(void) {
 	sleep_enable();
 	sleep_cpu();
 	sleep_disable();
+//	kputs("I awaken\n");
 }

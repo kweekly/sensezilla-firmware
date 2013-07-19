@@ -263,7 +263,7 @@ void powermon_writereg(uint8_t chipno, uint8_t address, uint32_t data) {
 }
 
 void powermon_setup_reporting_schedule(uint16_t starttime) {
-	scheduler_add_task(POWERMON_TASK_ID,starttime,&_powermon_write_report);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,POWERMON_TASK_ID,starttime,&_powermon_write_report);
 }
 
 void powermon_fmt_reading(powermon_reading_t reading[POWERMON_NUM_CHANNELS],int16_t maxlen, char * str) {

@@ -23,6 +23,8 @@ typedef struct {
 */
 
 
+uint16_t report_fields_requested;
+
 void report_print(report_t * rep) {
 	printf_P(PSTR("t=%10ld"),rep->time);
 	
@@ -73,6 +75,25 @@ void report_print(report_t * rep) {
 	if ( rep->fields & REPORT_TYPE_RSSI)
 		printf_P(PSTR(" rssi=%02X"),rep->rssi);
 	#endif
+	
+	
+	#ifdef REPORT_TYPE_OCCUPANCY_CHANGED
+	if ( rep->fields & REPORT_TYPE_OCCUPANCY_CHANGED ) {
+		printf_P(PSTR(" occupancy=%d"),rep->occupancy_state);
+	}
+	#endif
+	
+	#ifdef REPORT_TYPE_ORIENTATION_CHANGED
+	if ( rep->fields & REPORT_TYPE_ORIENTATION_CHANGED ) {
+		printf_P(PSTR(" orientation=%02X"),rep->orientation);
+	}
+	#endif
+	
+	#ifdef REPORT_TYPE_LIGHT_CHANGED
+	if ( rep->fields & REPORT_TYPE_LIGHT_CHANGED ) {
+		printf_P(PSTR(" lightdetect=%d"),rep->light_level_state);
+	}
+	#endif
 		
 	printf_P(PSTR("\n"));
 }
@@ -117,9 +138,31 @@ uint16_t report_populate_real_data(report_t * rep, uint8_t * buf) {
 	/**************** COMMON *******************/
 	
 	#ifdef REPORT_TYPE_RSSI	
-	if ( rep->fields & REPORT_TYPE_RSSI )
+	if ( rep->fields & REPORT_TYPE_RSSI ) {
 		*((int8_t *)fltptr) = rep->rssi;
 		fltptr = (float*)(((int8_t *)fltptr) + 1);
+	}		
+	#endif
+	
+	#ifdef REPORT_TYPE_OCCUPANCY_CHANGED
+	if ( rep->fields & REPORT_TYPE_OCCUPANCY_CHANGED ) {
+		*((int8_t *)fltptr) = rep->occupancy_state;
+		fltptr = (float*)(((int8_t *)fltptr) + 1);
+	}		
+	#endif
+	
+	#ifdef REPORT_TYPE_ORIENTATION_CHANGED
+	if ( rep->fields & REPORT_TYPE_ORIENTATION_CHANGED ) {
+		*((int8_t *)fltptr) = rep->orientation;
+		fltptr = (float*)(((int8_t *)fltptr) + 1);
+	}		
+	#endif
+	
+	#ifdef REPORT_TYPE_LIGHT_CHANGED
+	if ( rep->fields & REPORT_TYPE_LIGHT_CHANGED ) {
+		*((int8_t *)fltptr) = rep->light_level_state;
+		fltptr = (float*)(((int8_t *)fltptr) + 1);
+	}		
 	#endif
 	
 	return (uint16_t)((uint8_t *)fltptr - oldbuf);
@@ -184,6 +227,24 @@ void report_print_human(report_t * rep) {
 		xbee_fmt_reading(&(rep->rssi),sizeof(buf),buf);
 		uart_putc(' ');
 		uart_puts(buf);
+	}
+	#endif
+	
+	#ifdef REPORT_TYPE_OCCUPANCY_CHANGED
+	if ( rep->fields & REPORT_TYPE_OCCUPANCY_CHANGED ) {
+		printf_P(PSTR(" Occupancy=%d"),rep->occupancy_state);
+	}
+	#endif
+	
+	#ifdef REPORT_TYPE_ORIENTATION_CHANGED
+	if ( rep->fields & REPORT_TYPE_ORIENTATION_CHANGED ) {
+		printf_P(PSTR(" Orientation=%02X"),rep->orientation);
+	}
+	#endif
+		
+	#ifdef REPORT_TYPE_LIGHT_CHANGED
+	if ( rep->fields & REPORT_TYPE_LIGHT_CHANGED ) {
+		printf_P(PSTR(" Light detect=%d"),rep->light_level_state);
 	}
 	#endif
 	

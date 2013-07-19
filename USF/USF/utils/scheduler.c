@@ -16,10 +16,11 @@ typedef struct {
 	void (*callback)(void);
 } scheduler_event_t;
 
-scheduler_event_t event_list[MAX_EVENTS];
-uint8_t numevents;
+scheduler_event_t event_lists[SCHEDULER_NUM_LISTS][MAX_EVENTS];
+uint8_t numevents[SCHEDULER_NUM_LISTS];
+uint16_t maxtime[SCHEDULER_NUM_LISTS];
+
 uint8_t eventpos;
-uint16_t maxtime;
 
 extern void avr_doze(void);
 
@@ -38,13 +39,17 @@ void scheduler_init() {
 
 	// enable interrupts for compare A
 	TIMSK1 = 0x02;
-	
-	numevents = 0;
-	maxtime = 0;
 }
 
-void scheduler_add_task(uint8_t task_id, uint16_t time_ms, void (*cb)(void)) {
-	if ( numevents == MAX_EVENTS) {
+void scheduler_reset() {
+	memset(event_lists,0,sizeof(event_lists));
+	memset(numevents,0,sizeof(numevents));
+	memset(maxtime,0,sizeof(maxtime));
+	eventpos = 0;
+}
+
+void scheduler_add_task(uint8_t task_list, uint8_t task_id, uint16_t time_ms, void (*cb)(void)) {
+	if ( numevents[task_list] == MAX_EVENTS) {
 		kputs("Task list is full!\n");
 		return;
 	}
@@ -63,47 +68,49 @@ void scheduler_add_task(uint8_t task_id, uint16_t time_ms, void (*cb)(void)) {
 		#else
 			#error "F_CPU not defined!"
 		#endif
-		if (timeticks >= maxtime) 
-			maxtime = timeticks;
+		if (timeticks >= maxtime[task_list]) 
+			maxtime[task_list] = timeticks;
 	} else {
 		timeticks = SCHEDULER_LAST_EVENTS;
 	}
 
-	int8_t pos = numevents - 1;
-	while ( pos >= 0 && event_list[pos].time > timeticks  ) {
-		event_list[pos+1] = event_list[pos];
+	int8_t pos = numevents[task_list] - 1;
+	while ( pos >= 0 && event_lists[task_list][pos].time > timeticks  ) {
+		event_lists[task_list][pos+1] = event_lists[task_list][pos];
 		pos--;
 	}
-	event_list[pos+1].task_id = task_id;
-	event_list[pos+1].time = timeticks;
-	event_list[pos+1].callback = cb;
+	event_lists[task_list][pos+1].task_id = task_id;
+	event_lists[task_list][pos+1].time = timeticks;
+	event_lists[task_list][pos+1].callback = cb;
 	//printf("New Task %d %p\n", pos+1, cb);
-	numevents++;
+	numevents[task_list]++;
 }
 
-void scheduler_remove_tasks(uint8_t task_id) {
+void scheduler_remove_tasks(uint8_t task_list, uint8_t task_id) {
 	uint8_t p1=0,p2=0;
-	for ( p1 = 0; p1 < numevents; p1++ ) {
-		if ( event_list[p1].task_id != task_id ) {
-			event_list[p2++] = event_list[p1];
+	for ( p1 = 0; p1 < numevents[task_list]; p1++ ) {
+		if ( event_lists[task_list][p1].task_id != task_id ) {
+			event_lists[task_list][p2++] = event_lists[task_list][p1];
 		}
 	}
+	numevents[task_list] = p2;
 }
 
 
-void _scheduler_run_tasks() {
-	while (eventpos < numevents && event_list[eventpos].time <= TCNT1 ) {
-		//printf("Excecute Task %d %d %p\n", eventpos, event_list[eventpos].time, event_list[eventpos].callback);
-		event_list[eventpos].callback();
+void _scheduler_run_tasks(uint8_t task_list ){
+	while (eventpos < numevents[task_list] && event_lists[task_list][eventpos].time <= TCNT1 ) {
+		//printf("Excecute Task %d %d %p\n", eventpos, event_lists[task_list][eventpos].time, event_lists[task_list][eventpos].callback);
+		event_lists[task_list][eventpos].callback();
 		eventpos += 1;
 	}
 }
 
 
-void scheduler_start() {
-	if ( numevents == 0 ) {
-		kputs("Scheduler told to start, but no events");
+void scheduler_start(uint8_t task_list) {
+	if ( numevents[task_list] == 0 ) {
+		kputs("Scheduler told to start, but no events\n");
 	}
+	//printf_P(PSTR("Start task list %d\n"),task_list);
 		
 	TCNT1 = 0; // start from scratch
 	eventpos = 0;
@@ -112,16 +119,16 @@ void scheduler_start() {
 	
 	// set up for next events to run
 	while(1) {
-		_scheduler_run_tasks(); // run all tasks that need to be run
-		if ( eventpos >= numevents || event_list[eventpos].time == SCHEDULER_LAST_EVENTS) {
+		_scheduler_run_tasks(task_list); // run all tasks that need to be run
+		if ( eventpos >= numevents[task_list] || event_lists[task_list][eventpos].time == SCHEDULER_LAST_EVENTS) {
 			break;
 		}
-		OCR1A = event_list[eventpos].time; // set next alarm to wake up
+		OCR1A = event_lists[task_list][eventpos].time; // set next alarm to wake up
 		avr_doze();
 	}
 	
-	while(eventpos < numevents) {
-		event_list[eventpos].callback();
+	while(eventpos < numevents[task_list]) {
+		event_lists[task_list][eventpos].callback();
 		eventpos++;
 	}
 	

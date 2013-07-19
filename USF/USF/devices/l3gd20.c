@@ -106,9 +106,11 @@ void gyro_wake(void) {
 
 void gyro_sleep(void) {
 	unsigned char b = DEFAULT_CTRL_REG1;
+	
 	if ( i2c_writereg(GYRO_ADDR, CTRL_REG1, 1, &b ) ) {
 		kputs("Error turning off gyro\n");
-	}	
+	}
+	
 }
 
 #define GYRO_SENSITIVITY 250.0
@@ -128,8 +130,8 @@ uint8_t gyro_convert_real(gyro_reading_t * reading, float * fltptr) {
 }
 
 void gyro_setup_reporting_schedule(uint16_t starttime) {
-	scheduler_add_task(GYRO_TASK_ID,starttime,&gyro_wake);
-	scheduler_add_task(GYRO_TASK_ID,starttime + 15,&_gyro_reporting_finish);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,GYRO_TASK_ID,starttime,&gyro_wake);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,GYRO_TASK_ID,starttime + 15,&_gyro_reporting_finish);
 }
 
 void _gyro_reporting_finish() {

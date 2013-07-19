@@ -19,6 +19,7 @@
 #define MT_SENSOR_DATA				0x01
 #define MT_CONFIGURE_SENSOR			0x02
 #define MT_ACTUATE					0x03
+#define MT_RFID_DETECTION			0x04
 
 #if defined ENVIRONMENT_SENSOR
 	#define MY_BT BT_DUST_ENVIRONMENT_SENSOR
@@ -68,3 +69,12 @@ uint16_t packet_construct_sensor_data_header(uint32_t timestamp, uint16_t fields
 	*(uint16_t*)(buffer_out+6) = fields;
 	return 8;
 }
+
+#ifdef USE_PN532
+uint16_t packet_construct_RFID_detected_header(uint32_t timestamp, uint8_t * buffer_out) {
+	buffer_out[0] = MY_BT;
+	buffer_out[1] = MT_RFID_DETECTION;
+	*(uint32_t*)(buffer_out+2) = timestamp;
+	return 6;
+}
+#endif

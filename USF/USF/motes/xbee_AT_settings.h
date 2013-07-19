@@ -19,10 +19,11 @@ const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =
 	",D6\x0"
 #endif
 #ifdef XBEE_CTS_ENABLED
-	",D7\x1" // enable flow control RTS
+	",D7\x1" // enable flow control CTS
 #else
 	",D7\x0"
 #endif
+",D5\x0" // associated indicator off
 ",CH\xC"
 ",MY\xFF\xFF"
 ",MM\x0"
@@ -30,11 +31,15 @@ const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =
 ",RN\x3"
 ",CE\x0"
 ",EE\x0"
-#ifdef XBEE_PINSLEEP_ENABLED
+#if defined(XBEE_PINSLEEP_ENABLED) && defined(LOW_POWER)
 	",SM\x1" // pin hibernate
+	",A1\xC" // poll coordinator for data, device attempts association
 #else
 	",SM\x0"
+	",A1\x8" // only check for data, do not attempt to associate
 #endif
+",SP\x01\x90" // 20s before host discards message
+",ST\xFA" //250ms before sleep
 ",SO\x2" // supress IO samples
 ",AP\x2"
 ",XX"
@@ -48,22 +53,26 @@ const unsigned char XBEE_AT_SETTING_STR_S2[] PROGMEM =
 	",D6\x0"
 #endif
 #ifdef XBEE_CTS_ENABLED
-	",D7\x1" // enable flow control RTS
+	",D7\x1" // enable flow control CTS
 #else
 	",D7\x0"
 #endif
+",D5\x0" // associated indicator off
 ",CH\xC"
 ",MY\xFF\xFF"
 ",MM\x0"
 ",RR\x2"
 ",RN\x3"
-",CE\x0"
+",CE\x0" 
 ",EE\x0"
-#ifdef XBEE_PINSLEEP_ENABLED
+#if defined(XBEE_PINSLEEP_ENABLED) && defined(LOW_POWER)
 	",SM\x1" // pin hibernate
+	",A1\xC" // poll coordinator for data, device attempts association
 #else
 	",SM\x0"
+	",A1\x8" // only check for data, do not attempt to associate
 #endif
+",ST\xFA" // 250ms wake time
 ",SO\x2" // supress IO samples
 ",AP\x2"
 ",XX"
@@ -97,11 +106,12 @@ const unsigned char XBEE_AT_SETTING_STR_S6[] PROGMEM =
 #else
 ",D7\x0"
 #endif
-#ifdef XBEE_PINSLEEP_ENABLED
+#if defined(XBEE_PINSLEEP_ENABLED) && defined(LOW_POWER)
 	",SM\x1" // pin hibernate
 #else
 	",SM\x0"
 #endif
+",ST\xFA" // 250ms wake time
 ",XX"
 ;
 

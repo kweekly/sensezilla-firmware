@@ -19,6 +19,11 @@ void __pir_pcint_cb();
 void pir_setup_reporting_schedule(uint16_t starttime);
 void _pir_reporting_write_report();
 
+void pir_setup_interrupt_schedule(uint16_t starttime);
+void pir_set_interrupt_params(uint8_t time_before_release);
+void _pir_interrupt_write_report();
+
 void pir_fmt_reading(float * reading, uint8_t maxlen, char * str);
+
 
 #endif /* AMN41121_H_ */

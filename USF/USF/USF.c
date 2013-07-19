@@ -30,8 +30,6 @@ void board_power_down_devices(void);
 void board_init_devices(void);
 void board_setup_reporting(void);
 
-void task_led_blip_on(void);
-void task_led_blip_off(void);
 
 int main(void)
 {
@@ -71,11 +69,6 @@ int main(void)
 	report_init();
 	
 	board_init_devices();
-
-	#ifdef USE_PN532
-	kputs("Initializing RFID reader... \n");
-	rfid_init();
-	#endif
 	
 	kputs("Initializing wireless mote\n");
 	wdt_reset();
@@ -107,35 +100,28 @@ int main(void)
 
 	board_setup_reporting();
 	
-	
 	kputs("Starting RTC clock\n");
 	rtctimer_init();
-	rtctimer_set_periodic_alarm(2,&scheduler_start);
+	rtctimer_set_periodic_alarm(report_interval_needed(),&rtc_timer_cb);
 	wdt_reset();
 	wdt_disable();
     while(1)
     {
-		wdt_enable(WDTO_250MS);
+		wdt_enable(WDTO_1S);
 		wdt_reset();
 		pcint_check();
 		rtctimer_check_alarm();
 		wdt_disable();
-		wdt_enable(WDTO_1S);
-		wdt_reset();
+		
 		#ifdef USE_PN532
-		if(rfid_passive_scan()) {
-			
-		}
-		xbee_tick();
-		_delay_ms(100);
+			rtc_timer_cb(); // causes monitor list to be run
 		#else
-		#if defined ENVIRONMENT_SENSOR // do we have a RTC clock and battery-powered
+		#if defined LOW_POWER // do we have a RTC clock and battery-powered
 			avr_sleep();
 		#else
 			avr_doze();
 		#endif
 		#endif
-		wdt_disable();
     }
 }
 
@@ -145,13 +131,13 @@ void board_power_down_devices(void) {
 	LED1 = 0;
 	LED2 = 0;
 	
-	light_sleep();
+	light_sleep(); 
 	gyro_sleep();
-	//accel_sleep(); always-on
+	accel_sleep(); 
 	humid_sleep();
-	//pir_sleep(); always-on
+	pir_sleep(); 
 	xbee_sleep();	
-#endif 
+#endif
 }
 
 
@@ -174,38 +160,15 @@ void board_init_devices(void) {
 	kputs("Initializing Devices... Power\n");
 	powermon_init();	
 #endif
+
+#ifdef USE_PN532
+	kputs("Initializing RFID reader... \n");
+	rfid_init();
+#endif
 }
 
 void board_setup_reporting(void) {
 	kputs("Initializing Scheduler and tasks\n");
 	scheduler_init();
-	scheduler_add_task(LED_BLIP_TASK_ID, 0, &task_led_blip_on);
-	scheduler_add_task(LED_BLIP_TASK_ID, 10, &task_led_blip_off);
-	
-	scheduler_add_task(TASK_REPORTING, 0, &task_begin_report);
-	
-#if defined ENVIRONMENT_SENSOR	
-	xbee_setup_reporting_schedule(1); // also tells xbee to wake-up
-	humid_setup_reporting_schedule(1);
-	light_setup_reporting_schedule(1);
-	pir_setup_reporting_schedule(1);
-	accel_setup_reporting_schedule(5);
-	gyro_setup_reporting_schedule(1);
-#elif defined POWER_STRIP_MONITOR
-	xbee_setup_reporting_schedule(1); // also tells xbee to wake-up
-	powermon_setup_reporting_schedule(1);
-#endif	
-	
-	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
-	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_send_report);
-	scheduler_add_task(TASK_REPORTING, SCHEDULER_LAST_EVENTS, &report_poplast);
-	scheduler_add_task(MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &xbee_sleep);
-}
-
-void task_led_blip_on(void) {
-	LED1 = 1;
-}
-
-void task_led_blip_off(void) {
-	LED1 = 0;
+	cmd_configure_sensor_cb(0, DEFAULT_FIELDS_TO_REPORT, DEFAULT_SAMPLE_INTERVAL); // this initiates scheduler	
 }

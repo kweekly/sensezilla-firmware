@@ -12,6 +12,7 @@
 
 #include "devices/tsl2560.h"
 #include "drivers/i2cmaster.h"
+#include "drivers/pcint.h"
 #include "utils/scheduler.h"
 
 #define COMMAND_DEFAULT	0x80
@@ -67,9 +68,58 @@ void light_sleep() {
 	}
 }
 
+uint8_t int_current_level;
+uint16_t int_level_setting;
+uint16_t int_hysteresis_setting;
+
+void light_setup_interrupt_schedule(uint16_t starttime) {
+	light_set_interrupt_params(LIGHT_LEVEL_DRAWER_OPEN_MIN, 0x04);
+	scheduler_add_task(SCHEDULER_MONITOR_LIST, LIGHT_TASK_ID, starttime, &light_wake);
+	scheduler_add_task(SCHEDULER_MONITOR_LIST, LIGHT_TASK_ID, starttime += 105, &_light_interrupt_finish);
+}
+
+void light_set_interrupt_params(uint16_t level, uint16_t hysteresis) {
+	int_level_setting = level;
+	int_hysteresis_setting = hysteresis;
+	
+	light_reading_t lr;
+	// read current light value
+	light_wake();
+	_delay_ms(105);
+	lr = light_read();
+	int_current_level = (lr.ch0 > level);
+	light_sleep();
+}
+
+void _light_interrupt_finish() {
+	light_reading_t lr;
+	lr = light_read();
+	
+	//printf_P(PSTR("\tlr.ch0=%04X lvl=%04X hyst=%04X curlvl=%d\n"),lr.ch0,int_level_setting,int_hysteresis_setting,int_current_level);
+	if (( int_current_level && (lr.ch0 < int_level_setting - int_hysteresis_setting)) ||
+		 (!int_current_level && (lr.ch0 > int_level_setting + int_hysteresis_setting)) ) {
+		int_current_level = (lr.ch0 > int_level_setting);
+		report_current()->fields |= REPORT_TYPE_LIGHT_CHANGED;
+		report_current()->light_level_state = int_current_level;
+	}
+	
+	light_sleep();	
+}
+
+void (*light_level_cb)(uint8_t level);
+void light_configure_interrupt(uint16_t light_level, uint16_t hysteresis, void (*cb)(uint8_t level)) {	
+	light_reading_t lr;
+	light_level_cb = cb;
+	// read current light value
+	light_wake();
+	_delay_ms(105);
+	lr = light_read();
+	int_current_level = (lr.ch0 > light_level);
+}
+
 void light_setup_reporting_schedule(uint16_t starttime) {
-	scheduler_add_task(LIGHT_TASK_ID, starttime, &light_wake);
-	scheduler_add_task(LIGHT_TASK_ID, starttime += 105, &_light_reporting_finish); // change based on integration constant
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LIGHT_TASK_ID, starttime, &light_wake);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LIGHT_TASK_ID, starttime += 105, &_light_reporting_finish); // change based on integration constant
 }
 
 void _light_reporting_finish(void) {

@@ -9,8 +9,10 @@
 
 #include "avrincludes.h"
 #include "protocol/report.h"
+#include "utils/scheduler.h"
 
 #include "devices/PN532.h"
+#include "drivers/SPI.h"
 
 #define PN532_PREAMBLE                      (0x00)
 #define PN532_STARTCODE1                    (0x00)
@@ -172,6 +174,7 @@ uint8_t rfid_passive_scan() {
   
   if (success) {
     // Display some basic information about the card
+	/*
     kputs("Found an ISO14443A card");
     printf_P(PSTR("  UID Length: %d bytes\n"),uidLength);
     kputs("  UID Value: ");
@@ -179,7 +182,8 @@ uint8_t rfid_passive_scan() {
 		printf_P(PSTR("%02X"),rfid_uid_buffer[c]);	
 	}
 	kputs("\n");
-	return 1;
+	*/
+	return uidLength;
   }
   return 0;
 }
@@ -287,7 +291,6 @@ uint8_t rfid_send_command_check_ack(uint8_t *cmd, uint8_t cmdlen) {
 */
 /**************************************************************************/
 uint8_t rfid_write_GPIO(uint8_t pinstate) {
-  uint8_t errorbit;
 
   // Make sure pinstate does not try to toggle P32 or P34
   pinstate |= (1 << PN532_GPIO_P32) | (1 << PN532_GPIO_P34);
@@ -498,7 +501,6 @@ uint8_t rfid_mifareclassic_IsTrailerBlock (uint32_t uiBlock)
 /**************************************************************************/
 uint8_t rfid_mifareclassic_AuthenticateBlock (uint8_t * uid, uint8_t uidLen, uint32_t blockNumber, uint8_t keyNumber, uint8_t * keyData)
 {
-  uint8_t len;
   uint8_t i;
   
   // Hang on to the key and uid data
@@ -965,6 +967,32 @@ uint8_t _rfid_spiread(void) {
   }
   return x;
   */
+}
+void (*detection_cb)(uint8_t * uid, uint8_t uidlen);
+
+char last_uid_detected[sizeof(rfid_uid_buffer)];
+
+void rfid_setup_interrupt_schedule(uint16_t starttime, void (*dcb)(uint8_t * uid, uint8_t uidlen)) {
+	detection_cb = dcb;
+	scheduler_add_task(SCHEDULER_MONITOR_LIST, RFID_TASK_ID, starttime, &_rfid_check_interrupt);
+	memset(last_uid_detected, 0, sizeof(last_uid_detected));
+}
+
+void _rfid_check_interrupt() {
+	uint8_t uidlen;
+	LED1 = 1;
+	uidlen = rfid_passive_scan();
+	if (uidlen && detection_cb) {
+		if ( memcmp(last_uid_detected, rfid_uid_buffer, uidlen) ) {
+			detection_cb(rfid_uid_buffer, uidlen);
+			memcpy(last_uid_detected, rfid_uid_buffer, uidlen);
+		} else {
+			// already detected
+		}			
+	} else {
+		memset(last_uid_detected, 0, sizeof(last_uid_detected));
+	}
+	LED1 = 0;
 }
 
 

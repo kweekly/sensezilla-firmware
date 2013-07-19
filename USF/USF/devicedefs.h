@@ -10,27 +10,28 @@
 
 /***************  ENVIRONMENT SENSOR ***********************/ 
 /*
-  FUSE SETTINGS:
-  BODLEVEL = 2V7
-  OCDEN = [ ]
-  JTAGEN = [X]
-  SPIEN = [X]
-  WDTON = [ ]
-  EESAVE = [ ]
-  BOOTSZ = 4096W_F000
-  BOOTRST = [ ]
-  CKDIV8 = [ ]
-  CKOUT = [ ]
-  SUT_CKSEL = INTRCOSC_6CK_0MS
+BODLEVEL = DISABLED
+OCDEN = [ ]
+JTAGEN = [X]
+SPIEN = [X]
+WDTON = [ ]
+EESAVE = [ ]
+BOOTSZ = 4096W_F000
+BOOTRST = [ ]
+CKDIV8 = [ ]
+CKOUT = [ ]
+SUT_CKSEL = INTRCOSC_6CK_0MS
 
-  EXTENDED = 0xFD (valid)
-  HIGH = 0x99 (valid)
-  LOW = 0xC2 (valid)
+EXTENDED = 0xFF (valid)
+HIGH = 0x99 (valid)
+LOW = 0xC2 (valid)
+
  */ 
 // Uncomment this line to activate this board
 #define ENVIRONMENT_SENSOR
 #define HW_VERSION 2
 
+#define USE_PN532
 /***************  POWER STRIP MONITOR (v2) *******************/ 
 /* Fuse Settings:
 Extended: FF
@@ -58,11 +59,28 @@ typedef struct
 
 #define REGISTER_BIT(rg,bt) ((volatile _io_reg*)&rg)->bit##bt 
 
+// Power mode
+#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532)
+	#define LOW_POWER
+#else
+	#define HIGH_POWER
+#endif
+
 // FCPU
 #if defined ENVIRONMENT_SENSOR
 	#define F_CPU 8000000L
 #elif defined POWER_STRIP_MONITOR
 	#define F_CPU 16384000L
+#endif
+
+// Reporting
+#if defined ENVIRONMENT_SENSOR
+	#define DEFAULT_FIELDS_TO_REPORT	0x35F // all but gyro
+	//#define DEFAULT_FIELDS_TO_REPORT	0x40
+	#define DEFAULT_SAMPLE_INTERVAL		5
+#elif defined POWER_STRIP_MONITOR
+	#define DEFAULT_FIELDS_TO_REPORT	0x13F // all channels and RSSI
+	#define DEFAULT_SAMPLE_INTERVAL		60 // once per minute
 #endif
 
 // DDRs
@@ -96,7 +114,7 @@ typedef struct
 // Mote
 #if defined(ENVIRONMENT_SENSOR)
 	#define MOTE_TASK_ID	0x05
-	#define MOTE_SLEEPN		REGISTER_BIT(PORTA,5)
+	#define MOTE_SLEEP		REGISTER_BIT(PORTA,5)
 	#if HW_VERSION==1
 	#define MOTE_TIMEN		REGISTER_BIT(PORTA,3)
 	#define MOTE_TX_RTSN	REGISTER_BIT(PORTB,2)
@@ -108,14 +126,16 @@ typedef struct
 	#define MOTE_ASSOC		REGISTER_BIT(PORTB,1)
 	#define MOTE_RESETN		REGISTER_BIT(PORTA,4)
 	#endif
-	#define MOTE_TX_CTSN	REGISTER_BIT(PORTB,0)
+	#define MOTE_TX_CTSN		REGISTER_BIT(PORTB,0)
+	#define MOTE_TX_CTSN_PIN	REGISTER_BIT(PINB, 0)
 	#define MOTE_RX_RTSN	REGISTER_BIT(PORTD,6)
 	#define XBEE_RTS_ENABLED
+	#define XBEE_CTS_ENABLED
 	#define XBEE_PINSLEEP_ENABLED
 #elif defined(POWER_STRIP_MONITOR)
 	#define MOTE_TASK_ID	0x05
 	#define MOTE_RESETN		REGISTER_BIT(PORTC,1)
-	#define MOTE_SLEEPN		REGISTER_BIT(PORTA,6)
+	#define MOTE_SLEEP		REGISTER_BIT(PORTA,6)
 	#define MOTE_TIMEN		REGISTER_BIT(PORTA,5)
 	#define MOTE_TX_RTSN	REGISTER_BIT(PORTD,4)
 	#define MOTE_TX_CTSN	REGISTER_BIT(PORTD,5)

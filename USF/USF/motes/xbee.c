@@ -15,7 +15,7 @@
 
 #define XBEE_TX_API_BUF_SIZE 128
 #define XBEE_RX_API_BUF_SIZE 64
-#define XBEE_AT_RESP_TIMEOUT 20 // in 10ms periods
+#define XBEE_AT_RESP_TIMEOUT 10000
 
 uint8_t *rx_client_buf;
 void (*rx_callback)(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes);
@@ -25,6 +25,7 @@ void (*status_callback)(uint8_t status);
 uint8_t xbee_hw_series;
 
 uint8_t modem_status;
+uint8_t modem_initialized;
 uint8_t frame_id;
 
 uint16_t xbee_rx_api_buf_len;
@@ -43,6 +44,7 @@ void xbee_init() {
 
 	modem_status = XBEE_STATUS_HW_RESET;
 	frame_id = 1;
+	modem_initialized = 0;
 		
 	// comms initialization
 	int8_t resp;
@@ -68,7 +70,7 @@ void xbee_init() {
 	} else {
 		printf_P(PSTR("Maybe not %c%c%c\n"),ch1,ch2,ch3);
 	}
-	
+		
 	kputs("\tAttempt communication at 115200...");
 	MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
 	_delay_ms(100);
@@ -112,6 +114,8 @@ void xbee_init() {
 		}	
 	}
 	
+	
+	
 	if ( resp < 0 ) {
 		return;		
 	}
@@ -140,6 +144,23 @@ void xbee_init() {
 		return;
 	}
 	
+	char snbuf[8];
+	resp = xbee_AT_get("SH",snbuf);
+	if ( resp < 0 ) {
+		kputs("Error getting SH\n");
+	} else {
+		resp = xbee_AT_get("SL",snbuf+4);
+		if ( resp < 0 ) {
+			kputs("Error getting SL\n");
+		} else {
+			kputs("\tSerial No = ");
+			for ( int c = 0; c < 8; c++ ) {
+				printf_P(PSTR("%02X"),snbuf[c]);
+			}
+			kputs("\n");
+		}
+	}		
+	
 	uint16_t pos = 0;
 	char atcmd[2];
 	uint8_t atbuf[16];
@@ -164,6 +185,7 @@ void xbee_init() {
 		kputs(" ... ");
 		
 		resp = xbee_AT_set_resp(atcmd,c,atbuf);
+		
 		if ( resp < 0 ) {
 			printf_P(PSTR("error %d, retry..."),resp);
 			resp = xbee_AT_set_resp(atcmd,c,atbuf);
@@ -177,6 +199,19 @@ void xbee_init() {
 		}
 		_delay_ms(200);
 	}
+	/*
+	printf_P(PSTR("Writing to nonvolatile... "));
+	resp = xbee_AT_set_resp("AC",0,NULL);
+	if ( resp < 0 ) {
+		printf_P(PSTR("error on AC %d"),resp);
+	}
+	resp = xbee_AT_set_resp("WR",0,NULL);
+	if ( resp < 0 ) {
+		printf_P(PSTR("error on WR %d"),resp);
+	}
+	kputs("\n");
+	*/
+	modem_initialized = 1;
 }
 
 uint8_t xbee_get_type() {
@@ -184,13 +219,17 @@ uint8_t xbee_get_type() {
 }
 
 void xbee_sleep(){
+	//kputs("XB Sleep\n");
+#ifdef LOW_POWER
 	MOTE_RX_RTSN = 1; // de-asserted
-	MOTE_SLEEPN = 1;
+	MOTE_SLEEP = 1;
+#endif
 }
 
 void xbee_wake() {
-	MOTE_RX_RTSN = 0; // asserted
-	MOTE_SLEEPN = 0;
+	//kputs("XB Wake\n");
+		MOTE_RX_RTSN = 0; // asserted
+		MOTE_SLEEP = 0;
 }
 
 void xbee_tick() {
@@ -286,13 +325,13 @@ int8_t _xbee_wait_for_AT_resp(uint8_t * buf) {
 	rx_at_cmd_buf = buf;
 	rx_at_cmd_status = XBEE_AT_WAITING;
 	
-	int8_t c = XBEE_AT_RESP_TIMEOUT;
+	int16_t c = XBEE_AT_RESP_TIMEOUT;
 	while (c--) {
 		xbee_tick();
 		if ( rx_at_cmd_status != XBEE_AT_WAITING ){
 			return rx_at_cmd_status;
 		}
-		_delay_ms(10);
+		//_delay_ms();
 	}
 	return XBEE_AT_TIMEOUT;	
 }
@@ -311,6 +350,8 @@ int8_t xbee_AT_set_resp(char cmd[2], uint8_t nBytes,uint8_t * val) {
 
 // negative if error
 int8_t xbee_AT_get(char cmd[2], uint8_t * buf) {
+	//printf_P(PSTR("Xbee get %c%c\n"),cmd[0],cmd[1]);
+	
 	_xbee_start_API_frame();
 	_xbee_load_API_byte(0x08);
 	_xbee_load_API_byte(0x01); // frame ID is not 0
@@ -323,6 +364,7 @@ int8_t xbee_AT_get(char cmd[2], uint8_t * buf) {
 
 
 uint8_t xbee_send_packet_16( xbee_16b_address addr, uint16_t nBytes, uint8_t * data, uint8_t options) {
+
 	if ( nBytes >= 100 ) {
 		kputs("Maximum packet size exceeded\n");
 		return 0;
@@ -340,6 +382,7 @@ uint8_t xbee_send_packet_16( xbee_16b_address addr, uint16_t nBytes, uint8_t * d
 	return retval;
 }
 uint8_t xbee_send_packet_64( xbee_64b_address addr, uint16_t nBytes, uint8_t * data, uint8_t options) {
+
 	if ( nBytes >= 100 ) {
 		kputs("Maximum packet size exceeded\n");
 		return 0;
@@ -443,12 +486,24 @@ void _xbee_send_API_frame() {
 	xbee_tx_api_buf[2] = (uint8_t)((xbee_tx_api_buf_len) & 0xFF);
 	xbee_tx_api_buf[xbee_tx_api_buf_pos] = xbee_tx_api_buf_checksum;
 	
+	int8_t cntr = XBEE_AT_RESP_TIMEOUT;
+	if (modem_initialized) {
+		 while(--cntr && MOTE_TX_CTSN_PIN); // wait for CTS to go low
+		 if ( !cntr ) {
+			 kputs("Timeout waiting for CTS to go low\n");
+			 return;
+		 }
+	}
+	
 	MOTE_UART_WRITE(xbee_tx_api_buf_pos+1,xbee_tx_api_buf);
 }
 
 void _xbee_process_byte(uint8_t b) {
 	//printf("%02X",b);
 	if ( b == 0x7E ) { // restart reception no matter what ( since others are escaped )
+		if ( xbee_rx_api_buf_pos ) {
+			kputs("Warning, partial xbee API frame discarded.\n");
+		}
 		xbee_rx_api_buf[0] = 0x7E;
 		xbee_rx_api_buf_pos = 1;
 		esc_char_recv = 0;
@@ -490,11 +545,17 @@ void _xbee_read_rssi() {
 	int8_t retval;
 	if ( xbee_hw_series == 1 || xbee_hw_series == 2) {
 		retval = xbee_AT_get("DB",buf);
-		if ( retval < 0 ) return;
+		if ( retval < 0 ) {
+			kputs("Couldn't read DB\n");
+			return;
+		}			
 		rssi = -buf[0];
 	} else if ( xbee_hw_series == 6 ) {
 		retval = xbee_AT_get("LM",buf);
-		if ( retval < 0) return;
+		if ( retval < 0) {
+			kputs("Couldn't read LLM\n");
+			return;
+		}
 		rssi = buf[0];
 	} else {
 		rssi = 0;
@@ -505,8 +566,8 @@ void _xbee_read_rssi() {
 }
 
 void xbee_setup_reporting_schedule(uint16_t start_time) {
-	scheduler_add_task(MOTE_TASK_ID, 1, &xbee_wake);
-	scheduler_add_task(MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &_xbee_read_rssi);// ensure that this happens before the report is sent
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, start_time, &xbee_wake);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, start_time += 11, &_xbee_read_rssi);// ensure that this happens before the report is sent
 }
 
 void xbee_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {

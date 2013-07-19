@@ -42,7 +42,7 @@ void (* alarm_cb)(void);
 	ISR(TIMER3_COMPA_vect) {
 		time_val++;
 		if ( alarm_val )
-		alarm_val--;
+			alarm_val--;
 	}
 
 	void rtctimer_init() {

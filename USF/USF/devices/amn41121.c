@@ -21,6 +21,12 @@ uint16_t pir_accH;
 uint16_t pir_accL;
 uint16_t pir_latch;
 
+#define INT_LATCHH 0x01
+#define INT_LATCHL 0x02
+uint8_t int_bitmask;
+uint8_t int_time_before_release;
+uint32_t int_interrupt_started;
+
 void _pir_pcint_cb() {
 	uint16_t tval = (uint16_t)(rtctimer_read() << 8) | rtctimer_read_low();
 	uint16_t tdiff;
@@ -31,10 +37,10 @@ void _pir_pcint_cb() {
 	}
 	if ( PIR_OUT_PIN ) { // went high from being low
 		pir_accL += tdiff;
-		//kputs("DOOP H\n");
+		int_bitmask |= INT_LATCHH;
 	} else { // went low from being high
+		int_bitmask |= INT_LATCHL;
 		pir_accH += tdiff;
-		//kputs("DOOP L\n");
 	}	
 	pir_latch = tval;
 }
@@ -53,7 +59,6 @@ void pir_wake(void) {
 void pir_sleep(void) { 
 	// unregister the interrupt
 	pcint_unregister(PIR_OUT_PCINT);
-	
 	PIR_VCC = 0;
 }
 
@@ -63,7 +68,7 @@ void pir_init() {
 }
 
 void pir_setup_reporting_schedule(uint16_t starttime) {
-	scheduler_add_task(PIR_TASK_ID,starttime,&_pir_reporting_write_report);	
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,PIR_TASK_ID,starttime,&_pir_reporting_write_report);	
 }
 
 void _pir_reporting_write_report() {
@@ -75,6 +80,35 @@ void _pir_reporting_write_report() {
 	report_current()->fields |= REPORT_TYPE_OCCUPANCY;
 	pir_accH = pir_accL = 0;
 	pir_latch = (uint16_t)(rtctimer_read() << 8) | rtctimer_read_low();
+}
+
+
+void pir_setup_interrupt_schedule(uint16_t starttime) {
+	pir_set_interrupt_params(10);
+	scheduler_add_task(SCHEDULER_MONITOR_LIST, PIR_TASK_ID, starttime, &_pir_interrupt_write_report);	
+}
+
+void pir_set_interrupt_params(uint8_t time_before_release) {
+	int_time_before_release = time_before_release;
+	int_bitmask = 0;
+}
+
+void _pir_interrupt_write_report() {
+	uint32_t curtime = rtctimer_read();
+	if ( int_bitmask & INT_LATCHH ) {
+		if ( int_interrupt_started == 0 ) {
+			report_current()->fields |= REPORT_TYPE_OCCUPANCY_CHANGED;
+			report_current()->occupancy_state = 1;
+		}
+		int_interrupt_started = curtime;
+		int_bitmask = 0;
+	}
+	if ( int_interrupt_started && (curtime - int_interrupt_started > int_time_before_release) ) {
+		report_current()->fields |= REPORT_TYPE_OCCUPANCY_CHANGED;
+		report_current()->occupancy_state = 0;
+		int_interrupt_started = 0;
+	}
+	
 }
 
 void pir_fmt_reading(float * reading, uint8_t maxlen, char * str) {

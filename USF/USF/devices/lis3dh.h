@@ -43,4 +43,8 @@ uint8_t accel_convert_real(accel_reading_t * reading, float * fltptr);
 void accel_setup_reporting_schedule(uint16_t starttime);
 void _accel_reporting_doread();
 
+void accel_setup_interrupt_schedule(uint16_t starttime);
+void accel_configure_interrupt(uint8_t setup_time);
+void _accel_interrupt_check();
+void _accel_interrupt_orient_cb(unsigned char orientation);
 #endif /* LIS3DH_H_ */

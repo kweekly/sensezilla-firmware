@@ -19,4 +19,8 @@ void packet_recieved(uint8_t * data,uint16_t packet_len);
 
 uint16_t packet_construct_sensor_data_header(uint32_t timestamp, uint16_t fields, uint8_t * buffer_out);
 
+#ifdef USE_PN532
+uint16_t packet_construct_RFID_detected_header(uint32_t timestamp, uint8_t * buffer_out);
+#endif
+
 #endif /* SENSOR_PACKET_H_ */
