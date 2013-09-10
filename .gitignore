@@ -77,4 +77,15 @@ syntmp
 *.pad
 *.par
 
-MACHXO2_PMCO2/
+
+MACHXO2_PMCO2/*
+!MACHXO2_PMCO2/source/
+MACHXO2_PMCO2/source/*
+!MACHXO2_PMCO2/source/spi_master_slave
+MACHXO2_PMCO2/source/spi_master_slave
+
+!MACHXO2_PMCO2/source/spi_master_slave/*.vhd
+!MACHXO2_PMCO2/source/*.v
+!MACHXO2_PMCO2/source/*.h
+!MACHXO2_PMCO2/source/*.vhd
+!MACHXO2_PMCO2/*.lpf
