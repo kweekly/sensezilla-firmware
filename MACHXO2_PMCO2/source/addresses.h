@@ -15,10 +15,4 @@
 `define ADDR_CO2_DATA_H			7'h22
 
 
-// I2C wishbone registers
-`define I2C_2_CR	'h4A
-`define	I2C_2_CMDR	'h4B
-`define I2C_2_TXDR	'h4E
-`define I2C_2_SR	'h4F
-`define I2C_2_RXDR	'h51
 `endif

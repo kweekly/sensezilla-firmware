@@ -11,10 +11,10 @@ module toplevel (
 			SPI_CSN,
 			SPI_SCLK,
 			
-			I2C_SDA,
-			I2C_SCL,
+			UART_TXD,
+			UART_RXD,
 			
-			LEDs
+			LEDs 
 			);
 input chip_sleep;
 input [`numPMinputs-1:0] PMinputs;
@@ -23,8 +23,8 @@ output [8:1] LEDs;
 input SPI_MOSI,SPI_CSN,SPI_SCLK;
 output SPI_MISO;
 
-inout I2C_SDA;
-inout I2C_SCL;
+output UART_TXD;
+input UART_RXD;
 
 wire [8:1] iLEDs;
 assign LEDs = ~iLEDs;
@@ -102,7 +102,7 @@ PM_counter #(`ADDR_PM_COUNTER) main_counter(
 );
 
 // CO2 I2C interface
-CO2_to_memory_bus i2ciface(
+CO2_to_memory_bus CO2iface(
 	  .clk_i(sysclk), 
 	
 		// membus
@@ -112,8 +112,8 @@ CO2_to_memory_bus i2ciface(
 	 .membus_data_o(membus_data_out),
 	 .membus_data_i(membus_data_in),
 	 
-	 .I2C_SCL(I2C_SCL),
-	 .I2C_SDA(I2C_SDA),
+	 .UART_TXD(UART_TXD),
+	 .UART_RXD(UART_RXD),
 	 
 	 .dbg_state(iLEDs[4:1]),
 	 .dbg_bytecounter(iLEDs[8:5])
