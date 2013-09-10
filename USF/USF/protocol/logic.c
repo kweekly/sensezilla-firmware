@@ -68,6 +68,7 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	using_monitor_list = 0;
 	
 	scheduler_reset(); //removes all tasks
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, 0, &xbee_wake);
 	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 0, &task_led_blip_on);
 	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 100, &task_led_blip_off);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, 0, &task_begin_report);
@@ -159,7 +160,6 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &report_poplast);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &xbee_sleep);
 	
-	
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_check_send_report);
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &report_poplast);
@@ -214,14 +214,18 @@ uint16_t _construct_report_packet(uint8_t * buf) {
 }
 
 void _send_packet_to_host(uint8_t * packetbuf, uint16_t len) {
+#ifdef DISABLE_XBEE
+	return;
+#else
 	int8_t resp;
+	uint8_t txresp;
 	uint8_t buf[1];
 	xbee_tick();
 	
 	resp = xbee_AT_get("AI",buf);
 	if ( resp < 0 ) {
 		kputs("Radio not responding. (AI)\n");
-		return;
+		buf[0] = (xbee_get_status()!=XBEE_STATUS_ASSOC); // assume no change from before
 	}
 	
 	redo_send:
@@ -248,6 +252,8 @@ void _send_packet_to_host(uint8_t * packetbuf, uint16_t len) {
 			destipv4 = ((uint32_t)(ipbuf[0])<<24UL) | ((uint32_t)(ipbuf[1])<<16UL) | (((uint32_t)ipbuf[2])<<8UL) | 1;
 			xbee_send_ipv4_packet(destipv4, len, packetbuf);
 		}
+		txresp = xbee_wait_for_send();
+		//printf_P(PSTR("TX resp = %02X\n"),txresp);
 	} else {
 		if (buf[0] == 0) {
 			printf_P(PSTR("Radio ready, but did not send status update, correcting.\n"));
@@ -257,6 +263,7 @@ void _send_packet_to_host(uint8_t * packetbuf, uint16_t len) {
 		else printf_P(PSTR("Radio not ready to send packet AI=%02X\n"),buf[0]);
 	}
 	xbee_tick();	
+#endif
 }
 
 xbee_16b_address last_rx_addr_16b;
@@ -281,7 +288,8 @@ void mote_packet_recieved_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64
 
 
 void mote_tx_status_cb(uint8_t frame_id, uint8_t status){
-	//printf_P(PSTR("Last TX message had error code %d\n"),status);
+	if ( status != 0 )
+		printf_P(PSTR("Last TX message had error code %d\n"),status);
 }
 
 
@@ -309,7 +317,7 @@ void cmd_actuate_cb(uint16_t fields_to_affect, uint8_t * actuation_data) {
 void rfid_detection_cb(uint8_t * uid, uint8_t uidlen) {
 	uint8_t buf[128];
 	xbee_wake();
-	printf_P(PSTR("UID: "));
+	printf_P(PSTR("t=%10ld UID: "),rtctimer_read());
 	for(int c =0; c < uidlen; c++)
 		printf_P(PSTR("%02X"),uid[c]);
 	kputs("\n");

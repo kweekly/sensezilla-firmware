@@ -7,6 +7,8 @@
 #ifndef DEVICEDEFS_H_
 #define DEVICEDEFS_H_
 
+#define DISABLE_XBEE
+
 
 /***************  ENVIRONMENT SENSOR ***********************/ 
 /*
@@ -75,9 +77,10 @@ typedef struct
 
 // Reporting
 #if defined ENVIRONMENT_SENSOR
-	#define DEFAULT_FIELDS_TO_REPORT	0x35F // all but gyro
+	//#define DEFAULT_FIELDS_TO_REPORT	0x35F // all but gyro
+	#define DEFAULT_FIELDS_TO_REPORT	0x0 
 	//#define DEFAULT_FIELDS_TO_REPORT	0x40
-	#define DEFAULT_SAMPLE_INTERVAL		5
+	#define DEFAULT_SAMPLE_INTERVAL		36000
 #elif defined POWER_STRIP_MONITOR
 	#define DEFAULT_FIELDS_TO_REPORT	0x13F // all channels and RSSI
 	#define DEFAULT_SAMPLE_INTERVAL		60 // once per minute

@@ -28,6 +28,7 @@ AVR_APP_PATH :=$$$AVR_APP_PATH$$$
 QUOTE := "
 ADDITIONAL_DEPENDENCIES:=
 OUTPUT_FILE_DEP:=
+LIB_DEP:=
 
 # Every subdirectory with source files must be described here
 SUBDIRS :=  \
@@ -90,7 +91,6 @@ protocol/sensor_packet.o \
 USF.o \
 utils/scheduler.o
 
-
 OBJS_AS_ARGS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
@@ -112,7 +112,6 @@ protocol/report.o \
 protocol/sensor_packet.o \
 USF.o \
 utils/scheduler.o
-
 
 C_DEPS +=  \
 devices/amn41121.d \
@@ -136,7 +135,6 @@ protocol/sensor_packet.d \
 USF.d \
 utils/scheduler.d
 
-
 C_DEPS_AS_ARGS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
@@ -159,7 +157,6 @@ protocol/sensor_packet.d \
 USF.d \
 utils/scheduler.d
 
-
 OUTPUT_FILE_PATH +=USF.elf
 
 OUTPUT_FILE_PATH_AS_ARGS +=USF.elf
@@ -167,6 +164,8 @@ OUTPUT_FILE_PATH_AS_ARGS +=USF.elf
 ADDITIONAL_DEPENDENCIES:=
 
 OUTPUT_FILE_DEP:= ./makedep.mk
+
+LIB_DEP+= 
 
 # AVR32/GNU C Compiler
 
@@ -212,39 +211,45 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 
 devices/%.o: ../devices/%.c
 	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : (AVR_8_bit_GNU_Toolchain_3.4.1_830) 4.6.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-gcc.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fpack-struct -fshort-enums -Wall -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mmcu=atmega1284   -o"$@" "$<" 
+	@echo Invoking: AVR/GNU C Compiler : 3.4.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -Wall -mmcu=atmega1284 -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<"
 	@echo Finished building: $<
+	
 
 drivers/%.o: ../drivers/%.c
 	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : (AVR_8_bit_GNU_Toolchain_3.4.1_830) 4.6.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-gcc.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fpack-struct -fshort-enums -Wall -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mmcu=atmega1284   -o"$@" "$<" 
+	@echo Invoking: AVR/GNU C Compiler : 3.4.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -Wall -mmcu=atmega1284 -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<"
 	@echo Finished building: $<
+	
 
 motes/%.o: ../motes/%.c
 	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : (AVR_8_bit_GNU_Toolchain_3.4.1_830) 4.6.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-gcc.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fpack-struct -fshort-enums -Wall -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mmcu=atmega1284   -o"$@" "$<" 
+	@echo Invoking: AVR/GNU C Compiler : 3.4.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -Wall -mmcu=atmega1284 -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<"
 	@echo Finished building: $<
+	
 
 protocol/%.o: ../protocol/%.c
 	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : (AVR_8_bit_GNU_Toolchain_3.4.1_830) 4.6.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-gcc.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fpack-struct -fshort-enums -Wall -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mmcu=atmega1284   -o"$@" "$<" 
+	@echo Invoking: AVR/GNU C Compiler : 3.4.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -Wall -mmcu=atmega1284 -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<"
 	@echo Finished building: $<
+	
 
 ./%.o: .././%.c
 	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : (AVR_8_bit_GNU_Toolchain_3.4.1_830) 4.6.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-gcc.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fpack-struct -fshort-enums -Wall -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mmcu=atmega1284   -o"$@" "$<" 
+	@echo Invoking: AVR/GNU C Compiler : 3.4.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -Wall -mmcu=atmega1284 -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<"
 	@echo Finished building: $<
+	
 
 utils/%.o: ../utils/%.c
 	@echo Building file: $<
-	@echo Invoking: AVR/GNU C Compiler : (AVR_8_bit_GNU_Toolchain_3.4.1_830) 4.6.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-gcc.exe$(QUOTE) -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fpack-struct -fshort-enums -Wall -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"  -mmcu=atmega1284   -o"$@" "$<" 
+	@echo Invoking: AVR/GNU C Compiler : 3.4.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -funsigned-char -funsigned-bitfields -I".."  -Os -fno-strict-aliasing -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -Wall -mmcu=atmega1284 -c -std=gnu99 -Wno-pointer-sign -Wno-overflow -Wno-format -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<"
 	@echo Finished building: $<
+	
 
 
 
@@ -268,16 +273,17 @@ endif
 # All Target
 all: $(OUTPUT_FILE_PATH) $(ADDITIONAL_DEPENDENCIES)
 
-$(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
+$(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP) $(LIB_DEP)
 	@echo Building target: $@
-	@echo Invoking: AVR/GNU Linker : (AVR_8_bit_GNU_Toolchain_3.4.1_830) 4.6.2
-	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-gcc.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="USF.map" -Wl,--start-group -Wl,-lm -Wl,-lprintf_flt  -Wl,--end-group -Wl,-u,vfprintf  -mmcu=atmega1284  
+	@echo Invoking: AVR/GNU Linker : 3.4.2
+	$(QUOTE)C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE) -o$(OUTPUT_FILE_PATH_AS_ARGS) $(OBJS_AS_ARGS) $(USER_OBJS) $(LIBS) -Wl,-Map="USF.map" -Wl,--start-group -Wl,-lprintf_flt -Wl,-lm  -Wl,--end-group -Wl,--gc-sections -mmcu=atmega1284 -Wl,-u,vfprintf 
 	@echo Finished building target: $@
-	"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature  "USF.elf" "USF.hex"
-	"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "USF.elf" "USF.eep" || exit 0
-	"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-objdump.exe" -h -S "USF.elf" > "USF.lss"
-	"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature  "USF.elf" "USF.srec"
-	"C:\Program Files (x86)\Atmel\Atmel Studio 6.0\extensions\Atmel\AVRGCC\3.4.1.95\AVRToolchain\bin\avr-size.exe" "USF.elf"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O ihex -R .eeprom -R .fuse -R .lock -R .signature  "USF.elf" "USF.hex"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-objcopy.exe" -j .eeprom  --set-section-flags=.eeprom=alloc,load --change-section-lma .eeprom=0  --no-change-warnings -O ihex "USF.elf" "USF.eep" || exit 0
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-objdump.exe" -h -S "USF.elf" > "USF.lss"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-objcopy.exe" -O srec -R .eeprom -R .fuse -R .lock -R .signature  "USF.elf" "USF.srec"
+	"C:\Program Files (x86)\Atmel\Atmel Toolchain\AVR8 GCC\Native\3.4.2.1002\avr8-gnu-toolchain\bin\avr-size.exe" "USF.elf"
+	
 	
 
 
@@ -286,6 +292,7 @@ $(OUTPUT_FILE_PATH): $(OBJS) $(USER_OBJS) $(OUTPUT_FILE_DEP)
 
 # Other Targets
 clean:
-	-$(RM) $(OBJS_AS_ARGS)$(C_DEPS_AS_ARGS) $(EXECUTABLES) 
+	-$(RM) $(OBJS_AS_ARGS) $(EXECUTABLES)  
+	-$(RM) $(C_DEPS_AS_ARGS)   
 	rm -rf "USF.elf" "USF.a" "USF.hex" "USF.lss" "USF.eep" "USF.map" "USF.srec"
 	

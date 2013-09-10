@@ -33,14 +33,16 @@ const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =
 ",EE\x0"
 #if defined(XBEE_PINSLEEP_ENABLED) && defined(LOW_POWER)
 	",SM\x1" // pin hibernate
-	",A1\xC" // poll coordinator for data, device attempts association
+	//",A1\xA" // poll coordinator for data, can reassign channel, no attempt to associate
+	",A1\xE" // poll coordinator for data, device attempts association
 #else
 	",SM\x0"
-	",A1\x8" // only check for data, do not attempt to associate
+	",A1\xE" // poll coordinator for data, device attempts association
 #endif
 ",SP\x01\x90" // 20s before host discards message
-",ST\xFA" //250ms before sleep
+",ST\x1F8" //500ms before sleep
 ",SO\x2" // supress IO samples
+",CA\x32" // CCA threshold -50dBm
 ",AP\x2"
 ",XX"
 ;

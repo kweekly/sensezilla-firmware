@@ -22,6 +22,7 @@ void xbee_init();
 void xbee_tick();
 void xbee_sleep();
 void xbee_wake();
+void xbee_poll_coordinator();
 
 int8_t _xbee_wait_for_AT_resp(uint8_t * buf);
 void xbee_AT_set(char cmd[2], uint8_t nBytes,uint8_t * val);
@@ -41,6 +42,7 @@ int8_t xbee_AT_get(char cmd[2], uint8_t * buf);
 uint8_t xbee_send_packet_16( xbee_16b_address addr, uint16_t nBytes, uint8_t * data, uint8_t options);
 uint8_t xbee_send_packet_64( xbee_64b_address addr, uint16_t nBytes, uint8_t * data, uint8_t options);
 uint8_t xbee_send_ipv4_packet( xbee_ipv4_address addr, uint16_t nBytes, uint8_t * data );
+uint8_t xbee_wait_for_send();
 
 #define XBEE_TX_STATUS_SUCCESS	0
 #define XBEE_TX_STATUS_NO_ACK	1

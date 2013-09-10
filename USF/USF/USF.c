@@ -107,7 +107,7 @@ int main(void)
 	wdt_disable();
     while(1)
     {
-		wdt_enable(WDTO_1S);
+		wdt_enable(WDTO_2S);
 		wdt_reset();
 		pcint_check();
 		rtctimer_check_alarm();
