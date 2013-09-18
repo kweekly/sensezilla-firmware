@@ -120,12 +120,10 @@
  */
 
 #include <SdFat.h> //We do not use the built-in SD.h file because it calls Serial.print
-#include <SerialPort.h> //This is a new/beta library written by Bill Greiman. You rock Bill!
 #include <EEPROM.h>
 #include <TimerOne.h>
 #include <stdio.h>
 
-SerialPort<0, 100, 0> NewSerial;
 //This is a very important buffer declaration. This sets the <port #, rx size, tx size>. We set
 //the TX buffer to zero because we will be spending most of our time needing to buffer the incoming (RX) characters.
 //1100 fails on card init and causes FAT table corruption
@@ -213,33 +211,25 @@ int freeRam ()
 }
 void printRam() 
 {
-#if RAM_TESTING
-  NewSerial.print(F(" RAM:"));
-  NewSerial.println(freeRam());
-#endif
+
 }
 
 //Handle errors by printing the error type and blinking LEDs in certain way
 //The function will never exit - it loops forever inside blink_error
 void systemError(byte error_type)
 {
-  NewSerial.print(F("Error "));
   switch(error_type)
   {
   case ERROR_CARD_INIT:
-    NewSerial.print(F("card.init")); 
     blink_error(ERROR_SD_INIT);
     break;
   case ERROR_VOLUME_INIT:
-    NewSerial.print(F("volume.init")); 
     blink_error(ERROR_SD_INIT);
     break;
   case ERROR_ROOT_INIT:
-    NewSerial.print(F("root.init")); 
     blink_error(ERROR_SD_INIT);
     break;
   case ERROR_FILE_OPEN:
-    NewSerial.print(F("file.open")); 
     blink_error(ERROR_SD_INIT);
     break;
   }
@@ -270,7 +260,7 @@ void setup(void)
   read_system_settings(); //Load all system settings from EEPROM
 
   //Setup UART
-  NewSerial.begin(setting_uart_speed);
+  Serial.begin(setting_uart_speed);
   //NewSerial.print(F("1"));
 
   //Setup SD & FAT
@@ -301,7 +291,7 @@ void injectSerial(void)
   const uint8_t buf[] = {0xFE,0x44,0x0,0x8,0x2,0x9F,0x25};
   STAT1_PORT |= (1<<STAT1); 
   seconds_counter++;
-  NewSerial.write(buf,sizeof(buf));
+  Serial.write(buf,sizeof(buf));
 }
 
 void loop(void)
@@ -458,25 +448,21 @@ byte append_file(char* file_name)
 
   const byte LOCAL_BUFF_SIZE = 32; //This is the 2nd buffer. It holds the formatted string 
   char localBuffer[LOCAL_BUFF_SIZE];
-  char datbuf[7];
   unsigned short co2val = 0;
   //printRam(); //Print the available RAM
 
   //Start recording incoming characters
   while(1) { //Infinite loop
-     int n = NewSerial.peek(); //Read characters from global buffer into the local buffer
-     if ( n > 0 ) {
-        if ( n == 0xFE && NewSerial.available() >= 7 ) {
-           NewSerial.readBytes(datbuf,7);
-           co2val = ((unsigned short)datbuf[3]<<(unsigned short)8) | (unsigned short)datbuf[4];
-           byte sz = sprintf(localBuffer,"%10d,",seconds_counter);
-           sz += sprintf(localBuffer+sz,"%8d\r\n",co2val);
-           workingFile.write(localBuffer, sz); //Record the buffer to the card
-           workingFile.sync(); //Sync the card before we go to sleep
-           
-           STAT1_PORT &= ~(1<<STAT1); 
-        } else if ( n != 0xFE ) {
-           NewSerial.read(); //remove from buffer 
+     if (  Serial.available() >= 7) {
+        if ( Serial.read() == 0xFE && Serial.read() == 0x44 && Serial.read() == 0x02 ) {
+       
+            co2val = ((unsigned short)Serial.read()<<(unsigned short)8) | (unsigned short)Serial.read();
+            byte sz = sprintf(localBuffer,"%10u,",seconds_counter);
+            sz += sprintf(localBuffer+sz,"%8u\r\n",co2val);
+            workingFile.write(localBuffer, sz); //Record the buffer to the card
+            workingFile.sync(); //Sync the card before we go to sleep
+                 
+            STAT1_PORT &= ~(1<<STAT1); 
         }
      }
   }
@@ -780,7 +766,7 @@ void read_config_file(void)
     //And re-init the UART
     writeBaud(new_system_baud); //Write this baudrate to EEPROM
     setting_uart_speed = new_system_baud;
-    NewSerial.begin(setting_uart_speed); //Move system to new uart speed
+    Serial.begin(setting_uart_speed); //Move system to new uart speed
 
     recordNewSettings = true;
   }
