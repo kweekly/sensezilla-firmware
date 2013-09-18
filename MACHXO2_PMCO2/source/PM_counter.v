@@ -37,9 +37,9 @@ always @(posedge clk_i) begin
 			membus_data_o <= latched_val[7:0];
 		end else if (membus_addr_i == membus_address + 1) begin
 			membus_data_o <= latched_val[15:8];
-		end else if (membus_addr_i == membus_address + 1) begin
+		end else if (membus_addr_i == membus_address + 2) begin
 			membus_data_o <= latched_val[23:16];
-		end else if (membus_addr_i == membus_address + 1) begin
+		end else if (membus_addr_i == membus_address + 3) begin
 			membus_data_o <= latched_val[31:24];
 		end else begin
 			membus_data_o <= 8'hZZ;

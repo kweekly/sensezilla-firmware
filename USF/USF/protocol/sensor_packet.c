@@ -10,10 +10,6 @@
 #include "avrincludes.h"
 #include "protocol/sensor_packet.h"
 
-#define BT_HOST						0x00
-#define BT_POWER_STRIP_MONITOR		0x01
-#define BT_DUST_ENVIRONMENT_SENSOR	0x02
-#define BT_PM_SENSOR				0x03
 
 #define MT_TIMESYNC					0x00
 #define MT_SENSOR_DATA				0x01
@@ -62,12 +58,16 @@ void packet_recieved(uint8_t * data,uint16_t packet_len) {
 	}
 }
 
-uint16_t packet_construct_sensor_data_header(uint32_t timestamp, uint16_t fields, uint8_t * buffer_out) {
-	buffer_out[0] = MY_BT;
+uint16_t packet_construct_sensor_data_header_bt(uint8_t bt, uint32_t timestamp, uint16_t fields, uint8_t * buffer_out) {
+	buffer_out[0] = bt;
 	buffer_out[1] = MT_SENSOR_DATA;
 	*(uint32_t*)(buffer_out+2) = timestamp;
 	*(uint16_t*)(buffer_out+6) = fields;
 	return 8;
+}
+
+uint16_t packet_construct_sensor_data_header(uint32_t timestamp, uint16_t fields, uint8_t * buffer_out) {
+	return packet_construct_sensor_data_header_bt(MY_BT, timestamp, fields, buffer_out);
 }
 
 #ifdef USE_PN532

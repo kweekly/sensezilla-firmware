@@ -154,6 +154,10 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 		rfid_setup_interrupt_schedule(1, &rfid_detection_cb);
 		using_monitor_list = 1;
 	#endif
+	
+	#ifdef USE_MACHXO2_PMCO2
+		machxo2_setup_reporting_schedule(1);
+	#endif
 
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_send_report);
@@ -321,6 +325,15 @@ void rfid_detection_cb(uint8_t * uid, uint8_t uidlen) {
 	for(int c =0; c < uidlen; c++)
 		printf_P(PSTR("%02X"),uid[c]);
 	kputs("\n");
+	
+	// Beeper trigger
+	spi_pause();
+	EXP_CSN = 0;
+	EXP_MOSI = 0;
+	_delay_us(250);
+	EXP_CSN = 1;
+	EXP_MOSI = 1;
+	spi_resume();
 	
 	uint16_t pos = packet_construct_RFID_detected_header(rtctimer_read(), buf);
 	memcpy(buf+pos,uid,uidlen);

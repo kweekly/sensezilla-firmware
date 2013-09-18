@@ -22,6 +22,7 @@ uint8_t rfid_passive_scan();
 uint8_t rfid_SAMConfig(void);
 uint32_t rfid_get_firmware_version(void);
 uint8_t rfid_send_command_check_ack(uint8_t *cmd, uint8_t cmdlen);
+uint8_t rfid_write_register(uint16_t address, uint8_t val);
 uint8_t rfid_write_GPIO(uint8_t pinstate);
 uint8_t rfid_read_GPIO(void);
 uint8_t rfid_set_passive_activation_retries(uint8_t maxRetries);

@@ -27,7 +27,8 @@
 
 void spi_init(uint8_t mode);
 uint8_t spi_transfer(uint8_t data);
-
+void spi_pause();
+void spi_resume();
 
 
 #endif /* SPI_H_ */

@@ -34,6 +34,7 @@ LOW = 0xC2 (valid)
 #define HW_VERSION 2
 
 #define USE_PN532
+//#define USE_MACHXO2_PMCO2
 /***************  POWER STRIP MONITOR (v2) *******************/ 
 /* Fuse Settings:
 Extended: FF
@@ -47,44 +48,43 @@ Low D2
 //#define PM_SENSOR
 
 
-typedef struct
-{
-	unsigned int bit0:1;
-	unsigned int bit1:1;
-	unsigned int bit2:1;
-	unsigned int bit3:1;
-	unsigned int bit4:1;
-	unsigned int bit5:1;
-	unsigned int bit6:1;
-	unsigned int bit7:1;
-} _io_reg;
-
-#define REGISTER_BIT(rg,bt) ((volatile _io_reg*)&rg)->bit##bt 
-
-// Power mode
-#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532)
-	#define LOW_POWER
-#else
-	#define HIGH_POWER
-#endif
-
-// FCPU
-#if defined ENVIRONMENT_SENSOR
-	#define F_CPU 8000000L
-#elif defined POWER_STRIP_MONITOR
-	#define F_CPU 16384000L
-#endif
-
 // Reporting
 #if defined ENVIRONMENT_SENSOR
 	//#define DEFAULT_FIELDS_TO_REPORT	0x35F // all but gyro
 	#define DEFAULT_FIELDS_TO_REPORT	0x0 
 	//#define DEFAULT_FIELDS_TO_REPORT	0x40
 	#define DEFAULT_SAMPLE_INTERVAL		36000
+	//#define DEFAULT_SAMPLE_INTERVAL		5
 #elif defined POWER_STRIP_MONITOR
 	#define DEFAULT_FIELDS_TO_REPORT	0x13F // all channels and RSSI
 	#define DEFAULT_SAMPLE_INTERVAL		60 // once per minute
 #endif
+
+
+// checking SPI bus
+#if defined(USE_PN532) && defined(USE_MACHXO2_PMCO2)
+	#error "Cannot use PN532 and MACHXO2 at the same time (only one SPI)"
+#elif defined(USE_MACHXO2_PMCO2)
+	#define MACHXO2_NUM_PMINPUTS 6
+	#define MACHXO2_NUM_CO2INPUTS 3
+	#define MACHXO2_TASK_ID 0x70
+#endif
+
+
+// Power mode
+#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532)
+#define LOW_POWER
+#else
+#define HIGH_POWER
+#endif
+
+// FCPU
+#if defined ENVIRONMENT_SENSOR
+#define F_CPU 8000000L
+#elif defined POWER_STRIP_MONITOR
+#define F_CPU 16384000L
+#endif
+
 
 // DDRs
 #if defined ENVIRONMENT_SENSOR
@@ -102,6 +102,22 @@ typedef struct
 	#define DDRC_SETTING	0b11000010
 	#define DDRD_SETTING	0b11101010
 #endif
+
+
+typedef struct
+{
+	unsigned int bit0:1;
+	unsigned int bit1:1;
+	unsigned int bit2:1;
+	unsigned int bit3:1;
+	unsigned int bit4:1;
+	unsigned int bit5:1;
+	unsigned int bit6:1;
+	unsigned int bit7:1;
+} _io_reg;
+
+#define REGISTER_BIT(rg,bt) ((volatile _io_reg*)&rg)->bit##bt
+
 
 // Expansion
 #define EXP_SCK		REGISTER_BIT(PORTB,7)

@@ -14,7 +14,9 @@ module toplevel (
 			UART_TXD,
 			UART_RXD,
 			
-			LEDs 
+			LEDs,
+			
+			dbg_pins
 			);
 input chip_sleep;
 input [`numPMinputs-1:0] PMinputs;
@@ -28,6 +30,8 @@ input UART_RXD;
 
 wire [8:1] iLEDs;
 assign LEDs = ~iLEDs;
+
+output [5:0] dbg_pins;
 
 wire sysclk;
 
@@ -60,7 +64,13 @@ spi_to_memory_bus spimembus(
 	.spi_sck_i(SPI_SCLK),
 	.spi_mosi_i(SPI_MOSI),
 	.spi_miso_o(SPI_MISO)
+	
 );
+// debug LEDs for membus
+assign iLEDs[2] = membus_read_req;
+assign iLEDs[3] = membus_write_req;
+assign iLEDs[4] = !SPI_CSN;
+
 
  
 // create the counters
@@ -115,8 +125,10 @@ CO2_to_memory_bus CO2iface(
 	 .UART_TXD(UART_TXD),
 	 .UART_RXD(UART_RXD),
 	 
-	 .dbg_state(iLEDs[4:1]),
-	 .dbg_bytecounter(iLEDs[8:5])
+	 //.dbg_state(iLEDs[4:1]),
+	 //.dbg_bytecounter(iLEDs[8:5]),
+	 //.dbg_pins(dbg_pins)
+	 .dbg_reading(iLEDs[1])
 );			 			 
 
 endmodule 

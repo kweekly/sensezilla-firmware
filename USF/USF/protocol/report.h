@@ -35,6 +35,19 @@ extern uint16_t report_fields_requested;
 	#define REPORT_TYPE_RSSI			0x100
 #endif
 
+#if defined(USE_MACHXO2_PMCO2)
+	#define REPORT_TYPE_CO2_CH0		    0x01
+	#define REPORT_TYPE_CO2_CH1		    0x02
+	#define REPORT_TYPE_CO2_CH3		    0x04
+	#define REPORT_TYPE_PM_CH0			0x08
+	#define REPORT_TYPE_PM_CH1			0x10
+	#define REPORT_TYPE_PM_CH2			0x20
+	#define REPORT_TYPE_PM_CH3			0x40
+	#define REPORT_TYPE_PM_CH4			0x80
+	#define REPORT_TYPE_PM_CH5			0x100
+	#define REPORT_TYPE_PM_CH6			0x200
+#endif
+
 
 typedef struct {
 	uint32_t time;
@@ -56,6 +69,12 @@ typedef struct {
 #elif defined POWER_STRIP_MONITOR
 	powermon_reading_t power[POWERMON_NUM_CHANNELS];
 	int8_t rssi;
+#endif
+
+#ifdef USE_MACHXO2_PMCO2
+	uint16_t co2[MACHXO2_NUM_CO2INPUTS];
+	uint32_t pm[MACHXO2_NUM_PMINPUTS];
+	uint32_t pm_timer;
 #endif
 
 } report_t;

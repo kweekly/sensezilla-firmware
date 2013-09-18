@@ -165,6 +165,11 @@ void board_init_devices(void) {
 	kputs("Initializing RFID reader... \n");
 	rfid_init();
 #endif
+
+#ifdef USE_MACHXO2_PMCO2
+	kputs("Initializing CO2 and PM extension...\n");
+	machxo2_init();
+#endif
 }
 
 void board_setup_reporting(void) {

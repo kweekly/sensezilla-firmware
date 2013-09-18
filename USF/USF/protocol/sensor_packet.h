@@ -9,6 +9,13 @@
 #ifndef SENSOR_PACKET_H_
 #define SENSOR_PACKET_H_
 
+
+#define BT_HOST						0x00
+#define BT_POWER_STRIP_MONITOR		0x01
+#define BT_DUST_ENVIRONMENT_SENSOR	0x02
+#define BT_PM_SENSOR				0x03
+#define BT_MACHXO2_PMCO2			0x04
+
 void packet_set_handlers(
 	void (*timesync_cb)(uint32_t new_time),
 	void (*configure_sensor_cb)(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval),
@@ -18,6 +25,7 @@ void packet_set_handlers(
 void packet_recieved(uint8_t * data,uint16_t packet_len);
 
 uint16_t packet_construct_sensor_data_header(uint32_t timestamp, uint16_t fields, uint8_t * buffer_out);
+uint16_t packet_construct_sensor_data_header_bt(uint8_t bt, uint32_t timestamp, uint16_t fields, uint8_t * buffer_out);
 
 #ifdef USE_PN532
 uint16_t packet_construct_RFID_detected_header(uint32_t timestamp, uint8_t * buffer_out);

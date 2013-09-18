@@ -45,6 +45,7 @@ C_SRCS +=  \
 ../devices/CS5467.c \
 ../devices/l3gd20.c \
 ../devices/lis3dh.c \
+../devices/MACHXO2_PMCO2.c \
 ../devices/PN532.c \
 ../devices/si7005.c \
 ../devices/triacs.c \
@@ -74,6 +75,7 @@ devices/amn41121.o \
 devices/CS5467.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
+devices/MACHXO2_PMCO2.o \
 devices/PN532.o \
 devices/si7005.o \
 devices/triacs.o \
@@ -96,6 +98,7 @@ devices/amn41121.o \
 devices/CS5467.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
+devices/MACHXO2_PMCO2.o \
 devices/PN532.o \
 devices/si7005.o \
 devices/triacs.o \
@@ -118,6 +121,7 @@ devices/amn41121.d \
 devices/CS5467.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
+devices/MACHXO2_PMCO2.d \
 devices/PN532.d \
 devices/si7005.d \
 devices/triacs.d \
@@ -140,6 +144,7 @@ devices/amn41121.d \
 devices/CS5467.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
+devices/MACHXO2_PMCO2.d \
 devices/PN532.d \
 devices/si7005.d \
 devices/triacs.d \
@@ -168,6 +173,8 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

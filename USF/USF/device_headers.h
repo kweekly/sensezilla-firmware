@@ -25,4 +25,9 @@
 #ifdef USE_PN532
 	#include "devices/PN532.h"
 #endif
+
+#ifdef USE_MACHXO2_PMCO2
+	#include "devices/MACHXO2_PMCO2.h"
+#endif
+
 #endif /* DEVICE_HEADERS_H_ */

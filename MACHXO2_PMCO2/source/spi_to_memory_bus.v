@@ -18,11 +18,13 @@ output reg membus_read_req_o, membus_write_req_o;output reg [6:0] membus_addr_o
 output reg [7:0] membus_data_o;
 input [7:0] membus_data_i;
 
+reg [7:0] membus_data_o_local = 8'hZZ;
+assign membus_data_i = membus_data_o_local;
+
 input spi_ssel_i, spi_sck_i, spi_mosi_i;
 output spi_miso_o;
 
 
- wire spi_lookahead_req;
  reg  [7:0] spi_data_load;
  wire  [7:0] spi_data_rcv;
  reg spi_write_en_pre = 0;
@@ -41,8 +43,6 @@ spi_slave SPI (
 	.spi_mosi_i(spi_mosi_i),
 	.spi_miso_o(spi_miso_o),
 	
-	//internal bus
-	.di_req_o(spi_lookahead_req),                                      // preload lookahead data request line
 	.di_i(spi_data_load),  // parallel load data in (clocked in on rising edge of clk_i)
 	.wren_i(spi_write_en), // user data write enable
 	.wr_ack_o(spi_write_ack),                                       // write acknowledge
@@ -81,7 +81,8 @@ always @(posedge clk_i) begin
 					membus_data_o <= spi_data_rcv;
 					membus_write_req_o <= 1;
 				end else begin
-					spi_data_load <= membus_data_i;
+					//spi_data_load <= membus_data_i;
+					spi_data_load <= 'hA4;
 					membus_read_req_o <= 1;
 					spi_write_en_pre <= 1;
 				end
@@ -97,6 +98,26 @@ always @(posedge clk_i) begin
 			end
 		end
 	end
+end
+
+reg [7:0] temp_reg = 'h00;
+
+/// testing
+always @(posedge clk_i) begin
+	if (membus_read_req_o) begin
+		case (membus_addr_o) 
+			`ADDR_ID: membus_data_o_local <= `VER_ID;
+			`ADDR_TEMP: membus_data_o_local <= temp_reg;
+			default:
+				membus_data_o_local <= 8'hZZ;
+		endcase
+	end
+	if ( membus_write_req_o) begin
+		case ( membus_addr_o)
+			`ADDR_TEMP: temp_reg <= membus_data_o;
+			default: ;
+		endcase
+	end	
 end
 
 endmodule

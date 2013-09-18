@@ -120,6 +120,10 @@
 #define PN532_GPIO_P34                      (4)
 #define PN532_GPIO_P35                      (5)
 
+// some needed register defs
+#define PN532_SFR_P3CFGA					(0xFFFC)
+#define PN532_SFR_P3CFGB					(0xFFFD)
+
 //uint8_t pn532ack[] = {0x00, 0x00, 0xFF, 0x00, 0xFF, 0x00};
 uint8_t pn532ack[] = {0x00, 0xFF, 0x00, 0xFF, 0x00};
 uint8_t pn532response_firmwarevers[] = {0x00, 0xFF, 0x06, 0xFA, 0xD5, 0x03};
@@ -161,6 +165,12 @@ void rfid_init() {
  if (!rfid_SAMConfig()) {
 	 kputs("\tError putting in SAM mode.\n");
  }
+ 
+ kputs("Setting GPIO to OUTPUTs\n");
+ 
+ if ( !rfid_write_register(PN532_SFR_P3CFGB, 0x30))
+	kputs("\tError writing P3CFGB\n");
+ 
 }
 
 uint8_t rfid_passive_scan() {
@@ -308,6 +318,21 @@ uint8_t rfid_write_GPIO(uint8_t pinstate) {
   _rfid_readspidata(pn532_packetbuffer, 8);
 
   return  (pn532_packetbuffer[5] == 0x0F);
+}
+
+uint8_t rfid_write_register(uint16_t address, uint8_t val) {
+	pn532_packetbuffer[0] = PN532_COMMAND_WRITEREGISTER;
+	pn532_packetbuffer[1] = (address>>8);
+	pn532_packetbuffer[2] = address & 0xFF;
+	pn532_packetbuffer[3] = val;
+	
+	if (! rfid_send_command_check_ack(pn532_packetbuffer, 4))
+	  return 0x0;
+	  
+	  // Read response packet (00 FF PLEN PLENCHECKSUM D5 CMD+1(0x0F) DATACHECKSUM 00)
+	  _rfid_readspidata(pn532_packetbuffer, 8);
+
+	  return  (pn532_packetbuffer[5] == 0x09);	
 }
 
 /**************************************************************************/
