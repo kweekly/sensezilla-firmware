@@ -1,0 +1,8 @@
+__stringtab: STRING, 280 0 6
+_delay_us: CODE, 239 0 25
+_main: CODE, 16 0 223
+main@silence_len: STRING, 288 0 2
+__initialization: CODE, 290 0 4
+_isr: CODE, 264 0 16
+main@beep_len: STRING, 286 0 2
+Total: 278
