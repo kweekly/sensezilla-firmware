@@ -170,6 +170,11 @@ void board_init_devices(void) {
 	kputs("Initializing CO2 and PM extension...\n");
 	machxo2_init();
 #endif
+
+#ifdef USE_DOOR_SENSORS
+	kputs("Initializing Door Sensors...\n");
+	door_sensors_init();
+#endif
 }
 
 void board_setup_reporting(void) {

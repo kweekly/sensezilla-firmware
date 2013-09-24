@@ -17,6 +17,7 @@
 	#include "devices/lis3dh.h"
 	#include "devices/si7005.h"
 	#include "devices/tsl2560.h"
+	#include "devices/door_sensors.h"
 #elif defined(POWER_STRIP_MONITOR)
 	#include "devices/CS5467.h"
 	#include "devices/triacs.h"

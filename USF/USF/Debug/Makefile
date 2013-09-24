@@ -43,6 +43,7 @@ SUBDIRS :=  \
 C_SRCS +=  \
 ../devices/amn41121.c \
 ../devices/CS5467.c \
+../devices/door_sensors.c \
 ../devices/l3gd20.c \
 ../devices/lis3dh.c \
 ../devices/MACHXO2_PMCO2.c \
@@ -73,6 +74,7 @@ ASM_SRCS +=
 OBJS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
+devices/door_sensors.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
 devices/MACHXO2_PMCO2.o \
@@ -96,6 +98,7 @@ utils/scheduler.o
 OBJS_AS_ARGS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
+devices/door_sensors.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
 devices/MACHXO2_PMCO2.o \
@@ -119,6 +122,7 @@ utils/scheduler.o
 C_DEPS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
+devices/door_sensors.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
 devices/MACHXO2_PMCO2.d \
@@ -142,6 +146,7 @@ utils/scheduler.d
 C_DEPS_AS_ARGS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
+devices/door_sensors.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
 devices/MACHXO2_PMCO2.d \
@@ -173,6 +178,8 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

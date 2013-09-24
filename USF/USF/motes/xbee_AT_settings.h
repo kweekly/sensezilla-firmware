@@ -27,8 +27,12 @@ const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =
 ",CH\xC"
 ",MY\xFF\xFF"
 ",MM\x0"
+#ifdef XBEE_MAX_RETRIES
+",RR\x6"
+#else
 ",RR\x2"
-",RN\x3"
+#endif
+",RN\x0"
 ",CE\x0"
 ",EE\x0"
 #if defined(XBEE_PINSLEEP_ENABLED) && defined(LOW_POWER)
@@ -63,8 +67,12 @@ const unsigned char XBEE_AT_SETTING_STR_S2[] PROGMEM =
 ",CH\xC"
 ",MY\xFF\xFF"
 ",MM\x0"
+#ifdef XBEE_MAX_RETRIES
+",RR\x6"
+#else
 ",RR\x2"
-",RN\x3"
+#endif
+",RN\x0"
 ",CE\x0" 
 ",EE\x0"
 #if defined(XBEE_PINSLEEP_ENABLED) && defined(LOW_POWER)

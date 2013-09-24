@@ -7,72 +7,39 @@
 #ifndef DEVICEDEFS_H_
 #define DEVICEDEFS_H_
 
-#define DISABLE_XBEE
-
-
-/***************  ENVIRONMENT SENSOR ***********************/ 
-/*
-BODLEVEL = DISABLED
-OCDEN = [ ]
-JTAGEN = [X]
-SPIEN = [X]
-WDTON = [ ]
-EESAVE = [ ]
-BOOTSZ = 4096W_F000
-BOOTRST = [ ]
-CKDIV8 = [ ]
-CKOUT = [ ]
-SUT_CKSEL = INTRCOSC_6CK_0MS
-
-EXTENDED = 0xFF (valid)
-HIGH = 0x99 (valid)
-LOW = 0xC2 (valid)
-
- */ 
-// Uncomment this line to activate this board
-#define ENVIRONMENT_SENSOR
-#define HW_VERSION 2
-
-#define USE_PN532
-//#define USE_MACHXO2_PMCO2
-/***************  POWER STRIP MONITOR (v2) *******************/ 
-/* Fuse Settings:
-Extended: FF
-High : 91
-Low D2
-*/
-//#define POWER_STRIP_MONITOR
-
-
-/***************  PM SENSOR *********************************/ 
-//#define PM_SENSOR
-
-
-// Reporting
-#if defined ENVIRONMENT_SENSOR
-	//#define DEFAULT_FIELDS_TO_REPORT	0x35F // all but gyro
-	#define DEFAULT_FIELDS_TO_REPORT	0x0 
-	//#define DEFAULT_FIELDS_TO_REPORT	0x40
-	#define DEFAULT_SAMPLE_INTERVAL		36000
-	//#define DEFAULT_SAMPLE_INTERVAL		5
-#elif defined POWER_STRIP_MONITOR
-	#define DEFAULT_FIELDS_TO_REPORT	0x13F // all channels and RSSI
-	#define DEFAULT_SAMPLE_INTERVAL		60 // once per minute
-#endif
+#include "configurations.h"
 
 
 // checking SPI bus
-#if defined(USE_PN532) && defined(USE_MACHXO2_PMCO2)
-	#error "Cannot use PN532 and MACHXO2 at the same time (only one SPI)"
-#elif defined(USE_MACHXO2_PMCO2)
+#if defined(USE_MACHXO2_PMCO2)
 	#define MACHXO2_NUM_PMINPUTS 6
 	#define MACHXO2_NUM_CO2INPUTS 3
 	#define MACHXO2_TASK_ID 0x70
+	#ifdef USE_EXP
+		#error "Expansion port already in use!"
+	#else
+		#define USE_EXP
+	#endif
 #endif
 
+#if defined(USE_PN532)
+	#ifdef USE_EXP
+	#error "Expansion port already in use!"
+	#else
+	#define USE_EXP
+	#endif	
+#endif
+
+#if defined(USE_DOOR_SENSORS)
+	#ifdef USE_EXP
+	#error "Expansion port already in use!"
+	#else
+	#define USE_EXP
+	#endif
+#endif
 
 // Power mode
-#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532)
+#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532) && !defined(USE_MACHXO2_PMCO2)
 #define LOW_POWER
 #else
 #define HIGH_POWER
@@ -91,7 +58,11 @@ Low D2
 	#if HW_VERSION==1
 	#define DDRB_SETTING	0b10110010
 	#elif HW_VERSION==2
-	#define DDRB_SETTING	0b10110000
+		#if defined(USE_DOOR_SENSORS)
+			#define DDRB_SETTING	0b00010000
+		#else
+			#define DDRB_SETTING	0b10110000
+		#endif
 	#endif
 	#define DDRA_SETTING	0b10111100
 	#define DDRC_SETTING	0b00000000 // hopefully automatically initialized by i2c port
@@ -228,6 +199,17 @@ typedef struct
 		// RFID Reader PN532
 		#define RFID_TASK_ID 0x60
 		#define RFID_CSN EXP_CSN
+	#endif
+	
+	#ifdef USE_DOOR_SENSORS
+		#define DOOR_SENSOR_TASK_ID 0x70
+		#define DOOR_SENSOR_VCC_PIN				EXP_CSN
+		#define DOOR_SENSOR_SWITCH_PIN			EXP_SCK
+		#define DOOR_SENSOR_SWITCH_PCINT		15
+		#define DOOR_SENSOR_INDOOR_TOUCH_PIN	EXP_MISO
+		#define DOOR_SENSOR_INDOOR_TOUCH_PCINT	14
+		#define DOOR_SENSOR_OUTDOOR_TOUCH_PIN	EXP_MOSI
+		#define DOOR_SENSOR_OUTDOOR_TOUCH_PCINT 13
 	#endif
 #endif 
 

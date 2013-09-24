@@ -130,6 +130,9 @@
     <Compile Include="avrincludes.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="configurations.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="devicedefs.h">
       <SubType>compile</SubType>
     </Compile>
@@ -143,6 +146,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="devices\CS5467.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\door_sensors.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\door_sensors.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="devices\l3gd20.c">
