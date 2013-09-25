@@ -132,6 +132,13 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 		} else {
 			if ( !(fields_to_report & (REPORT_TYPE_LIGHT) ) ) light_sleep();
 		}
+	#endif	
+	#ifdef USE_DOOR_SENSORS
+		if ( fields_to_report & (REPORT_TYPE_DOOR_SENSORS))
+		door_sensors_setup_interrupt_schedule(1);
+		else {
+			scheduler_remove_tasks(SCHEDULER_MONITOR_LIST,DOOR_SENSOR_TASK_ID);
+		}
 	#endif
 	
 	#ifdef REPORT_TYPE_POWER_CH0 // should cover all the other channels
@@ -158,6 +165,7 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	#ifdef USE_MACHXO2_PMCO2
 		machxo2_setup_reporting_schedule(1);
 	#endif
+	
 
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_send_report);

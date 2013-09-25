@@ -25,6 +25,10 @@ extern uint16_t report_fields_requested;
 	#define REPORT_TYPE_OCCUPANCY_CHANGED	0x100
 	#define REPORT_TYPE_ORIENTATION_CHANGED	0x200
 	#define REPORT_TYPE_LIGHT_CHANGED		0x400
+	#ifdef USE_DOOR_SENSORS
+		#define REPORT_TYPE_DOOR_SENSORS		0x800
+	#endif
+	
 #elif defined(POWER_STRIP_MONITOR)
 	#define REPORT_TYPE_POWER_CH0		0x01
 	#define REPORT_TYPE_POWER_CH1		0x02
@@ -49,6 +53,8 @@ extern uint16_t report_fields_requested;
 #endif
 
 
+
+
 typedef struct {
 	uint32_t time;
 	uint16_t fields;
@@ -66,6 +72,10 @@ typedef struct {
 	unsigned char orientation;
 	unsigned char light_level_state;
 	
+	#ifdef USE_DOOR_SENSORS
+	unsigned char door_sensor_state;
+	#endif
+	
 #elif defined POWER_STRIP_MONITOR
 	powermon_reading_t power[POWERMON_NUM_CHANNELS];
 	int8_t rssi;
@@ -81,7 +91,6 @@ typedef struct {
 
 void report_init();
 void report_new(uint32_t time);
-void report_print(report_t * rep);
 void report_print_human(report_t * rep);
 uint16_t report_populate_real_data(report_t * rep, uint8_t * buf);
 report_t * report_current();

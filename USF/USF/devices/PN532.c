@@ -166,11 +166,6 @@ void rfid_init() {
 	 kputs("\tError putting in SAM mode.\n");
  }
  
- kputs("Setting GPIO to OUTPUTs\n");
- 
- if ( !rfid_write_register(PN532_SFR_P3CFGB, 0x30))
-	kputs("\tError writing P3CFGB\n");
- 
 }
 
 uint8_t rfid_passive_scan() {

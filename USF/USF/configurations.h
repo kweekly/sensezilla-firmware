@@ -10,11 +10,11 @@
 #define CONFIGURATIONS_H_
 
 
-#define CONFIG_DOORWAY_RFID_READER
+//#define CONFIG_DOORWAY_RFID_READER
 //#define CONFIG_SERIAL_RFID_READER
 //#define CONFIG_BATTERY_SENSOR_DEVEL
 //#define CONFIG_BATTERY_SENSOR_DEPLOY
-//#define CONFIG_DOOR_OPEN_SENSOR
+#define CONFIG_DOOR_OPEN_SENSOR
 
 /***************  ENVIRONMENT SENSOR ***********************/ 
 /*
@@ -60,10 +60,12 @@ Low D2
 
 
 // reporting
-#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR)
-#define DEFAULT_FIELDS_TO_REPORT 0x35F // all but gyro
+#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) 
+	#define DEFAULT_FIELDS_TO_REPORT 0x35F // all but gyro, light level change
+#elif defined(CONFIG_DOOR_OPEN_SENSOR)
+	#define DEFAULT_FIELDS_TO_REPORT 0xB5F // all but gyro, light level change
 #elif defined(CONFIG_SERIAL_RFID_READER)
-#define DEFAULT_FIELDS_TO_REPORT 0
+	#define DEFAULT_FIELDS_TO_REPORT 0
 #endif
 
 // sample interval
