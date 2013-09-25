@@ -8,7 +8,7 @@
 
 #include "avrincludes.h"
 #include "protocol/report.h"
-#include "motes/xbee.h"
+#include "protocol/datalink.h"
 /*
 typedef struct {
 	uint32_t time;
@@ -159,7 +159,7 @@ void report_print_human(report_t * rep) {
 	/**************** COMMON *******************/
 	#ifdef REPORT_TYPE_RSSI	
 	if ( rep->fields & REPORT_TYPE_RSSI) {
-		xbee_fmt_reading(&(rep->rssi),sizeof(buf),buf);
+		datalink_fmt_reading(&(rep->rssi),sizeof(buf),buf);
 		uart_puts_P("; ");
 		uart_puts(buf);
 	}

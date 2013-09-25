@@ -21,15 +21,12 @@ void task_begin_report(void);
 void task_print_report(void);
 void task_check_send_report(void);
 void task_send_report(void);
-void _send_packet_to_host(uint8_t * packetbuf, uint16_t len);
 uint16_t _construct_report_packet(uint8_t * buf);
 
 void rtc_timer_cb(void);
 
-uint8_t rx_packet_buf[128];
-void mote_status_cb(uint8_t status);
-void mote_packet_recieved_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes);
-void mote_tx_status_cb(uint8_t frame_id, uint8_t status);
+void datalink_rx_callback(uint8_t * data, uint16_t len);
+
 
 #ifdef USE_LIS3DH
 void accel_click_cb(unsigned char detect_mask);

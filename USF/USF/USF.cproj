@@ -244,6 +244,12 @@
     <Compile Include="motes\xbee_AT_settings.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="protocol\datalink.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="protocol\datalink.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="protocol\logic.c">
       <SubType>compile</SubType>
     </Compile>

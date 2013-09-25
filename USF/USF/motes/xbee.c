@@ -6,7 +6,7 @@
  */ 
 #include "devicedefs.h"
 
-
+#if MOTE_TYPE == MOTE_XBEE
 #include "avrincludes.h"
 #include "motes/xbee.h"
 #include "protocol/report.h"
@@ -596,3 +596,4 @@ void xbee_setup_reporting_schedule(uint16_t start_time) {
 void xbee_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {
 	snprintf_P(buf,bufsize,PSTR("RSSI=%4ddBm"),*reading);
 }
+#endif

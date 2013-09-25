@@ -58,6 +58,7 @@ C_SRCS +=  \
 ../drivers/twimaster.c \
 ../drivers/uart.c \
 ../motes/xbee.c \
+../protocol/datalink.c \
 ../protocol/logic.c \
 ../protocol/report.c \
 ../protocol/sensor_packet.c \
@@ -89,6 +90,7 @@ drivers/SPI.o \
 drivers/twimaster.o \
 drivers/uart.o \
 motes/xbee.o \
+protocol/datalink.o \
 protocol/logic.o \
 protocol/report.o \
 protocol/sensor_packet.o \
@@ -113,6 +115,7 @@ drivers/SPI.o \
 drivers/twimaster.o \
 drivers/uart.o \
 motes/xbee.o \
+protocol/datalink.o \
 protocol/logic.o \
 protocol/report.o \
 protocol/sensor_packet.o \
@@ -137,6 +140,7 @@ drivers/SPI.d \
 drivers/twimaster.d \
 drivers/uart.d \
 motes/xbee.d \
+protocol/datalink.d \
 protocol/logic.d \
 protocol/report.d \
 protocol/sensor_packet.d \
@@ -161,6 +165,7 @@ drivers/SPI.d \
 drivers/twimaster.d \
 drivers/uart.d \
 motes/xbee.d \
+protocol/datalink.d \
 protocol/logic.d \
 protocol/report.d \
 protocol/sensor_packet.d \
@@ -178,6 +183,8 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

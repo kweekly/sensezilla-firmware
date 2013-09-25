@@ -7,7 +7,7 @@
 
 #include "devicedefs.h"
 #include "avrincludes.h"
-#include "motes/xbee.h"
+#include "protocol/datalink.h"
 
 void avr_doze(void) {
 	// go into idle mode
@@ -21,7 +21,7 @@ void avr_sleep(void) {
 //	kputs("I go to sleep.\n");
 	uart_flush();
 	uart1_flush();
-	xbee_tick();
+	datalink_tick();
 	// go into sleep (only external interrupt or timer can wake us up)
 	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 	sleep_enable();

@@ -2,13 +2,20 @@
  * devicedefs.h
  *
  * Created: 3/12/2013 4:27:35 PM
- *  Author: kweekly
+ *  Author: kweekly 
  */ 
 #ifndef DEVICEDEFS_H_
 #define DEVICEDEFS_H_
+#define MOTE_NONE 0
+#define MOTE_XBEE 1
+#define MOTE_WIFLY 2
+
 
 #include "configurations.h"
 
+#if !(MOTE_TYPE == MOTE_XBEE || MOTE_TYPE == MOTE_WIFLY || MOTE_TYPE == MOTE_NONE)
+#error "Unknown MOTE_TYPE"
+#endif
 
 // checking SPI bus
 #if defined(USE_MACHXO2_PMCO2)

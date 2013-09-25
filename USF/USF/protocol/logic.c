@@ -8,9 +8,9 @@
 
 #include "devicedefs.h"
 #include "avrincludes.h"
-#include "motes/xbee.h"
 #include "protocol/report.h"
 #include "protocol/sensor_packet.h"
+#include "protocol/datalink.h"
 #include "device_headers.h"
 
 #include "drivers/uart.h"
@@ -24,31 +24,13 @@
 
 #include "logic.h"
 
-xbee_64b_address dest64;
-xbee_16b_address dest16;
-xbee_ipv4_address destipv4;
-enum{
-	NO_SEND,
-	BROADCAST,
-	SEND64,
-	SEND16,
-	WIFI_SEND
-} dest_mode;
 
 uint16_t requested_report_interval;
 uint32_t last_periodic_report_sent;
 uint8_t using_monitor_list;
 
-void logic_init() {
-	if (xbee_get_type() == XBEE_TYPE_WIFI) {
-		dest_mode = WIFI_SEND;
-	} else {
-		dest_mode = BROADCAST;
-	}
-	xbee_set_modem_status_callback(&mote_status_cb);
-	xbee_set_tx_status_callback(&mote_tx_status_cb);
-	xbee_set_rx_callback(&mote_packet_recieved_cb,rx_packet_buf);
-		
+void logic_init() {		
+	datalink_set_rx_callback(&datalink_rx_callback);
 	packet_set_handlers(&cmd_timesync_cb, &cmd_configure_sensor_cb, &cmd_actuate_cb);
 }
 
@@ -60,6 +42,10 @@ uint16_t report_interval_needed() {
 	}	
 }
 
+void datalink_rx_callback(uint8_t * data, uint16_t len) {
+	packet_recieved(data,len);
+}
+
 void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval) {
 	printf_P(PSTR("Configuring fields %02X => %02X, sample interval %ds\n"),report_fields_requested,fields_to_report,sample_interval);
 	report_fields_requested = fields_to_report;
@@ -68,7 +54,7 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	using_monitor_list = 0;
 	
 	scheduler_reset(); //removes all tasks
-	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, 0, &xbee_wake);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, 0, &datalink_wake);
 	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 0, &task_led_blip_on);
 	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 100, &task_led_blip_off);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, 0, &task_begin_report);
@@ -151,9 +137,9 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 		
 	#ifdef REPORT_TYPE_RSSI 
 		if ( fields_to_report & (REPORT_TYPE_RSSI) )
-			xbee_setup_reporting_schedule(1);
+			datalink_setup_rssi_reporting(1);
 		else {
-			scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, MOTE_TASK_ID, 0, &xbee_wake);	
+			scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, MOTE_TASK_ID, 0, &datalink_wake);	
 		}
 	#endif
 	
@@ -170,7 +156,7 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_send_report);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &report_poplast);
-	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &xbee_sleep);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &datalink_sleep);
 	
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_check_send_report);
@@ -203,10 +189,10 @@ void task_print_report(void) {
 void task_check_send_report(void) {
 	if ( report_current()->fields != 0) {
 		uint8_t packetbuf[128];
-		xbee_wake();		
+		datalink_wake();		
 		uint16_t len = _construct_report_packet(packetbuf);
-		_send_packet_to_host(packetbuf, len);
-		xbee_sleep();
+		datalink_send_packet_to_host(packetbuf, len);
+		datalink_wake();
 	}
 }
 
@@ -214,7 +200,7 @@ void task_check_send_report(void) {
 void task_send_report(void) {
 	uint8_t packetbuf[128];
 	uint16_t len = _construct_report_packet(packetbuf);
-	_send_packet_to_host(packetbuf, len);
+	datalink_send_packet_to_host(packetbuf, len);
 }
 
 uint16_t _construct_report_packet(uint8_t * buf) {
@@ -225,100 +211,12 @@ uint16_t _construct_report_packet(uint8_t * buf) {
 	return len;
 }
 
-void _send_packet_to_host(uint8_t * packetbuf, uint16_t len) {
-#ifdef DISABLE_XBEE
-	return;
-#else
-	int8_t resp;
-	uint8_t txresp;
-	uint8_t buf[1];
-	xbee_tick();
-	
-	resp = xbee_AT_get("AI",buf);
-	if ( resp < 0 ) {
-		kputs("Radio not responding. (AI)\n");
-		buf[0] = (xbee_get_status()!=XBEE_STATUS_ASSOC); // assume no change from before
-	}
-	
-	redo_send:
-	if (xbee_get_status() == XBEE_STATUS_ASSOC) {
-		if ( buf[0] != 0 ) {
-			printf_P(PSTR("Radio not ready, AI=%02X, correcting.\n"),buf[0]);
-			xbee_set_status(XBEE_STATUS_DISASSOC);
-			return;
-		}
-		if (dest_mode == BROADCAST) {
-			xbee_send_packet_64(XBEE_BROADCAST_64b_ADDR,len,packetbuf,XBEE_TX_OPTION_BROADCAST_PAN);
-		} else if ( dest_mode == SEND16 ){
-			xbee_send_packet_16(dest16,len,packetbuf,0);
-		} else if (dest_mode == SEND64) {
-			xbee_send_packet_64(dest64,len,packetbuf,0);
-		} else if (dest_mode == WIFI_SEND) {
-			uint8_t ipbuf[4];
-			resp = xbee_AT_get("MY",ipbuf);
-			if ( resp < 0 ) {
-				kputs("Radio not responding. (MY)\n");
-				return;
-			}
-			printf_P(PSTR("My IP address=%d.%d.%d.%d\n"),ipbuf[0],ipbuf[1],ipbuf[2],ipbuf[3]);
-			destipv4 = ((uint32_t)(ipbuf[0])<<24UL) | ((uint32_t)(ipbuf[1])<<16UL) | (((uint32_t)ipbuf[2])<<8UL) | 1;
-			xbee_send_ipv4_packet(destipv4, len, packetbuf);
-		}
-		txresp = xbee_wait_for_send();
-		//printf_P(PSTR("TX resp = %02X\n"),txresp);
-	} else {
-		if (buf[0] == 0) {
-			printf_P(PSTR("Radio ready, but did not send status update, correcting.\n"));
-			xbee_set_status(XBEE_STATUS_ASSOC);
-			goto redo_send;
-		}
-		else printf_P(PSTR("Radio not ready to send packet AI=%02X\n"),buf[0]);
-	}
-	xbee_tick();	
-#endif
-}
 
-xbee_16b_address last_rx_addr_16b;
-xbee_64b_address last_rx_addr_64b;
-
-void mote_packet_recieved_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes) {
-	if ( nBytes == 0 ) return;
-	
-	last_rx_addr_16b = addr_16b;
-	last_rx_addr_64b = addr_64b;
-	
-	/*
-	printf_P(PSTR("RCV: "));
-	for ( int c = 0; c < nBytes; c++ ) {
-		printf("%02X",rx_packet_buf[c]);
-	}
-	printf_P(PSTR("\n"));
-	*/
-	
-	packet_recieved(rx_packet_buf,nBytes);
-}
-
-
-void mote_tx_status_cb(uint8_t frame_id, uint8_t status){
-	if ( status != 0 )
-		printf_P(PSTR("Last TX message had error code %d\n"),status);
-}
-
-
-void mote_status_cb(uint8_t status) {
-	printf_P(PSTR("Modem status is now %d\n"),status);
-}
 
 void cmd_timesync_cb(uint32_t new_time) {
 	printf_P(PSTR("Time is now: %ld\n"),new_time);
 	rtctimer_write(new_time);
-	if ( last_rx_addr_16b != XBEE_UNKNOWN_16b_ADDR ) {
-		dest_mode = SEND16;
-		dest16 = last_rx_addr_16b;
-	} else if ( last_rx_addr_64b != XBEE_UNKNOWN_64b_ADDR ) {
-		dest_mode = SEND64;
-		dest64 = last_rx_addr_64b;
-	}
+	datalink_latch_destination_address();
 }
 
 
@@ -328,7 +226,7 @@ void cmd_actuate_cb(uint16_t fields_to_affect, uint8_t * actuation_data) {
 #ifdef USE_PN532
 void rfid_detection_cb(uint8_t * uid, uint8_t uidlen) {
 	uint8_t buf[128];
-	xbee_wake();
+	datalink_wake();
 	printf_P(PSTR("t=%10ld UID: "),rtctimer_read());
 	for(int c =0; c < uidlen; c++)
 		printf_P(PSTR("%02X"),uid[c]);
@@ -345,8 +243,8 @@ void rfid_detection_cb(uint8_t * uid, uint8_t uidlen) {
 	
 	uint16_t pos = packet_construct_RFID_detected_header(rtctimer_read(), buf);
 	memcpy(buf+pos,uid,uidlen);
-	_send_packet_to_host(buf,pos+uidlen);
-	xbee_sleep();
+	datalink_send_packet_to_host(buf,pos+uidlen);
+	datalink_sleep();
 }
 #endif
 

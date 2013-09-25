@@ -22,8 +22,7 @@ static FILE mystdout = FDEV_SETUP_STREAM(uart_putc, NULL, _FDEV_SETUP_WRITE);
 #include "protocol/report.h"
 #include "protocol/sensor_packet.h"
 #include "protocol/logic.h"
-
-#include "motes/xbee.h"
+#include "protocol/datalink.h"
 
 // board-specific logic
 void board_power_down_devices(void);
@@ -72,7 +71,7 @@ int main(void)
 	
 	kputs("Initializing wireless mote\n");
 	wdt_reset();
-	xbee_init();
+	datalink_init();
 
 	
 	/*
@@ -136,7 +135,7 @@ void board_power_down_devices(void) {
 	accel_sleep(); 
 	humid_sleep();
 	pir_sleep(); 
-	xbee_sleep();	
+	datalink_sleep();	
 #endif
 }
 
