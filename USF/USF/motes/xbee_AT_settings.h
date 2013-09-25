@@ -10,7 +10,7 @@
 
 #ifndef XBEE_AT_SETTINGS_H_
 #define XBEE_AT_SETTINGS_H_
-
+#if MOTE_TYPE == MOTE_XBEE
 const unsigned char XBEE_AT_SETTING_STR_S1[] PROGMEM =  
  "ID\x12\x34"
 #ifdef XBEE_RTS_ENABLED
@@ -124,5 +124,5 @@ const unsigned char XBEE_AT_SETTING_STR_S6[] PROGMEM =
 ",ST\xFA" // 250ms wake time
 ",XX"
 ;
-
+#endif
 #endif /* XBEE_AT_SETTINGS_H_ */

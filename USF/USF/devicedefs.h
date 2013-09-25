@@ -141,6 +141,7 @@ typedef struct
 	#undef XBEE_PINSLEEP_ENABLED
 #endif
 
+#define MOTE_UART_PUTC	uart1_putc
 #define MOTE_UART_GETC	uart1_getc
 #define MOTE_UART_WRITE uart1_write
 #define MOTE_UART_INIT  uart1_init

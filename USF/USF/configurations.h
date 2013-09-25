@@ -16,7 +16,7 @@
 //#define CONFIG_BATTERY_SENSOR_DEPLOY
 //#define CONFIG_DOOR_OPEN_SENSOR
 
-#define MOTE_TYPE MOTE_NONE
+#define MOTE_TYPE MOTE_WIFLY
 /***************  ENVIRONMENT SENSOR ***********************/ 
 /*
 BODLEVEL = DISABLED

@@ -34,20 +34,14 @@
 	void datalink_fmt_reading(int8_t * reading,size_t bufsize,char * buf){}
 #endif
 
-// client callbacks
+// GLOBAL STUFF
 void (*rx_cb)(uint8_t * packetbuf, uint16_t len);
 
 
-uint8_t rx_packet_buf[128];
-
-
-void datalink_set_rx_callback(void (*r)(uint8_t * packetbuf, uint16_t len)) {
-	rx_cb = r;
-}
-
-
+// XBEE TRANSLATION LAYER
 #if MOTE_TYPE == MOTE_XBEE
 	// callbacks
+	uint8_t rx_packet_buf[128];
 	void xbee_status_cb(uint8_t status);
 	void xbee_packet_recieved_cb(xbee_16b_address addr_16b, xbee_64b_address addr_64b, uint8_t rssi, uint16_t nBytes);
 	void xbee_tx_status_cb(uint8_t frame_id, uint8_t status);
@@ -62,6 +56,10 @@ void datalink_set_rx_callback(void (*r)(uint8_t * packetbuf, uint16_t len)) {
 		xbee_set_modem_status_callback(&xbee_status_cb);
 		xbee_set_tx_status_callback(&xbee_tx_status_cb);
 		xbee_set_rx_callback(&xbee_packet_recieved_cb,rx_packet_buf);		
+	}
+	
+	void datalink_set_rx_callback(void (*r)(uint8_t * packetbuf, uint16_t len)) {
+		rx_cb = r;
 	}
 
 	xbee_16b_address last_rx_addr_16b;
@@ -148,23 +146,32 @@ void datalink_set_rx_callback(void (*r)(uint8_t * packetbuf, uint16_t len)) {
 		}
 	}
 	
-	void datalink_wake() {
-		xbee_wake();
+	inline void datalink_wake() {		xbee_wake();	}
+	inline void datalink_sleep() {		xbee_sleep();	}
+	inline void datalink_tick() {		xbee_tick();	}
+	inline void datalink_setup_rssi_reporting(uint16_t starttime) {		xbee_setup_reporting_schedule(starttime);	}
+	inline void datalink_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {		xbee_fmt_reading(reading, bufsize, buf);	}
+	
+#elif MOTE_TYPE==MOTE_WIFLY
+	
+	inline void datalink_init() {
+		wifly_init();	
+	}
+
+	inline void datalink_send_packet_to_host(uint8_t * packetbuf, uint16_t len) {
+		wifly_send_packet(packetbuf, len);
 	}
 	
-	void datalink_sleep() {
-		xbee_sleep();
-	}
 	
-	void datalink_tick() {
-		xbee_tick();
+	inline void datalink_set_rx_callback(void (*r)(uint8_t * packetbuf, uint16_t len)) {
+		wifly_set_rx_callback(r);
 	}
-	
-	void datalink_setup_rssi_reporting(uint16_t starttime) {
-		xbee_setup_reporting_schedule(starttime);
-	}
-	void datalink_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {
-		xbee_fmt_reading(reading, bufsize, buf);
-	}
-	
+
+
+	void datalink_latch_destination_address() {} // always connects to the same server (invalid)
+	inline void datalink_wake() { 		wifly_wake();	}
+	inline void datalink_sleep() {		wifly_sleep();	}
+	inline void datalink_tick() {		wifly_tick();	}
+	inline void datalink_setup_rssi_reporting(uint16_t starttime) {		wifly_setup_reporting_schedule(starttime);	}
+	inline void datalink_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {		wifly_fmt_reading(reading, bufsize, buf);	}	
 #endif
