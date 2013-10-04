@@ -112,6 +112,8 @@ int main(void)
 		rtctimer_check_alarm();
 		wdt_disable();
 		
+		datalink_tick();
+		
 		#ifdef USE_PN532
 			rtc_timer_cb(); // causes monitor list to be run
 		#else

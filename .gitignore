@@ -67,7 +67,7 @@ dust_environment_sensor/dust_environment_sensor/motes/xbee_AT_settings.h
 .build_status
 *.ccl
 *.log
-*.txt
+
 reportview.xml
 ovs_hw_ovs_hw*
 ovs_hw/syntmp/

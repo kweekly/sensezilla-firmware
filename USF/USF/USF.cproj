@@ -241,9 +241,6 @@
     <Compile Include="motes\wifly.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="motes\wifly_settings.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="motes\xbee.c">
       <SubType>compile</SubType>
     </Compile>

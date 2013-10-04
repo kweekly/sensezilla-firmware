@@ -104,7 +104,7 @@ LICENSE:
    @return  none
 */
 extern void uart_init(unsigned int baudrate);
-
+extern void uart_disable();
 
 /**
  *  @brief   Get received byte from ringbuffer
@@ -183,6 +183,7 @@ extern void uart_flush();
 
 /** @brief  Initialize USART1 (only available on selected ATmegas) @see uart_init */
 extern void uart1_init(unsigned int baudrate);
+extern void uart1_disable();
 /** @brief  Get received byte of USART1 from ringbuffer. (only available on selected ATmega) @see uart_getc */
 extern unsigned int uart1_getc(void);
 /** @brief  Put byte to ringbuffer for transmitting via USART1 (only available on selected ATmega) @see uart_putc */

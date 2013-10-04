@@ -189,10 +189,11 @@ void task_print_report(void) {
 void task_check_send_report(void) {
 	if ( report_current()->fields != 0) {
 		uint8_t packetbuf[128];
-		datalink_wake();		
+		datalink_wake();
+		_delay_ms(250);
 		uint16_t len = _construct_report_packet(packetbuf);
 		datalink_send_packet_to_host(packetbuf, len);
-		datalink_wake();
+		datalink_sleep();
 	}
 }
 

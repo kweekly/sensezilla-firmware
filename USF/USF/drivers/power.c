@@ -21,7 +21,6 @@ void avr_sleep(void) {
 //	kputs("I go to sleep.\n");
 	uart_flush();
 	uart1_flush();
-	datalink_tick();
 	// go into sleep (only external interrupt or timer can wake us up)
 	set_sleep_mode(SLEEP_MODE_PWR_SAVE);
 	sleep_enable();

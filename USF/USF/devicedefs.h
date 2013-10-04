@@ -126,6 +126,8 @@ typedef struct
 	#define MOTE_TX_CTSN		REGISTER_BIT(PORTB,0)
 	#define MOTE_TX_CTSN_PIN	REGISTER_BIT(PINB, 0)
 	#define MOTE_RX_RTSN	REGISTER_BIT(PORTD,6)
+	#define MOTE_TX			REGISTER_BIT(PORTD,2)
+	#define MOTE_RX			REGISTER_BIT(PORTD,3)
 	#define XBEE_RTS_ENABLED
 	#define XBEE_CTS_ENABLED
 	#define XBEE_PINSLEEP_ENABLED
@@ -141,10 +143,12 @@ typedef struct
 	#undef XBEE_PINSLEEP_ENABLED
 #endif
 
+#define MOTE_UART_FLUSH	uart1_flush
 #define MOTE_UART_PUTC	uart1_putc
 #define MOTE_UART_GETC	uart1_getc
 #define MOTE_UART_WRITE uart1_write
 #define MOTE_UART_INIT  uart1_init
+#define MOTE_UART_DISABLE uart1_disable
 
 // LEDs
 #define LED_BLIP_TASK_ID 0x01

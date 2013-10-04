@@ -399,6 +399,9 @@ void uart_init(unsigned int baudrate)
 
 }/* uart_init */
 
+void uart_disable() {
+	UART0_CONTROL = 0;
+}
 
 /*************************************************************************
 Function: uart_getc()
@@ -600,6 +603,9 @@ void uart1_init(unsigned int baudrate)
     #endif 
 }/* uart_init */
 
+void uart1_disable() {
+	UART1_CONTROL = 0;
+}
 
 /*************************************************************************
 Function: uart1_getc()
