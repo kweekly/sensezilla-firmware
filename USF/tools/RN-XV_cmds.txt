@@ -19,7 +19,8 @@ set comm timer 10
 # ip parameters
 set ip dhcp 3
 set ip flags 0x38
-set ip host 192.168.0.197
+#set ip host 192.168.0.197 #Kevin's laptop
+set ip host 192.168.0.11
 set ip protocol 0x1
 set ip remote 7602
 set ip localport 7602
