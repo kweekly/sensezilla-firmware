@@ -2,8 +2,13 @@ import serial
 import os,time,sys
 
 SERIAL_PORT = sys.argv[1]
-SERIAL_SPEED = sys.argv[2]
-CONF = sys.argv[3]
+CONF = sys.argv[2]
+
+class RNException(BaseException):
+    def __init__(self,value):
+        self.value = value;
+    def __str__(self):
+        return repr(self.value)
 
 fin = open(CONF,'r');
 lines = []
@@ -38,7 +43,7 @@ def cmdmode():
     while True:
         l = rd();
         if ( len(l) == 0):
-            raise Exception("Did not recieve $$$ or CMD");
+            raise RNException("Did not recieve $$$ or CMD");
         elif ("CMD" in l or "$$$" in l):
             break
                 
@@ -46,9 +51,17 @@ def cmdmode():
     wr("\r\n"*3); 
     fl();
 
+try:
+    print "Opening serial port at 115200"
+    ser = serial.Serial(SERIAL_PORT,115200, timeout=1);
+    cmdmode();
+except RNException:
+    ser.close()
+    print "Opening serial port at 9600"
+    ser = serial.Serial(SERIAL_PORT,9600, timeout=1);
+    cmdmode()
     
-ser = serial.Serial(SERIAL_PORT,SERIAL_SPEED, timeout=1);
-cmdmode();
+    
 cmdmodetry = False
 lineidx = 0;
 while lineidx < len(lines):
@@ -59,14 +72,14 @@ while lineidx < len(lines):
         l = rd();
         if ( len(l) == 0):
             if cmdmodetry:
-                raise Exception("Did not recieve ERR or AOK");
+                raise RNException("Did not recieve ERR or AOK");
             else:
                 cmdmodetry = True
                 cmdmode();
                 continue;
                 
         elif ("ERR" in l):
-            raise Exception("ERR recieved");
+            raise RNException("ERR recieved");
         elif ("AOK" in l):
             break
     
@@ -79,3 +92,5 @@ time.sleep(0.01)
 rd();
 wr("reboot\r\n");
 fl();
+
+ser.close()

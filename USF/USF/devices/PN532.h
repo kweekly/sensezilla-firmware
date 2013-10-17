@@ -52,6 +52,8 @@ void _rfid_spiwrite(uint8_t c);
 uint8_t _rfid_spiread(void);
 
 void rfid_setup_interrupt_schedule(uint16_t starttime, void (*dcb)(uint8_t * uid, uint8_t uidlen));
+void rfid_setup_report_schedule(uint16_t starttime);
+void _rfid_report();
 void _rfid_check_interrupt();
 
 #endif /* PN532_H_ */

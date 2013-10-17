@@ -12,6 +12,7 @@
 #include "protocol/sensor_packet.h"
 #include "protocol/datalink.h"
 #include "device_headers.h"
+#include "protocol/recordstore.h"
 
 #include "drivers/uart.h"
 #include "drivers/i2cmaster.h"
@@ -26,12 +27,23 @@
 
 
 uint16_t requested_report_interval;
-uint32_t last_periodic_report_sent;
+uint32_t last_periodic_report_taken;
 uint8_t using_monitor_list;
+
+uint16_t requested_recordstore_interval;
+uint32_t last_recordstore_sent;
+
 
 void logic_init() {		
 	datalink_set_rx_callback(&datalink_rx_callback);
 	packet_set_handlers(&cmd_timesync_cb, &cmd_configure_sensor_cb, &cmd_actuate_cb);
+	requested_recordstore_interval = DEFAULT_RECORDSTORE_INTERVAL;
+	last_recordstore_sent = 0;
+	
+	datalink_set_ready_callback(&_datalink_rdy_cb);
+#ifdef USE_RECORDSTORE
+	recordstore_init();
+#endif
 }
 
 uint16_t report_interval_needed() {
@@ -50,11 +62,10 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	printf_P(PSTR("Configuring fields %02X => %02X, sample interval %ds\n"),report_fields_requested,fields_to_report,sample_interval);
 	report_fields_requested = fields_to_report;
 	requested_report_interval = sample_interval;
-	last_periodic_report_sent = 0;
+	last_periodic_report_taken = 0;
 	using_monitor_list = 0;
 	
 	scheduler_reset(); //removes all tasks
-	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, 0, &datalink_wake);
 	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 0, &task_led_blip_on);
 	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 100, &task_led_blip_off);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, 0, &task_begin_report);
@@ -121,10 +132,14 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	#endif	
 	#ifdef USE_DOOR_SENSORS
 		if ( fields_to_report & (REPORT_TYPE_DOOR_SENSORS))
-		door_sensors_setup_interrupt_schedule(1);
+			door_sensors_setup_interrupt_schedule(1);
 		else {
 			scheduler_remove_tasks(SCHEDULER_MONITOR_LIST,DOOR_SENSOR_TASK_ID);
 		}
+	#endif
+	#ifdef USE_PN532
+		if ( fields_to_report & REPORT_TYPE_RFID_COUNT)
+			rfid_setup_report_schedule(1);
 	#endif
 	
 	#ifdef REPORT_TYPE_POWER_CH0 // should cover all the other channels
@@ -138,9 +153,6 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	#ifdef REPORT_TYPE_RSSI 
 		if ( fields_to_report & (REPORT_TYPE_RSSI) )
 			datalink_setup_rssi_reporting(1);
-		else {
-			scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, MOTE_TASK_ID, 0, &datalink_wake);	
-		}
 	#endif
 	
 	#ifdef USE_PN532
@@ -152,11 +164,16 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 		machxo2_setup_reporting_schedule(1);
 	#endif
 	
+	#ifndef USE_RECORDSTORE
+		scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, MOTE_TASK_ID, 0, &datalink_wake);	
+	#endif
 
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_send_report);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &report_poplast);
-	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &datalink_sleep);
+	#ifndef USE_RECORDSTORE
+		scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,MOTE_TASK_ID, SCHEDULER_LAST_EVENTS, &datalink_sleep);
+	#endif
 	
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_check_send_report);
@@ -166,10 +183,16 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 
 void rtc_timer_cb(void) {
 	uint32_t curtime = rtctimer_read();
-	if ( curtime < last_periodic_report_sent || curtime - last_periodic_report_sent  >= requested_report_interval ) {
+	if ( curtime < last_periodic_report_taken || curtime - last_periodic_report_taken  >= requested_report_interval ) {
 		scheduler_start(SCHEDULER_PERIODIC_SAMPLE_LIST);
-		last_periodic_report_sent = curtime;
+		last_periodic_report_taken = curtime;
 	}
+	if ( curtime < last_recordstore_sent || curtime - last_recordstore_sent >= requested_recordstore_interval ) {
+		datalink_wake();
+	//	_datalink_rdy_cb();
+		last_recordstore_sent = curtime;
+	}
+	
 	if ( using_monitor_list ) {
 		scheduler_start(SCHEDULER_MONITOR_LIST);
 	}
@@ -183,25 +206,40 @@ void task_begin_report(void) {
 void task_print_report(void) {
 	if ( report_current()->fields != 0)
 		report_print_human(report_current());
-	//report_print(report_current());
 }
 
 void task_check_send_report(void) {
 	if ( report_current()->fields != 0) {
 		uint8_t packetbuf[128];
+		uint16_t len = _construct_report_packet(packetbuf);
+	#ifdef USE_RECORDSTORE
+		recordstore_insert(packetbuf,len);
+	#else
 		datalink_wake();
 		_delay_ms(250);
-		uint16_t len = _construct_report_packet(packetbuf);
 		datalink_send_packet_to_host(packetbuf, len);
 		datalink_sleep();
+	#endif
 	}
+}
+
+void _datalink_rdy_cb() {
+	uint16_t len;
+	uint8_t * packet = recordstore_dump(&len);
+	datalink_send_packet_to_host(packet,len);
+	recordstore_clear();
+	datalink_sleep();
 }
 
 
 void task_send_report(void) {
 	uint8_t packetbuf[128];
 	uint16_t len = _construct_report_packet(packetbuf);
+#ifdef USE_RECORDSTORE
+	recordstore_insert(packetbuf,len);
+#else
 	datalink_send_packet_to_host(packetbuf, len);
+#endif
 }
 
 uint16_t _construct_report_packet(uint8_t * buf) {

@@ -28,6 +28,9 @@ extern uint16_t report_fields_requested;
 	#ifdef USE_DOOR_SENSORS
 		#define REPORT_TYPE_DOOR_SENSORS		0x800
 	#endif
+	#ifdef USE_PN532
+		#define REPORT_TYPE_RFID_COUNT	0x1000
+	#endif	
 	
 #elif defined(POWER_STRIP_MONITOR)
 	#define REPORT_TYPE_POWER_CH0		0x01
@@ -74,6 +77,10 @@ typedef struct {
 	
 	#ifdef USE_DOOR_SENSORS
 	unsigned char door_sensor_state;
+	#endif
+	
+	#ifdef USE_PN532
+	unsigned char rfid_count;
 	#endif
 	
 #elif defined POWER_STRIP_MONITOR

@@ -9,48 +9,137 @@
 #if MOTE_TYPE == MOTE_WIFLY
 #define WIFLY_CMD_RESP_TIMEOUT 100 // in 100us
 #define WIFLY_WAKE_TIMEOUT 100
+#define WIFLY_CONNECT_TIMEOUT 5 // in seconds
 
 #include "avrincludes.h"
 #include "protocol/report.h"
 #include "utils/scheduler.h"
 #include "motes/wifly.h"
+#include "drivers/pcint.h"
+#include "drivers/rtctimer.h"
 
 uint8_t mote_line_buffer[128];
 uint16_t line_buffer_pos;
 uint8_t escape_next_char;
+#define LATCH_OFF		0
+#define LATCH_PRIMED	1
+#define LATCH_FIRED		2
+uint8_t line_recieved_latch;
 
-uint8_t mote_cmd_resp_buf[16];
-uint8_t cmd_resp_recieved;
+uint8_t mac_address_buffer[6];
 
 void _wifly_process_byte(char c);
 
 void _wifly_read_rssi();
 
 void (*rx_cb)(uint8_t * buf, uint16_t len);
+void (*rdy_cb)(void);
+
+uint8_t trying_to_connect;
+uint32_t try_connect;
 
 void wifly_init() {
+	uint8_t success = 0;
 	line_buffer_pos = 0;
 	escape_next_char = 0;
+	trying_to_connect = try_connect = 0;
+	line_recieved_latch = LATCH_OFF;
 	
 	MOTE_RESETN = 1;
-	wifly_wake();
+	MOTE_RX_RTSN = 0;
+	_delay_us(100);
+	MOTE_RX_RTSN = 1;
+	_delay_us(100);
+	MOTE_RX_RTSN = 0;
+	#ifdef MOTE_ASSOC_PCINT
+	pcint_register(MOTE_ASSOC_PCINT,&_wifly_pcint_cb);
+	#endif
 	
+	kputs("Trying to enter command mode...");
 	MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
+	_delay_ms(500);
+	MOTE_UART_WRITE(3,"$$$");
+	_delay_ms(500);
+	
+	success = 0;
+	while ( !success && _wifly_readline() ) {
+		if ( strstr(mote_line_buffer,"CMD") ) {
+			success = 1;
+		}
+	}
+	if ( success ) {
+		kputs("Success!\n");
+		
+		kputs("Getting MAC Address...");
+		MOTE_UART_WRITE(sizeof("get mac\r\n"),"get mac\r\n");
+		success = 0;
+		while ( !success && _wifly_readline() ) {
+			char * strpos;
+			if ( strpos = strstr(mote_line_buffer,"Mac Addr=") ) {
+				success = 1;
+				strpos += sizeof("Mac Addr=") - 1;
+				strpos[17] = 0;
+				printf_P(PSTR("MAC Address: %s\n"),strpos);
+				for(size_t i = 0; i < 6; i++) {
+					mac_address_buffer[i] = (uint8_t)strtoul(strpos + i*3,NULL,16);
+				}
+				break;
+			}
+		}
+		if ( !success ) {
+			kputs("FAIL!");
+			for ( size_t i = 0; i < 6; i++ ) {
+				mac_address_buffer[i] = 0;
+			}
+		}
+	} else {
+		kputs("FAIL!");
+	}
+	// flush anything left
+	while(_wifly_readline());
+	line_recieved_latch = LATCH_OFF;
+	
+	//MOTE_UART_WRITE(sizeof("sleep\r\n"),"sleep\r\n");	
 }
 
 void wifly_wake() {
 	MOTE_RX_RTSN = 0;
+	_delay_us(10);
+	MOTE_RX_RTSN = 1;
+	printf("Waking Wifly %02X\n",PINB);
+	try_connect = rtctimer_read();
+	if ( MOTE_ASSOC_PIN ) {
+		rdy_cb();
+	} else if ( MOTE_STATUS_PIN ) { // associated, but not connected
+		_wifly_TCP_connect();
+		trying_to_connect = 1;
+	} else {
+		trying_to_connect = 1;
+	}
+}
+
+void _wifly_TCP_connect() {
+	MOTE_UART_WRITE(3,"$$$");
+	_delay_ms(250);
+	MOTE_UART_WRITE(sizeof("open\r\nexit\r\n"),"open\r\nexit\r\n");
+}
+
+void _wifly_pcint_cb() {
+	if ( MOTE_ASSOC_PIN && rdy_cb) {
+		kputs("Wifly ready!\n");
+		rdy_cb();
+		trying_to_connect = 0;
+	}
 }
 
 void wifly_sleep() {
-	MOTE_RX_RTSN = 1;
+	kputs("Sleeping Wifly\n");
+	trying_to_connect = 0;
 	#ifdef LOW_POWER
-	//MOTE_RX_RTSN = 1; // de-asserted
-	MOTE_UART_FLUSH();
-	MOTE_RX = 0;
-	_delay_us(400); // send a break char
-	MOTE_RX = 1;
-	MOTE_UART_INIT(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
+		_delay_ms(250);
+		MOTE_UART_WRITE(3,"$$$");	
+		_delay_ms(250);
+		MOTE_UART_WRITE(sizeof("close\r\nsleep\r\n"),"close\r\nsleep\r\n");	
 	#endif
 }
 
@@ -62,8 +151,12 @@ void wifly_send_packet(uint8_t * buf, uint16_t len) {
 	 } // wait for CTS to go low
 	 if ( !cntr ) {
 		 kputs("Timeout waiting for CTS to go low\n");
+		 #ifndef LOW_POWER
+		 LED2 = 1;
+		 #endif
 		 return;
-	 }	
+	 }
+	 LED2 = 0;
 	
 	for ( uint16_t c = 0; c < len; c++ ) {
 		//printf_P(PSTR("%02X"),buf[c]);
@@ -82,20 +175,41 @@ void wifly_set_rx_callback(void (*r)(uint8_t * buf, uint16_t len)) {
 	rx_cb = r;
 }
 
+void wifly_set_rdy_callback(void (*r)(void)) {
+	rdy_cb = r;
+}
+
 void wifly_tick() {
 	int ch;
-	while( ((ch = MOTE_UART_GETC()) & 0xFF00) == 0 ){
-		uart_putc(ch);
+	uint32_t curtime = rtctimer_read();
+	if ( trying_to_connect) {
+		if((curtime - try_connect) > WIFLY_CONNECT_TIMEOUT || curtime < try_connect ){
+			kputs("Timeout trying to TCP connect\n");
+			wifly_sleep();			
+		}	
+		else if ( !MOTE_STATUS_PIN && MOTE_ASSOC_PIN) {
+			_wifly_TCP_connect();
+		}
+	}
+	
+	
+	while( (line_recieved_latch != LATCH_FIRED) && ((ch = MOTE_UART_GETC()) & 0xFF00) == 0 ){
+		//printf_P(PSTR("%02X "),ch);
 		_wifly_process_byte(ch & 0xFF);
 	}
 }
 
 void _wifly_process_byte(char c) {
-	if (c == '\n') {
+	if (c == 0x0A) {
 		if ( line_buffer_pos > 0 ) {
 			mote_line_buffer[line_buffer_pos++] = 0;
-			rx_cb(mote_line_buffer,line_buffer_pos);
+			//printf_P(PSTR("RCV %s\n"),mote_line_buffer);
+			if ( rx_cb )
+				rx_cb(mote_line_buffer,line_buffer_pos);
 			line_buffer_pos = 0;
+			if ( line_recieved_latch == LATCH_PRIMED ) {
+				line_recieved_latch = LATCH_FIRED;	
+			}
 		}
 	} else {
 		if ( escape_next_char ) {
@@ -107,6 +221,18 @@ void _wifly_process_byte(char c) {
 			mote_line_buffer[line_buffer_pos++] = c;
 		}
 	}
+}
+
+uint8_t _wifly_readline() {
+	line_recieved_latch = LATCH_PRIMED;
+	uint8_t tmout = 10;
+	wifly_tick();
+	while ( tmout-- && line_recieved_latch == LATCH_PRIMED )  {
+		wifly_tick();
+		_delay_ms(100);
+	}
+	
+	return line_recieved_latch == LATCH_FIRED;
 }
 
 void wifly_setup_reporting_schedule(uint16_t starttime) {

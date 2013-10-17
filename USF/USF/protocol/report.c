@@ -100,6 +100,13 @@ uint16_t report_populate_real_data(report_t * rep, uint8_t * buf) {
 	}
 	#endif
 	
+	#ifdef REPORT_TYPE_RFID_COUNT
+	if ( rep->fields & REPORT_TYPE_RFID_COUNT ) {
+		*((int8_t *)fltptr) = rep->rfid_count;
+		fltptr = (float*)(((int8_t *)fltptr) + 1);
+	}
+	#endif
+	
 	return (uint16_t)((uint8_t *)fltptr - oldbuf);
 }
 
@@ -189,6 +196,12 @@ void report_print_human(report_t * rep) {
 		uart_puts_P("; ");
 		uart_puts(buf);
 	}
+	#endif
+	
+	#ifdef REPORT_TYPE_RFID_COUNT
+		if ( rep->fields & REPORT_TYPE_RFID_COUNT ) {
+			printf_P(PSTR("; RFID count=%d"),rep->rfid_count);
+		}
 	#endif
 	
 	printf_P(PSTR("\n"));

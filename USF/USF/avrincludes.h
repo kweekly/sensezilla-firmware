@@ -20,6 +20,7 @@
 
 // Convenience
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <avr/pgmspace.h>
 #include "drivers/uart.h"

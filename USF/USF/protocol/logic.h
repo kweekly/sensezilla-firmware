@@ -26,7 +26,11 @@ uint16_t _construct_report_packet(uint8_t * buf);
 void rtc_timer_cb(void);
 
 void datalink_rx_callback(uint8_t * data, uint16_t len);
+void _datalink_rdy_cb();
 
+#ifdef USE_RECORDSTORE
+void recordstore_send();
+#endif
 
 #ifdef USE_LIS3DH
 void accel_click_cb(unsigned char detect_mask);

@@ -262,6 +262,12 @@
     <Compile Include="protocol\logic.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="protocol\recordstore.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="protocol\recordstore.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="protocol\report.c">
       <SubType>compile</SubType>
     </Compile>

@@ -142,6 +142,8 @@ uint8_t pn532_packetbuffer[PN532_PACKBUFFSIZ];
 
 uint8_t rfid_uid_buffer[16];
 
+uint8_t num_report_tags;
+
 void rfid_init() {
   RFID_CSN = 1;
   spi_init(SPI_MODE0 | SPI_LSBFIRST | SPI_CLKDIV4);
@@ -165,7 +167,7 @@ void rfid_init() {
  if (!rfid_SAMConfig()) {
 	 kputs("\tError putting in SAM mode.\n");
  }
- 
+ num_report_tags = 0;
 }
 
 uint8_t rfid_passive_scan() {
@@ -996,6 +998,16 @@ void rfid_setup_interrupt_schedule(uint16_t starttime, void (*dcb)(uint8_t * uid
 	detection_cb = dcb;
 	scheduler_add_task(SCHEDULER_MONITOR_LIST, RFID_TASK_ID, starttime, &_rfid_check_interrupt);
 	memset(last_uid_detected, 0, sizeof(last_uid_detected));
+}
+
+void _rfid_report() {
+	report_current()->rfid_count = num_report_tags;
+	report_current()->fields |= REPORT_TYPE_RFID_COUNT;
+	num_report_tags = 0;
+}
+
+void rfid_setup_report_schedule(uint16_t starttime) {
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, RFID_TASK_ID, starttime, &_rfid_report);
 }
 
 void _rfid_check_interrupt() {

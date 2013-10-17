@@ -61,6 +61,7 @@ C_SRCS +=  \
 ../motes/xbee.c \
 ../protocol/datalink.c \
 ../protocol/logic.c \
+../protocol/recordstore.c \
 ../protocol/report.c \
 ../protocol/sensor_packet.c \
 ../USF.c \
@@ -94,6 +95,7 @@ motes/wifly.o \
 motes/xbee.o \
 protocol/datalink.o \
 protocol/logic.o \
+protocol/recordstore.o \
 protocol/report.o \
 protocol/sensor_packet.o \
 USF.o \
@@ -120,6 +122,7 @@ motes/wifly.o \
 motes/xbee.o \
 protocol/datalink.o \
 protocol/logic.o \
+protocol/recordstore.o \
 protocol/report.o \
 protocol/sensor_packet.o \
 USF.o \
@@ -146,6 +149,7 @@ motes/wifly.d \
 motes/xbee.d \
 protocol/datalink.d \
 protocol/logic.d \
+protocol/recordstore.d \
 protocol/report.d \
 protocol/sensor_packet.d \
 USF.d \
@@ -172,6 +176,7 @@ motes/wifly.d \
 motes/xbee.d \
 protocol/datalink.d \
 protocol/logic.d \
+protocol/recordstore.d \
 protocol/report.d \
 protocol/sensor_packet.d \
 USF.d \
@@ -188,6 +193,8 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

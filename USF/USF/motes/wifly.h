@@ -19,6 +19,12 @@ void wifly_fmt_reading(int8_t * reading,size_t bufsize,char * buf);
 void wifly_flush();
 void wifly_send_packet(uint8_t * buf, uint16_t len);
 void wifly_set_rx_callback(void (*rx_cb)(uint8_t * buf, uint16_t len));
+void wifly_set_rdy_callback(void (*rdy_cb)(void));
+
+void _wifly_TCP_connect();
+
+uint8_t _wifly_readline();
+void _wifly_pcint_cb();
 
 uint8_t wifly_exec_command(uint8_t * cmd, uint16_t len);
 

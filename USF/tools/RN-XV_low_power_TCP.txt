@@ -7,7 +7,7 @@ set comm $ $
 set comm close 0
 set comm open 0
 set comm remote 0
-set comm idle 0
+set comm idle 1
 set comm match 0xa
 set comm size 1420
 set comm timer 10
@@ -19,12 +19,12 @@ set comm timer 10
 # ip parameters
 set ip dhcp 3
 set ip flags 0x38
-#set ip host 192.168.0.197 #Kevin's laptop
-set ip host 192.168.0.11
-set ip protocol 0x1
+set ip host 192.168.0.197 #Kevin's laptop
+#set ip host 192.168.0.11
+set ip protocol 0x8
 set ip remote 7602
 set ip localport 7602
-set ip tcp-mode 0x10
+set ip tcp-mode 0x13
 
 # optional parameters
 set opt jointmr 1000
@@ -34,13 +34,12 @@ set opt deviceid USF-WIFLY
 set opt password 0
 
 # System parameters
-set sys autoconn 0
-set sys autosleep 10
-set sys iofunc 0x7
-set sys mask 0x0
+set sys autoconn 255
+set sys iofunc 0x52 # use ASSOC and STATUS pins, no LED
+set sys mask 0x21f0 # defaults
 set sys printlvl 0
 set sys trigger 2
-set sys wake 0
+set sys wake 10
 
 # wlan parameters
 set wlan auth 3
@@ -50,11 +49,11 @@ set wlan linkmon 0
 set wlan phrase crest406bubble
 set wlan rate 3
 set wlan ssid crest-406
-set wlan tx 10
+set wlan tx 12
 
 # uart parameters
 set uart raw 115200
 set uart flow 1
 set uart mode 0x18
-set sys sleep 1
+set sys sleep 0
 
