@@ -154,6 +154,8 @@
 	inline void datalink_setup_rssi_reporting(uint16_t starttime) {		xbee_setup_reporting_schedule(starttime);	}
 	inline void datalink_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {		xbee_fmt_reading(reading, bufsize, buf);	}
 	
+	char xbeeuid[8];
+	void datalink_get_ID(uint8_t ** uid_buf, uint8_t * uid_len) { *uid_buf = xbeeuid; *uid_len = sizeof(xbeeuid); }
 #elif MOTE_TYPE==MOTE_WIFLY
 	
 	inline void datalink_init() {
@@ -180,4 +182,5 @@
 	inline void datalink_tick() {		wifly_tick();	}
 	inline void datalink_setup_rssi_reporting(uint16_t starttime) {		wifly_setup_reporting_schedule(starttime);	}
 	inline void datalink_fmt_reading(int8_t * reading,size_t bufsize,char * buf) {		wifly_fmt_reading(reading, bufsize, buf);	}	
+	inline void datalink_get_ID(uint8_t ** uid_buf, uint8_t * uid_len) { wifly_get_ID(uid_buf, uid_len); }
 #endif

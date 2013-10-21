@@ -16,6 +16,8 @@
 #define MT_CONFIGURE_SENSOR			0x02
 #define MT_ACTUATE					0x03
 #define MT_RFID_DETECTION			0x04
+#define MT_RECORDSTORE				0x05
+#define MT_DEVICE_ID				0x06
 
 #if defined ENVIRONMENT_SENSOR
 	#define MY_BT BT_DUST_ENVIRONMENT_SENSOR
@@ -59,7 +61,7 @@ void packet_recieved(uint8_t * data,uint16_t packet_len) {
 }
 
 uint16_t packet_construct_sensor_data_header_bt(uint8_t bt, uint32_t timestamp, uint16_t fields, uint8_t * buffer_out) {
-	buffer_out[0] = bt;
+	buffer_out[0] = MY_BT;
 	buffer_out[1] = MT_SENSOR_DATA;
 	*(uint32_t*)(buffer_out+2) = timestamp;
 	*(uint16_t*)(buffer_out+6) = fields;
@@ -70,11 +72,27 @@ uint16_t packet_construct_sensor_data_header(uint32_t timestamp, uint16_t fields
 	return packet_construct_sensor_data_header_bt(MY_BT, timestamp, fields, buffer_out);
 }
 
+uint16_t packet_construct_device_id_header(uint8_t device_id_type, uint8_t * buffer_out) {
+	buffer_out[0] = MY_BT;
+	buffer_out[1] = MT_DEVICE_ID;
+	buffer_out[2] = device_id_type;
+	return 3;
+}
+
 #ifdef USE_PN532
 uint16_t packet_construct_RFID_detected_header(uint32_t timestamp, uint8_t * buffer_out) {
 	buffer_out[0] = MY_BT;
 	buffer_out[1] = MT_RFID_DETECTION;
 	*(uint32_t*)(buffer_out+2) = timestamp;
 	return 6;
+}
+#endif
+
+
+#ifdef USE_RECORDSTORE
+uint16_t packet_construct_recordstore_header(uint8_t * buffer_out) {
+	buffer_out[0] = MY_BT;
+	buffer_out[1] = MT_RECORDSTORE;
+	return 2;
 }
 #endif

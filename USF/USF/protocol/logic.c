@@ -30,15 +30,20 @@ uint16_t requested_report_interval;
 uint32_t last_periodic_report_taken;
 uint8_t using_monitor_list;
 
+#ifdef USE_RECORDSTORE
 uint16_t requested_recordstore_interval;
 uint32_t last_recordstore_sent;
+#endif
 
 
 void logic_init() {		
 	datalink_set_rx_callback(&datalink_rx_callback);
 	packet_set_handlers(&cmd_timesync_cb, &cmd_configure_sensor_cb, &cmd_actuate_cb);
+	#ifdef USE_RECORDSTORE
 	requested_recordstore_interval = DEFAULT_RECORDSTORE_INTERVAL;
 	last_recordstore_sent = 0;
+	#endif
+	
 	
 	datalink_set_ready_callback(&_datalink_rdy_cb);
 #ifdef USE_RECORDSTORE
@@ -187,11 +192,13 @@ void rtc_timer_cb(void) {
 		scheduler_start(SCHEDULER_PERIODIC_SAMPLE_LIST);
 		last_periodic_report_taken = curtime;
 	}
+	#ifdef USE_RECORDSTORE
 	if ( curtime < last_recordstore_sent || curtime - last_recordstore_sent >= requested_recordstore_interval ) {
 		datalink_wake();
 	//	_datalink_rdy_cb();
 		last_recordstore_sent = curtime;
 	}
+	#endif
 	
 	if ( using_monitor_list ) {
 		scheduler_start(SCHEDULER_MONITOR_LIST);
@@ -225,9 +232,22 @@ void task_check_send_report(void) {
 
 void _datalink_rdy_cb() {
 	uint16_t len;
+	uint8_t len8;
+	uint8_t * uidbuf;
+	uint8_t pbuf[32];
+	datalink_get_ID(&uidbuf,&len8);
+	
+	len = packet_construct_device_id_header(DEVID_TYPE_MAC_80211, pbuf);
+	memcpy(pbuf+len,uidbuf,len8);
+	datalink_send_packet_to_host(pbuf,len8+len);
+
+#ifdef USE_RECORDSTORE	
 	uint8_t * packet = recordstore_dump(&len);
 	datalink_send_packet_to_host(packet,len);
 	recordstore_clear();
+#endif
+	_delay_ms(200);
+	datalink_tick(); // take care of any packets sent by host
 	datalink_sleep();
 }
 
@@ -282,8 +302,13 @@ void rfid_detection_cb(uint8_t * uid, uint8_t uidlen) {
 	
 	uint16_t pos = packet_construct_RFID_detected_header(rtctimer_read(), buf);
 	memcpy(buf+pos,uid,uidlen);
-	datalink_send_packet_to_host(buf,pos+uidlen);
-	datalink_sleep();
+	#ifdef USE_RECORDSTORE
+		recordstore_insert(buf,pos+uidlen);
+	#else
+		datalink_send_packet_to_host(buf,pos+uidlen);
+		datalink_sleep();
+	#endif
+	
 }
 #endif
 

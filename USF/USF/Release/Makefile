@@ -43,8 +43,10 @@ SUBDIRS :=  \
 C_SRCS +=  \
 ../devices/amn41121.c \
 ../devices/CS5467.c \
+../devices/door_sensors.c \
 ../devices/l3gd20.c \
 ../devices/lis3dh.c \
+../devices/MACHXO2_PMCO2.c \
 ../devices/PN532.c \
 ../devices/si7005.c \
 ../devices/triacs.c \
@@ -55,8 +57,11 @@ C_SRCS +=  \
 ../drivers/SPI.c \
 ../drivers/twimaster.c \
 ../drivers/uart.c \
+../motes/wifly.c \
 ../motes/xbee.c \
+../protocol/datalink.c \
 ../protocol/logic.c \
+../protocol/recordstore.c \
 ../protocol/report.c \
 ../protocol/sensor_packet.c \
 ../USF.c \
@@ -72,8 +77,10 @@ ASM_SRCS +=
 OBJS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
+devices/door_sensors.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
+devices/MACHXO2_PMCO2.o \
 devices/PN532.o \
 devices/si7005.o \
 devices/triacs.o \
@@ -84,8 +91,11 @@ drivers/rtctimer.o \
 drivers/SPI.o \
 drivers/twimaster.o \
 drivers/uart.o \
+motes/wifly.o \
 motes/xbee.o \
+protocol/datalink.o \
 protocol/logic.o \
+protocol/recordstore.o \
 protocol/report.o \
 protocol/sensor_packet.o \
 USF.o \
@@ -94,8 +104,10 @@ utils/scheduler.o
 OBJS_AS_ARGS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
+devices/door_sensors.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
+devices/MACHXO2_PMCO2.o \
 devices/PN532.o \
 devices/si7005.o \
 devices/triacs.o \
@@ -106,8 +118,11 @@ drivers/rtctimer.o \
 drivers/SPI.o \
 drivers/twimaster.o \
 drivers/uart.o \
+motes/wifly.o \
 motes/xbee.o \
+protocol/datalink.o \
 protocol/logic.o \
+protocol/recordstore.o \
 protocol/report.o \
 protocol/sensor_packet.o \
 USF.o \
@@ -116,8 +131,10 @@ utils/scheduler.o
 C_DEPS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
+devices/door_sensors.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
+devices/MACHXO2_PMCO2.d \
 devices/PN532.d \
 devices/si7005.d \
 devices/triacs.d \
@@ -128,8 +145,11 @@ drivers/rtctimer.d \
 drivers/SPI.d \
 drivers/twimaster.d \
 drivers/uart.d \
+motes/wifly.d \
 motes/xbee.d \
+protocol/datalink.d \
 protocol/logic.d \
+protocol/recordstore.d \
 protocol/report.d \
 protocol/sensor_packet.d \
 USF.d \
@@ -138,8 +158,10 @@ utils/scheduler.d
 C_DEPS_AS_ARGS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
+devices/door_sensors.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
+devices/MACHXO2_PMCO2.d \
 devices/PN532.d \
 devices/si7005.d \
 devices/triacs.d \
@@ -150,8 +172,11 @@ drivers/rtctimer.d \
 drivers/SPI.d \
 drivers/twimaster.d \
 drivers/uart.d \
+motes/wifly.d \
 motes/xbee.d \
+protocol/datalink.d \
 protocol/logic.d \
+protocol/recordstore.d \
 protocol/report.d \
 protocol/sensor_packet.d \
 USF.d \
@@ -168,6 +193,16 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
+
+
+
+
+
+
+
+
 
 
 

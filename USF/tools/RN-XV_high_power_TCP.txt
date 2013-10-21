@@ -20,7 +20,7 @@ set comm timer 10
 set ip dhcp 3
 set ip flags 0x38
 #set ip host 192.168.0.197 #Kevin's laptop
-set ip host 129.32.189.129 # Sensezilla
+set ip host 128.32.189.129 # Sensezilla
 #set ip host 192.168.0.11
 set dns name sensezilla.berkeley.edu
 set ip protocol 0x8

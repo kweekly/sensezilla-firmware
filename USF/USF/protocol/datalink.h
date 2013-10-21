@@ -22,6 +22,7 @@ datalink_status_t datalink_status();
 void datalink_send_packet_to_host(uint8_t * packetbuf, uint16_t len);
 void datalink_set_rx_callback(void (*rx_cb)(uint8_t * packetbuf, uint16_t len));
 void datalink_latch_destination_address();
+void datalink_get_ID(uint8_t ** uid_buf, uint8_t * uid_len);
 
 void datalink_set_ready_callback(void (*rdy_cb)(void));
 

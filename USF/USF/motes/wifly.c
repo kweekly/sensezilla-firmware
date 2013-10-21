@@ -9,7 +9,7 @@
 #if MOTE_TYPE == MOTE_WIFLY
 #define WIFLY_CMD_RESP_TIMEOUT 100 // in 100us
 #define WIFLY_WAKE_TIMEOUT 100
-#define WIFLY_CONNECT_TIMEOUT 5 // in seconds
+#define WIFLY_CONNECT_TIMEOUT 3 // in seconds
 
 #include "avrincludes.h"
 #include "protocol/report.h"
@@ -75,7 +75,7 @@ void wifly_init() {
 		success = 0;
 		while ( !success && _wifly_readline() ) {
 			char * strpos;
-			if ( strpos = strstr(mote_line_buffer,"Mac Addr=") ) {
+			if ( (strpos = strstr(mote_line_buffer,"Mac Addr=")) ) {
 				success = 1;
 				strpos += sizeof("Mac Addr=") - 1;
 				strpos[17] = 0;
@@ -103,9 +103,11 @@ void wifly_init() {
 }
 
 void wifly_wake() {
-	MOTE_RX_RTSN = 0;
-	_delay_us(10);
+	#ifndef LOW_POWER
 	MOTE_RX_RTSN = 1;
+	_delay_us(20);
+	#endif
+	MOTE_RX_RTSN = 0;
 	printf("Waking Wifly %02X\n",PINB);
 	try_connect = rtctimer_read();
 	if ( MOTE_ASSOC_PIN ) {
@@ -116,6 +118,11 @@ void wifly_wake() {
 	} else {
 		trying_to_connect = 1;
 	}
+}
+
+void wifly_get_ID(uint8_t ** uid_buf, uint8_t * uid_len) {
+	*uid_buf = mac_address_buffer;
+	*uid_len = sizeof(mac_address_buffer);
 }
 
 void _wifly_TCP_connect() {
@@ -133,6 +140,7 @@ void _wifly_pcint_cb() {
 }
 
 void wifly_sleep() {
+	MOTE_RX_RTSN = 1;
 	kputs("Sleeping Wifly\n");
 	trying_to_connect = 0;
 	#ifdef LOW_POWER
@@ -194,7 +202,7 @@ void wifly_tick() {
 	
 	
 	while( (line_recieved_latch != LATCH_FIRED) && ((ch = MOTE_UART_GETC()) & 0xFF00) == 0 ){
-		//printf_P(PSTR("%02X "),ch);
+		printf_P(PSTR("%02X "),ch);
 		_wifly_process_byte(ch & 0xFF);
 	}
 }
@@ -203,7 +211,7 @@ void _wifly_process_byte(char c) {
 	if (c == 0x0A) {
 		if ( line_buffer_pos > 0 ) {
 			mote_line_buffer[line_buffer_pos++] = 0;
-			//printf_P(PSTR("RCV %s\n"),mote_line_buffer);
+			printf_P(PSTR("RCV %s\n"),mote_line_buffer);
 			if ( rx_cb )
 				rx_cb(mote_line_buffer,line_buffer_pos);
 			line_buffer_pos = 0;
