@@ -176,6 +176,11 @@ void board_init_devices(void) {
 	kputs("Initializing Door Sensors...\n");
 	door_sensors_init();
 #endif
+
+#ifdef USE_K20
+	kputs("Initializing CO2...\n");
+	k20_init();
+#endif
 }
 
 void board_setup_reporting(void) {

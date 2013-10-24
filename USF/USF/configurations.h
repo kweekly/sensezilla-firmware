@@ -13,8 +13,9 @@
 //#define CONFIG_DOORWAY_RFID_READER
 //#define CONFIG_SERIAL_RFID_READER
 //#define CONFIG_BATTERY_SENSOR_DEVEL
-#define CONFIG_BATTERY_SENSOR_DEPLOY
+//#define CONFIG_BATTERY_SENSOR_DEPLOY
 //#define CONFIG_DOOR_OPEN_SENSOR
+#define CONFIG_CO2_SENSOR
 
 #define MOTE_TYPE MOTE_WIFLY
 /***************  ENVIRONMENT SENSOR ***********************/ 
@@ -37,13 +38,17 @@ LOW = 0xC2 (valid)
 
  */ 
 // Uncomment this line to activate this board
-#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR)
+#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR) || defined(CONFIG_CO2_SENSOR)
 	#define ENVIRONMENT_SENSOR
 	#define HW_VERSION 2
 #endif
 
 #if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER)
 	#define USE_PN532
+#endif
+
+#if defined(CONFIG_CO2_SENSOR)
+	#define USE_K20
 #endif
 
 #if defined(CONFIG_DOOR_OPEN_SENSOR)
@@ -63,6 +68,8 @@ Low D2
 // reporting
 #if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) 
 	#define DEFAULT_FIELDS_TO_REPORT 0x31F // all but gyro, light level change, RSSI
+#elif defined(CONFIG_CO2_SENSOR)
+	#define DEFAULT_FIELDS_TO_REPORT 0x31F // all but gyro, light level change, RSSI
 #elif defined(CONFIG_DOOR_OPEN_SENSOR)
 	#define DEFAULT_FIELDS_TO_REPORT 0xB1F // all but gyro, light level change, RSSI
 #elif defined(CONFIG_SERIAL_RFID_READER)
@@ -78,7 +85,7 @@ Low D2
 #define DEFAULT_SAMPLE_INTERVAL 5
 #define DEFAULT_RECORDSTORE_INTERVAL 150
 #define USE_RECORDSTORE
-#elif defined(CONFIG_DOORWAY_RFID_READER)
+#elif defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_CO2_SENSOR)
 #define DEFAULT_SAMPLE_INTERVAL 5
 #define DEFAULT_RECORDSTORE_INTERVAL 20
 #define USE_RECORDSTORE

@@ -27,6 +27,7 @@ uint8_t escape_next_char;
 uint8_t line_recieved_latch;
 
 uint8_t mac_address_buffer[6];
+uint8_t mac_valid;
 
 void _wifly_process_byte(char c);
 
@@ -42,6 +43,7 @@ void wifly_init() {
 	uint8_t success = 0;
 	line_buffer_pos = 0;
 	escape_next_char = 0;
+	mac_valid = 0;
 	trying_to_connect = try_connect = 0;
 	line_recieved_latch = LATCH_OFF;
 	
@@ -69,29 +71,7 @@ void wifly_init() {
 	}
 	if ( success ) {
 		kputs("Success!\n");
-		
-		kputs("Getting MAC Address...");
-		MOTE_UART_WRITE(sizeof("get mac\r\n"),"get mac\r\n");
-		success = 0;
-		while ( !success && _wifly_readline() ) {
-			char * strpos;
-			if ( (strpos = strstr(mote_line_buffer,"Mac Addr=")) ) {
-				success = 1;
-				strpos += sizeof("Mac Addr=") - 1;
-				strpos[17] = 0;
-				printf_P(PSTR("MAC Address: %s\n"),strpos);
-				for(size_t i = 0; i < 6; i++) {
-					mac_address_buffer[i] = (uint8_t)strtoul(strpos + i*3,NULL,16);
-				}
-				break;
-			}
-		}
-		if ( !success ) {
-			kputs("FAIL!");
-			for ( size_t i = 0; i < 6; i++ ) {
-				mac_address_buffer[i] = 0;
-			}
-		}
+		_wifly_get_MAC();
 	} else {
 		kputs("FAIL!");
 	}
@@ -99,7 +79,7 @@ void wifly_init() {
 	while(_wifly_readline());
 	line_recieved_latch = LATCH_OFF;
 	
-	//MOTE_UART_WRITE(sizeof("sleep\r\n"),"sleep\r\n");	
+	MOTE_UART_WRITE(sizeof("sleep\r\n"),"sleep\r\n");	
 }
 
 void wifly_wake() {
@@ -108,10 +88,19 @@ void wifly_wake() {
 	_delay_us(20);
 	#endif
 	MOTE_RX_RTSN = 0;
-	printf("Waking Wifly %02X\n",PINB);
+	printf_P(PSTR("Waking Wifly %02X\n"),PINB);
+	if ( !mac_valid ) {
+		_delay_ms(250);
+		MOTE_UART_WRITE(3,"$$$");
+		_delay_ms(250);
+		_wifly_get_MAC();
+		MOTE_UART_WRITE(sizeof("exit\r\n"),"exit\r\n");
+	}
 	try_connect = rtctimer_read();
 	if ( MOTE_ASSOC_PIN ) {
+		kputs("Wifly already ready!\n");
 		rdy_cb();
+		trying_to_connect = 0;
 	} else if ( MOTE_STATUS_PIN ) { // associated, but not connected
 		_wifly_TCP_connect();
 		trying_to_connect = 1;
@@ -125,10 +114,36 @@ void wifly_get_ID(uint8_t ** uid_buf, uint8_t * uid_len) {
 	*uid_len = sizeof(mac_address_buffer);
 }
 
+void _wifly_get_MAC() {
+	kputs("Getting MAC Address...");
+	MOTE_UART_WRITE(sizeof("get mac\r\n"),"get mac\r\n");
+	uint8_t success = 0;
+	while ( !success && _wifly_readline() ) {
+		char * strpos;
+		if ( (strpos = strstr(mote_line_buffer,"Mac Addr=")) ) {
+			success = 1;
+			strpos += sizeof("Mac Addr=") - 1;
+			strpos[17] = 0;
+			printf_P(PSTR("MAC Address: %s\n"),strpos);
+			for(size_t i = 0; i < 6; i++) {
+				mac_address_buffer[i] = (uint8_t)strtoul(strpos + i*3,NULL,16);
+			}
+			mac_valid = 1;
+			break;
+		}
+	}
+	if ( !success ) {
+		kputs("FAIL!");
+		for ( size_t i = 0; i < 6; i++ ) {
+			mac_address_buffer[i] = 0;
+		}
+	}	
+}
+
 void _wifly_TCP_connect() {
 	MOTE_UART_WRITE(3,"$$$");
 	_delay_ms(250);
-	MOTE_UART_WRITE(sizeof("open\r\nexit\r\n"),"open\r\nexit\r\n");
+	MOTE_UART_WRITE(sizeof("\r\nopen\r\nexit\r\n"),"\r\nopen\r\nexit\r\n");
 }
 
 void _wifly_pcint_cb() {
@@ -147,11 +162,12 @@ void wifly_sleep() {
 		_delay_ms(250);
 		MOTE_UART_WRITE(3,"$$$");	
 		_delay_ms(250);
-		MOTE_UART_WRITE(sizeof("close\r\nsleep\r\n"),"close\r\nsleep\r\n");	
+		MOTE_UART_WRITE(sizeof("\r\nclose\r\nsleep\r\n"),"\r\nclose\r\nsleep\r\n");	
 	#endif
 }
 
 void wifly_send_packet(uint8_t * buf, uint16_t len) {
+	/*
 	// wait for CTS to go LOW
 	int8_t cntr = WIFLY_WAKE_TIMEOUT;
 	while(--cntr && MOTE_TX_CTSN_PIN) {
@@ -165,7 +181,7 @@ void wifly_send_packet(uint8_t * buf, uint16_t len) {
 		 return;
 	 }
 	 LED2 = 0;
-	
+	*/
 	for ( uint16_t c = 0; c < len; c++ ) {
 		//printf_P(PSTR("%02X"),buf[c]);
 		if ( buf[c] == 0x7D || buf[c] == '\n' ) {

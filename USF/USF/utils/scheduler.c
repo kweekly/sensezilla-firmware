@@ -7,6 +7,7 @@
 #include "devicedefs.h"
 #include "avrincludes.h"
 #include "utils/scheduler.h"
+#include "drivers/pcint.h"
 
 #define MAX_EVENTS 32
 
@@ -125,6 +126,7 @@ void scheduler_start(uint8_t task_list) {
 		}
 		OCR1A = event_lists[task_list][eventpos].time; // set next alarm to wake up
 		avr_doze();
+		pcint_check(); // other interrupt sources could have woken us up
 	}
 	
 	while(eventpos < numevents[task_list]) {

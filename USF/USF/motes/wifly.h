@@ -24,6 +24,7 @@ void wifly_set_rdy_callback(void (*rdy_cb)(void));
 void wifly_get_ID(uint8_t ** uid_buf, uint8_t * uid_len);
 
 void _wifly_TCP_connect();
+void _wifly_get_MAC();
 
 uint8_t _wifly_readline();
 void _wifly_pcint_cb();

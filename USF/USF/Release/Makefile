@@ -44,6 +44,7 @@ C_SRCS +=  \
 ../devices/amn41121.c \
 ../devices/CS5467.c \
 ../devices/door_sensors.c \
+../devices/k20.c \
 ../devices/l3gd20.c \
 ../devices/lis3dh.c \
 ../devices/MACHXO2_PMCO2.c \
@@ -54,6 +55,7 @@ C_SRCS +=  \
 ../drivers/pcint.c \
 ../drivers/power.c \
 ../drivers/rtctimer.c \
+../drivers/softserial.c \
 ../drivers/SPI.c \
 ../drivers/twimaster.c \
 ../drivers/uart.c \
@@ -78,6 +80,7 @@ OBJS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
 devices/door_sensors.o \
+devices/k20.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
 devices/MACHXO2_PMCO2.o \
@@ -88,6 +91,7 @@ devices/tsl2560.o \
 drivers/pcint.o \
 drivers/power.o \
 drivers/rtctimer.o \
+drivers/softserial.o \
 drivers/SPI.o \
 drivers/twimaster.o \
 drivers/uart.o \
@@ -105,6 +109,7 @@ OBJS_AS_ARGS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
 devices/door_sensors.o \
+devices/k20.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
 devices/MACHXO2_PMCO2.o \
@@ -115,6 +120,7 @@ devices/tsl2560.o \
 drivers/pcint.o \
 drivers/power.o \
 drivers/rtctimer.o \
+drivers/softserial.o \
 drivers/SPI.o \
 drivers/twimaster.o \
 drivers/uart.o \
@@ -132,6 +138,7 @@ C_DEPS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
 devices/door_sensors.d \
+devices/k20.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
 devices/MACHXO2_PMCO2.d \
@@ -142,6 +149,7 @@ devices/tsl2560.d \
 drivers/pcint.d \
 drivers/power.d \
 drivers/rtctimer.d \
+drivers/softserial.d \
 drivers/SPI.d \
 drivers/twimaster.d \
 drivers/uart.d \
@@ -159,6 +167,7 @@ C_DEPS_AS_ARGS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
 devices/door_sensors.d \
+devices/k20.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
 devices/MACHXO2_PMCO2.d \
@@ -169,6 +178,7 @@ devices/tsl2560.d \
 drivers/pcint.d \
 drivers/power.d \
 drivers/rtctimer.d \
+drivers/softserial.d \
 drivers/SPI.d \
 drivers/twimaster.d \
 drivers/uart.d \
@@ -193,6 +203,10 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
+
+
 
 
 

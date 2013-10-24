@@ -154,6 +154,12 @@
     <Compile Include="devices\door_sensors.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="devices\k20.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\k20.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="devices\l3gd20.c">
       <SubType>compile</SubType>
     </Compile>
@@ -218,6 +224,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="drivers\rtctimer.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\softserial.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="drivers\softserial.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="drivers\SPI.c">

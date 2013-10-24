@@ -45,8 +45,16 @@
 	#endif
 #endif
 
+#ifdef USE_K20
+	#ifdef USE_EXP
+	#error "Expansion port already in use!"
+	#else
+	#define USE_EXP
+	#endif
+#endif
+
 // Power mode
-#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532) && !defined(USE_MACHXO2_PMCO2)
+#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532) && !defined(USE_MACHXO2_PMCO2) && !defined(USE_K20)
 #define LOW_POWER
 #else
 #define HIGH_POWER
@@ -98,10 +106,12 @@ typedef struct
 
 
 // Expansion
-#define EXP_SCK		REGISTER_BIT(PORTB,7)
-#define EXP_MISO	REGISTER_BIT(PORTB,6)
-#define EXP_MOSI	REGISTER_BIT(PORTB,5)
-#define EXP_CSN		REGISTER_BIT(PORTB,4)
+#define EXP_SCK		 REGISTER_BIT(PORTB,7)
+#define EXP_MISO	 REGISTER_BIT(PORTB,6)
+#define EXP_MISO_PIN REGISTER_BIT(PINB,6)
+#define EXP_MISO_PCINT 14
+#define EXP_MOSI	 REGISTER_BIT(PORTB,5)
+#define EXP_CSN		 REGISTER_BIT(PORTB,4)
 
 #define EXP_SCK_DDR		REGISTER_BIT(DDRB,7)
 #define EXP_MISO_DDR	REGISTER_BIT(DDRB,6)
@@ -226,6 +236,13 @@ typedef struct
 		#define DOOR_SENSOR_INDOOR_TOUCH_PCINT	14
 		#define DOOR_SENSOR_OUTDOOR_TOUCH_PIN	REGISTER_BIT(PINB, 5)
 		#define DOOR_SENSOR_OUTDOOR_TOUCH_PCINT 13
+	#endif
+	
+	#ifdef USE_K20
+		#define K20_TASK_ID 0x80
+		#define SOFTSERIAL_TX		EXP_MOSI
+		#define SOFTSERIAL_RX_PIN	EXP_MISO_PIN
+		#define SOFTSERIAL_RX_PCINT EXP_MISO_PCINT
 	#endif
 #endif 
 

@@ -107,6 +107,13 @@ uint16_t report_populate_real_data(report_t * rep, uint8_t * buf) {
 	}
 	#endif
 	
+	#ifdef REPORT_TYPE_CO2
+	if ( rep->fields & REPORT_TYPE_CO2 ) {
+		*((uint16_t *)fltptr) = rep->co2;
+		fltptr = (float*)(((uint16_t *)fltptr) + 1);
+	}
+	#endif
+	
 	return (uint16_t)((uint8_t *)fltptr - oldbuf);
 }
 
@@ -201,6 +208,12 @@ void report_print_human(report_t * rep) {
 	#ifdef REPORT_TYPE_RFID_COUNT
 		if ( rep->fields & REPORT_TYPE_RFID_COUNT ) {
 			printf_P(PSTR("; RFID count=%d"),rep->rfid_count);
+		}
+	#endif
+	
+	#ifdef REPORT_TYPE_CO2
+		if ( rep->fields & REPORT_TYPE_CO2 ) {
+			printf_P(PSTR("; CO2=%d ppm"),rep->co2);
 		}
 	#endif
 	

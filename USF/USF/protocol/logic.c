@@ -169,6 +169,10 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 		machxo2_setup_reporting_schedule(1);
 	#endif
 	
+	#ifdef USE_K20
+		k20_setup_reporting_schedule(0);
+	#endif
+	
 	#ifndef USE_RECORDSTORE
 		scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, MOTE_TASK_ID, 0, &datalink_wake);	
 	#endif
@@ -235,17 +239,18 @@ void _datalink_rdy_cb() {
 	uint8_t len8;
 	uint8_t * uidbuf;
 	uint8_t pbuf[32];
+
+#ifdef USE_RECORDSTORE
 	datalink_get_ID(&uidbuf,&len8);
-	
 	len = packet_construct_device_id_header(DEVID_TYPE_MAC_80211, pbuf);
 	memcpy(pbuf+len,uidbuf,len8);
-	datalink_send_packet_to_host(pbuf,len8+len);
+	recordstore_insert(pbuf,len8+len);
 
-#ifdef USE_RECORDSTORE	
 	uint8_t * packet = recordstore_dump(&len);
 	datalink_send_packet_to_host(packet,len);
 	recordstore_clear();
 #endif
+
 	_delay_ms(200);
 	datalink_tick(); // take care of any packets sent by host
 	datalink_sleep();

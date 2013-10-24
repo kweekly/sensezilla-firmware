@@ -53,15 +53,17 @@ void pcint_init() {
 }
 
 void pcint_check() {
+	//EXP_CSN = 1;
 	for ( int c = 0; c < PCINT_NUM_PINS / 8; c++) {
 		if ( pcint_cbflags[c] )
 			for ( int d = 0; d < 8; d++ ) {
-				if ( pcint_cbflags[c] & _BV(d) && pcint_callbacks[c*8+d]) {
+				if (pcint_callbacks[c*8+d] && pcint_cbflags[c] & _BV(d)) {
 					pcint_callbacks[c*8+d]();
 					pcint_cbflags[c] &= ~_BV(d);
 				}
 			}
 	}
+	//EXP_CSN = 0;
 }
 
 void pcint_latchall() {
@@ -124,4 +126,5 @@ void pcint_unregister(uint8_t intnum) {
 	}
 	
 	pcint_callbacks[intnum] = NULL;
+	pcint_cbflags[regnum] &= ~_BV(bitnum);
 }

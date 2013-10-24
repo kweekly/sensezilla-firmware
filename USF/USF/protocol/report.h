@@ -31,7 +31,9 @@ extern uint16_t report_fields_requested;
 	#ifdef USE_PN532
 		#define REPORT_TYPE_RFID_COUNT	0x1000
 	#endif	
-	
+	#ifdef USE_K20
+		#define REPORT_TYPE_CO2 0x2000
+	#endif	
 #elif defined(POWER_STRIP_MONITOR)
 	#define REPORT_TYPE_POWER_CH0		0x01
 	#define REPORT_TYPE_POWER_CH1		0x02
@@ -92,6 +94,10 @@ typedef struct {
 	uint16_t co2[MACHXO2_NUM_CO2INPUTS];
 	uint32_t pm[MACHXO2_NUM_PMINPUTS];
 	uint32_t pm_timer;
+#endif
+
+#ifdef USE_K20
+	uint16_t co2;
 #endif
 
 } report_t;
