@@ -26,6 +26,8 @@ uint16_t _construct_report_packet(uint8_t * buf);
 void rtc_timer_cb(void);
 
 void datalink_rx_callback(uint8_t * data, uint16_t len);
+
+void send_over_datalink(void);
 void _datalink_rdy_cb();
 
 #ifdef USE_RECORDSTORE

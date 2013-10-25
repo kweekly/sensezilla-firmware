@@ -39,10 +39,7 @@ uint32_t last_recordstore_sent;
 void logic_init() {		
 	datalink_set_rx_callback(&datalink_rx_callback);
 	packet_set_handlers(&cmd_timesync_cb, &cmd_configure_sensor_cb, &cmd_actuate_cb);
-	#ifdef USE_RECORDSTORE
-	requested_recordstore_interval = DEFAULT_RECORDSTORE_INTERVAL;
-	last_recordstore_sent = 0;
-	#endif
+
 	
 	
 	datalink_set_ready_callback(&_datalink_rdy_cb);
@@ -60,6 +57,11 @@ uint16_t report_interval_needed() {
 }
 
 void datalink_rx_callback(uint8_t * data, uint16_t len) {
+	kputs("Recieved: ");
+	for ( int d = 0; d < len; d++ ) {
+		printf_P(PSTR("%02X"),data[d]);
+	}
+	kputs("\n");
 	packet_recieved(data,len);
 }
 
@@ -67,8 +69,12 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	printf_P(PSTR("Configuring fields %02X => %02X, sample interval %ds\n"),report_fields_requested,fields_to_report,sample_interval);
 	report_fields_requested = fields_to_report;
 	requested_report_interval = sample_interval;
-	last_periodic_report_taken = 0;
+	last_periodic_report_taken = -1;
 	using_monitor_list = 0;
+	#ifdef USE_RECORDSTORE
+	requested_recordstore_interval = DEFAULT_RECORDSTORE_INTERVAL;
+	last_recordstore_sent = -1;
+	#endif
 	
 	scheduler_reset(); //removes all tasks
 	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 0, &task_led_blip_on);
@@ -174,7 +180,7 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	#endif
 	
 	#ifndef USE_RECORDSTORE
-		scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, MOTE_TASK_ID, 0, &datalink_wake);	
+		scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, MOTE_TASK_ID, 0, &datalink_wake);
 	#endif
 
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
@@ -235,25 +241,33 @@ void task_check_send_report(void) {
 }
 
 void _datalink_rdy_cb() {
+	send_over_datalink();
+}
+
+void send_over_datalink(void) {
 	uint16_t len;
 	uint8_t len8;
 	uint8_t * uidbuf;
 	uint8_t pbuf[32];
+	EXP_CSN = 1;
 
-#ifdef USE_RECORDSTORE
-	datalink_get_ID(&uidbuf,&len8);
-	len = packet_construct_device_id_header(DEVID_TYPE_MAC_80211, pbuf);
-	memcpy(pbuf+len,uidbuf,len8);
-	recordstore_insert(pbuf,len8+len);
+	#ifdef USE_RECORDSTORE
+		datalink_get_ID(&uidbuf,&len8);
+		len = packet_construct_device_id_header(DEVID_TYPE_MAC_80211, pbuf);
+		memcpy(pbuf+len,uidbuf,len8);
+		recordstore_insert(pbuf,len8+len);
 
-	uint8_t * packet = recordstore_dump(&len);
-	datalink_send_packet_to_host(packet,len);
-	recordstore_clear();
-#endif
-
-	_delay_ms(200);
-	datalink_tick(); // take care of any packets sent by host
-	datalink_sleep();
+		uint8_t * packet = recordstore_dump(&len);
+		datalink_send_packet_to_host(packet,len);
+		recordstore_clear();
+	#endif
+	len = 500;
+	do {
+		datalink_tick(); // take care of any packets sent by host
+		_delay_ms(1);
+	} while (len--);
+	datalink_sleep();	
+	EXP_CSN = 0;
 }
 
 
@@ -279,6 +293,11 @@ uint16_t _construct_report_packet(uint8_t * buf) {
 
 void cmd_timesync_cb(uint32_t new_time) {
 	printf_P(PSTR("Time is now: %ld\n"),new_time);
+	last_periodic_report_taken = new_time;
+#ifdef USE_RECORDSTORE
+	last_recordstore_sent = new_time;
+	recordstore_clear(); 
+#endif
 	rtctimer_write(new_time);
 	datalink_latch_destination_address();
 }

@@ -508,6 +508,8 @@ void uart_puts_p(const char *progmem_s )
  */
 #if defined( ATMEGA_USART1 )
 
+#include "devicedefs.h"
+
 ISR(UART1_RECEIVE_INTERRUPT)
 /*************************************************************************
 Function: UART1 Receive Complete interrupt
@@ -519,7 +521,7 @@ Purpose:  called when the UART1 has received a character
     unsigned char usr;
     unsigned char lastRxError;
  
- 
+	
     /* read UART status register and UART data register */ 
     usr  = UART1_STATUS;
     data = UART1_DATA;
@@ -540,6 +542,7 @@ Purpose:  called when the UART1 has received a character
         UART1_RxBuf[tmphead] = data;
     }
     UART1_LastRxError |= lastRxError;   
+	
 }
 
 
@@ -631,7 +634,7 @@ unsigned int uart1_getc(void)
     data = UART1_RxBuf[tmptail];
     
     data = (UART1_LastRxError << 8) + data;
-    UART_LastRxError = 0;
+    UART1_LastRxError = 0;
     return data;
 
 }/* uart1_getc */

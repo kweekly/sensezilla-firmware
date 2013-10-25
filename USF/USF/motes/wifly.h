@@ -14,6 +14,8 @@ void wifly_init();
 void wifly_wake();
 void wifly_sleep();
 void wifly_tick();
+void wifly_wake_hook();
+void wifly_sleep_hook();
 void wifly_setup_reporting_schedule(uint16_t starttime);
 void wifly_fmt_reading(int8_t * reading,size_t bufsize,char * buf);
 void wifly_flush();

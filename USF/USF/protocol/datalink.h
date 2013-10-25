@@ -28,6 +28,8 @@ void datalink_set_ready_callback(void (*rdy_cb)(void));
 
 void datalink_wake();
 void datalink_sleep();
+void datalink_sleep_hook();
+void datalink_wake_hook();
 void datalink_tick();
 
 // reporting

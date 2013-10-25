@@ -9,11 +9,9 @@
 #ifndef POWER_H_
 #define POWER_H_
 
-
-
-
-
 void avr_doze(void);
 void avr_sleep(void);
+
+
 
 #endif /* POWER_H_ */

@@ -8,6 +8,7 @@
 
 #ifndef SOFTSERIAL_H_
 #define SOFTSERIAL_H_
+#ifdef USE_SOFTSERIAL
 #ifndef SOFTSERIAL_BUFSIZE
 	#define SOFTSERIAL_BUFSIZE 28
 #endif
@@ -31,5 +32,5 @@ uint8_t softserial_available();
 uint8_t softserial_read();
 
 void _softserial_rx_isr();
-
+#endif
 #endif /* SOFTSERIAL_H_ */

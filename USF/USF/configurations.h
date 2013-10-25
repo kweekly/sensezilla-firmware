@@ -12,10 +12,10 @@
 
 //#define CONFIG_DOORWAY_RFID_READER
 //#define CONFIG_SERIAL_RFID_READER
-//#define CONFIG_BATTERY_SENSOR_DEVEL
+#define CONFIG_BATTERY_SENSOR_DEVEL
 //#define CONFIG_BATTERY_SENSOR_DEPLOY
 //#define CONFIG_DOOR_OPEN_SENSOR
-#define CONFIG_CO2_SENSOR
+//#define CONFIG_CO2_SENSOR
 
 #define MOTE_TYPE MOTE_WIFLY
 /***************  ENVIRONMENT SENSOR ***********************/ 
@@ -49,6 +49,7 @@ LOW = 0xC2 (valid)
 
 #if defined(CONFIG_CO2_SENSOR)
 	#define USE_K20
+	#define USE_SOFTSERIAL
 #endif
 
 #if defined(CONFIG_DOOR_OPEN_SENSOR)

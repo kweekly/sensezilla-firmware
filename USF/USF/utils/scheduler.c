@@ -49,12 +49,16 @@ void scheduler_reset() {
 	eventpos = 0;
 }
 
+uint8_t scheduler_running() {
+	return (TCCR1B != 0);
+}
+
 void scheduler_add_task(uint8_t task_list, uint8_t task_id, uint16_t time_ms, void (*cb)(void)) {
 	if ( numevents[task_list] == MAX_EVENTS) {
 		kputs("Task list is full!\n");
 		return;
 	}
-	if ( TCCR1B != 0  ) {
+	if ( scheduler_running() ) {
 		kputs("Cannot add tasks while scheduler is running\n");
 		return;
 	}

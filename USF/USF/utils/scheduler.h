@@ -13,10 +13,13 @@
 void scheduler_init();
 void scheduler_reset();
 void scheduler_start(uint8_t task_list); 
+uint8_t scheduler_running();
 
 #define SCHEDULER_LAST_EVENTS 0xFFFF
 void scheduler_add_task(uint8_t task_list, uint8_t task_id, uint16_t time_ms, void (*cb)(void));
 void scheduler_remove_tasks(uint8_t task_list, uint8_t task_id);
+
+
 
 void _scheduler_run_tasks(uint8_t task_list);
 

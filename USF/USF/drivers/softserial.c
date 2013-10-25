@@ -5,6 +5,7 @@
  *  Author: kweekly
  */ 
 #include "devicedefs.h"
+#ifdef USE_SOFTSERIAL
 #include "avrincludes.h"
 #include "drivers/pcint.h"
 #include "drivers/softserial.h"
@@ -123,3 +124,4 @@ uint8_t softserial_read() {
 	bufstart = (bufstart + 1)%SOFTSERIAL_BUFSIZE;
 	return r;
 }
+#endif
