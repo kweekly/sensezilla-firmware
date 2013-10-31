@@ -17,41 +17,6 @@
 #error "Unknown MOTE_TYPE"
 #endif
 
-// checking SPI bus
-#if defined(USE_MACHXO2_PMCO2)
-	#define MACHXO2_NUM_PMINPUTS 6
-	#define MACHXO2_NUM_CO2INPUTS 3
-	#define MACHXO2_TASK_ID 0x70
-	#ifdef USE_EXP
-		#error "Expansion port already in use!"
-	#else
-		#define USE_EXP
-	#endif
-#endif
-
-#if defined(USE_PN532)
-	#ifdef USE_EXP
-	#error "Expansion port already in use!"
-	#else
-	#define USE_EXP
-	#endif	
-#endif
-
-#if defined(USE_DOOR_SENSORS)
-	#ifdef USE_EXP
-	#error "Expansion port already in use!"
-	#else
-	#define USE_EXP
-	#endif
-#endif
-
-#ifdef USE_K20
-	#ifdef USE_EXP
-	#error "Expansion port already in use!"
-	#else
-	#define USE_EXP
-	#endif
-#endif
 
 // Power mode
 #if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532) && !defined(USE_MACHXO2_PMCO2) && !defined(USE_K20)
@@ -74,7 +39,11 @@
 	#define DDRB_SETTING	0b10110010
 	#elif HW_VERSION==2
 		#if defined(USE_DOOR_SENSORS)
-			#define DDRB_SETTING	0b00010000
+			#if defined(USE_TOUCH_SENSORS)
+				#define DDRB_SETTING	0b00010000
+			#else
+				#define DDRB_SETTING	0b00110000
+			#endif
 		#else
 			#define DDRB_SETTING	0b10110000
 		#endif
@@ -230,6 +199,7 @@ typedef struct
 	#ifdef USE_DOOR_SENSORS
 		#define DOOR_SENSOR_TASK_ID 0x70
 		#define DOOR_SENSOR_VCC_PIN				EXP_CSN
+		#define DOOR_SENSOR_SWITCH				REGISTER_BIT(PORTB, 7)
 		#define DOOR_SENSOR_SWITCH_PIN			REGISTER_BIT(PINB, 7)
 		#define DOOR_SENSOR_SWITCH_PCINT		15
 		#define DOOR_SENSOR_INDOOR_TOUCH_PIN	REGISTER_BIT(PINB, 6)

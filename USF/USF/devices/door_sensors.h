@@ -12,7 +12,9 @@
 void door_sensors_init();
 
 void door_sensors_setup_interrupt_schedule();
+void door_sensors_setup_reporting_schedule();
 void _door_sensors_setup_write_report();
+void _door_sensors_setup_write_periodic_report();
 
 void _door_sensors_indoor_interrupt();
 void _door_sensors_outdoor_interrupt();

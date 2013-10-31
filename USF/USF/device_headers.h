@@ -27,6 +27,10 @@
 	#include "devices/PN532.h"
 #endif
 
+#ifdef USE_K20
+	#include "devices/k20.h"
+#endif
+
 #ifdef USE_MACHXO2_PMCO2
 	#include "devices/MACHXO2_PMCO2.h"
 #endif

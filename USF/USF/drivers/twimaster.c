@@ -24,6 +24,8 @@
 #define SCL_CLOCK		100000L
 #define SCL_CLOCK_FAST  400000L
 
+#define I2C_TIMEOUT 5000 // in 1us increments
+
 /*************************************************************************
  Initialization of the I2C bus interface. Need to be called only once
 *************************************************************************/
@@ -46,13 +48,18 @@ void i2c_init(void)
 *************************************************************************/
 unsigned char i2c_start(unsigned char address)
 {
+	uint16_t tmout = I2C_TIMEOUT;
     uint8_t   twst;
 
 	// send START condition
 	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
 
 	// wait until transmission completed
-	while(!(TWCR & (1<<TWINT)));
+	while(!(TWCR & (1<<TWINT)) && --tmout) { _delay_us(1); }
+	if ( !tmout ) {
+		kputs("I2C Timeout\n");
+		return 1;
+	}
 
 	// check value of TWI Status Register. Mask prescaler bits.
 	twst = TW_STATUS & 0xF8;
@@ -66,7 +73,11 @@ unsigned char i2c_start(unsigned char address)
 	TWCR = (1<<TWINT) | (1<<TWEN);
 
 	// wail until transmission completed and ACK/NACK has been received
-	while(!(TWCR & (1<<TWINT)));
+	while(!(TWCR & (1<<TWINT)) && --tmout) { _delay_us(1); }
+	if ( !tmout ) {
+		kputs("I2C Timeout\n");
+		return 1;
+	}
 
 	// check value of TWI Status Register. Mask prescaler bits.
 	twst = TW_STATUS & 0xF8;
@@ -127,6 +138,7 @@ void i2c_stop(void)
 *************************************************************************/
 unsigned char i2c_write( unsigned char data )
 {	
+	uint16_t tmout = I2C_TIMEOUT;
     uint8_t   twst;
     
 	// send data to the previously addressed device
@@ -134,7 +146,11 @@ unsigned char i2c_write( unsigned char data )
 	TWCR = (1<<TWINT) | (1<<TWEN);
 
 	// wait until transmission completed
-	while(!(TWCR & (1<<TWINT)));
+	while(!(TWCR & (1<<TWINT)) && --tmout) {_delay_us(1); }
+	if (!tmout) {
+		kputs("I2C Timeout\n");
+		return 1;
+	}
 
 	// check value of TWI Status Register. Mask prescaler bits
 	twst = TW_STATUS & 0xF8;
@@ -151,8 +167,13 @@ unsigned char i2c_write( unsigned char data )
 *************************************************************************/
 unsigned char i2c_readAck(void)
 {
+	uint16_t tmout = I2C_TIMEOUT;
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA);
-	while(!(TWCR & (1<<TWINT)));  
+	while(!(TWCR & (1<<TWINT)) && --tmout){ _delay_us(1); }
+	if ( !tmout ) {
+		kputs("I2C Timeout\n");
+		return 1;
+	}
 
     return TWDR;
 
@@ -166,8 +187,13 @@ unsigned char i2c_readAck(void)
 *************************************************************************/
 unsigned char i2c_readNak(void)
 {
+	uint16_t tmout = I2C_TIMEOUT;
 	TWCR = (1<<TWINT) | (1<<TWEN);
-	while(!(TWCR & (1<<TWINT)));
+	while(!(TWCR & (1<<TWINT)) && --tmout) {_delay_us(1);}
+	if (!tmout) {
+		kputs("I2C Timeout\n");
+		return 0xFF;
+	}
 	
     return TWDR;
 

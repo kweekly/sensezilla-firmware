@@ -142,10 +142,13 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 		}
 	#endif	
 	#ifdef USE_DOOR_SENSORS
-		if ( fields_to_report & (REPORT_TYPE_DOOR_SENSORS))
+		if ( fields_to_report & (REPORT_TYPE_DOOR_SENSORS)) {
 			door_sensors_setup_interrupt_schedule(1);
+			door_sensors_setup_reporting_schedule(1);
+		}
 		else {
 			scheduler_remove_tasks(SCHEDULER_MONITOR_LIST,DOOR_SENSOR_TASK_ID);
+			scheduler_remove_tasks(SCHEDULER_PERIODIC_SAMPLE_LIST,DOOR_SENSOR_TASK_ID);
 		}
 	#endif
 	#ifdef USE_PN532
@@ -176,7 +179,7 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	#endif
 	
 	#ifdef USE_K20
-		k20_setup_reporting_schedule(0);
+		k20_setup_reporting_schedule(250);
 	#endif
 	
 	#ifndef USE_RECORDSTORE

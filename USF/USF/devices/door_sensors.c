@@ -8,8 +8,8 @@
 #include "devicedefs.h"
 #ifdef USE_DOOR_SENSORS
 
-
 #include "avrincludes.h"
+
 #include "utils/scheduler.h"
 #include "protocol/report.h"
 #include "devices/door_sensors.h"
@@ -22,15 +22,31 @@ volatile unsigned char door_sensor_state;
 volatile unsigned char last_open_state;
 
 void door_sensors_init() {
+#ifdef USE_TOUCH_SENSORS
 	EXP_CSN = 1;
 	pcint_register(DOOR_SENSOR_OUTDOOR_TOUCH_PCINT,&_door_sensors_outdoor_interrupt);
 	pcint_register(DOOR_SENSOR_INDOOR_TOUCH_PCINT,&_door_sensors_indoor_interrupt);
+#else
+	DOOR_SENSOR_SWITCH = 1; // enable pull-ups
+	MCUCR &= ~_BV(PUD); // enable pull-ups
+	EXP_CSN = 0; // "pull-down" for door sensor switch
+#endif
 	door_sensor_state = 0;
 	last_open_state = 0x80;
 }
 
 void door_sensors_setup_interrupt_schedule(uint16_t starttime) {
 	scheduler_add_task(SCHEDULER_MONITOR_LIST, DOOR_SENSOR_TASK_ID, starttime, &_door_sensors_setup_write_report );	
+}
+
+void door_sensors_setup_reporting_schedule(uint16_t starttime) {
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST, DOOR_SENSOR_TASK_ID, starttime, &_door_sensors_setup_write_periodic_report);
+}
+
+void _door_sensors_setup_write_periodic_report() {
+	char open_state = (DOOR_SENSOR_SWITCH_PIN)?SENSOR_OPEN:SENSOR_CLOSED;
+	report_current()->fields |= REPORT_TYPE_DOOR_SENSORS;
+	report_current()->door_sensor_state = open_state;
 }
 
 void _door_sensors_setup_write_report() {

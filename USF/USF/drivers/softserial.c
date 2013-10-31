@@ -15,6 +15,7 @@ uint8_t bufstart,bufend;
 uint8_t transmitting;
 uint8_t receiving;
 uint8_t bit_no;
+uint8_t available;
 
 // for 9600 baud
 #define BIT_PERIOD_0_5	52
@@ -35,6 +36,7 @@ ISR(TIMER0_COMPA_vect) {
 			if ( bufstart == bufend - 1 ) {
 				transmitting = 0;
 				bufstart = bufend = 0;
+				available = 0;
 				TIMSK0 = 0;
 			} else {
 				SOFTSERIAL_TX = 0;
@@ -58,6 +60,7 @@ ISR(TIMER0_COMPA_vect) {
 			bit_no++;
 			if ( bit_no == 8 ) {
 				bufend = (bufend + 1) % SOFTSERIAL_BUFSIZE;
+				available ++;
 			}
 		}
 	}
@@ -66,7 +69,7 @@ ISR(TIMER0_COMPA_vect) {
 
 void _softserial_rx_isr() {
 	if (!transmitting && !receiving && (SOFTSERIAL_RX_PIN == 0)) {
-		//EXP_SCK = 1;
+	//	EXP_SCK = 1;
 		bit_no = 0;
 		TCNT0 = 0;
 		OCR0A = BIT_PERIOD_1_5 - RX_COMPENSATE_START;
@@ -81,6 +84,7 @@ void _softserial_rx_isr() {
 }
 
 void softserial_init() {
+	available = 0;
 	transmitting = 0;
 	receiving = 0;
 	bufstart = bufend = 0;
@@ -101,6 +105,7 @@ void softserial_write(uint8_t len, const uint8_t * bytes) {
 	transmitting = 1;
 	memcpy(buffer,bytes,len);
 	bufstart = 0;
+	available = 0;
 	bufend = len;
 	
 	bit_no = 0;
@@ -114,13 +119,15 @@ void softserial_write(uint8_t len, const uint8_t * bytes) {
 uint8_t softserial_available() {
 	if ( transmitting ) return 0;
 	
-	return (bufend + SOFTSERIAL_BUFSIZE - bufstart)%SOFTSERIAL_BUFSIZE;
+	return available;
 }
 
 uint8_t softserial_read() {
 	if ( transmitting || bufstart == bufend) return 0xFF;
 	
+	available--;
 	uint8_t r = buffer[bufstart];
+	//printf_P(PSTR("R %02X\n"),r);
 	bufstart = (bufstart + 1)%SOFTSERIAL_BUFSIZE;
 	return r;
 }

@@ -82,7 +82,7 @@ void wifly_init() {
 	line_recieved_latch = LATCH_OFF;
 	
 	MOTE_RX_RTSN = 1;
-	//MOTE_UART_WRITE(sizeof("sleep\r\n"),"sleep\r\n");
+	MOTE_UART_WRITE(sizeof("exit\r\n"),"exit\r\n");
 	wifly_wake_status = 1;
 }
 
@@ -229,8 +229,10 @@ void wifly_tick() {
 		if ( err == 0x01 ) break;
 		else if (err) {
 			//printf_P(PSTR("UART ERROR %02X\n"),err);
+			continue;
+		} else {
+			_wifly_process_byte(ch & 0xFF);
 		}
-		_wifly_process_byte(ch & 0xFF);
 	}	
 
 	//EXP_SCK = 0;

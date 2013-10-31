@@ -12,10 +12,11 @@
 
 //#define CONFIG_DOORWAY_RFID_READER
 //#define CONFIG_SERIAL_RFID_READER
-#define CONFIG_BATTERY_SENSOR_DEVEL
+//#define CONFIG_BATTERY_SENSOR_DEVEL
 //#define CONFIG_BATTERY_SENSOR_DEPLOY
 //#define CONFIG_DOOR_OPEN_SENSOR
 //#define CONFIG_CO2_SENSOR
+#define CONFIG_DOOR_AND_CO2
 
 #define MOTE_TYPE MOTE_WIFLY
 /***************  ENVIRONMENT SENSOR ***********************/ 
@@ -38,7 +39,7 @@ LOW = 0xC2 (valid)
 
  */ 
 // Uncomment this line to activate this board
-#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR) || defined(CONFIG_CO2_SENSOR)
+#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR) || defined(CONFIG_CO2_SENSOR) || defined(CONFIG_DOOR_AND_CO2)
 	#define ENVIRONMENT_SENSOR
 	#define HW_VERSION 2
 #endif
@@ -54,6 +55,13 @@ LOW = 0xC2 (valid)
 
 #if defined(CONFIG_DOOR_OPEN_SENSOR)
 	#define USE_DOOR_SENSORS
+	#define USE_TOUCH_SENSORS
+#endif
+
+#if defined(CONFIG_DOOR_AND_CO2)
+	#define USE_DOOR_SENSORS
+	#define USE_K20
+	#define USE_SOFTSERIAL
 #endif
 
 //#define USE_MACHXO2_PMCO2
@@ -70,9 +78,11 @@ Low D2
 #if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) 
 	#define DEFAULT_FIELDS_TO_REPORT 0x31F // all but gyro, light level change, RSSI
 #elif defined(CONFIG_CO2_SENSOR)
-	#define DEFAULT_FIELDS_TO_REPORT 0x31F // all but gyro, light level change, RSSI
+	#define DEFAULT_FIELDS_TO_REPORT 0x231F // all but gyro, light level change, RSSI
 #elif defined(CONFIG_DOOR_OPEN_SENSOR)
 	#define DEFAULT_FIELDS_TO_REPORT 0xB1F // all but gyro, light level change, RSSI
+#elif defined(CONFIG_DOOR_AND_CO2)
+	#define DEFAULT_FIELDS_TO_REPORT 0x2B1F
 #elif defined(CONFIG_SERIAL_RFID_READER)
 	#define DEFAULT_FIELDS_TO_REPORT 0
 #endif
@@ -86,9 +96,9 @@ Low D2
 #define DEFAULT_SAMPLE_INTERVAL 5
 #define DEFAULT_RECORDSTORE_INTERVAL 150
 #define USE_RECORDSTORE
-#elif defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_CO2_SENSOR)
+#elif defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_CO2_SENSOR) || defined(CONFIG_DOOR_AND_CO2)
 #define DEFAULT_SAMPLE_INTERVAL 5
-#define DEFAULT_RECORDSTORE_INTERVAL 20
+#define DEFAULT_RECORDSTORE_INTERVAL 30
 #define USE_RECORDSTORE
 #elif defined(CONFIG_SERIAL_RFID_READER)
 #define DEFAULT_SAMPLE_INTERVAL 65535
