@@ -44,6 +44,7 @@ C_SRCS +=  \
 ../devices/amn41121.c \
 ../devices/CS5467.c \
 ../devices/door_sensors.c \
+../devices/htu21d.c \
 ../devices/k20.c \
 ../devices/l3gd20.c \
 ../devices/lis3dh.c \
@@ -80,6 +81,7 @@ OBJS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
 devices/door_sensors.o \
+devices/htu21d.o \
 devices/k20.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
@@ -109,6 +111,7 @@ OBJS_AS_ARGS +=  \
 devices/amn41121.o \
 devices/CS5467.o \
 devices/door_sensors.o \
+devices/htu21d.o \
 devices/k20.o \
 devices/l3gd20.o \
 devices/lis3dh.o \
@@ -138,6 +141,7 @@ C_DEPS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
 devices/door_sensors.d \
+devices/htu21d.d \
 devices/k20.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
@@ -167,6 +171,7 @@ C_DEPS_AS_ARGS +=  \
 devices/amn41121.d \
 devices/CS5467.d \
 devices/door_sensors.d \
+devices/htu21d.d \
 devices/k20.d \
 devices/l3gd20.d \
 devices/lis3dh.d \
@@ -203,6 +208,8 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

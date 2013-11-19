@@ -56,7 +56,8 @@ void wifly_init() {
 	_delay_us(100);
 	MOTE_RX_RTSN = 0;
 	#ifdef MOTE_ASSOC_PCINT
-	pcint_register(MOTE_ASSOC_PCINT,&_wifly_pcint_cb);
+	//pcint_register(MOTE_ASSOC_PCINT,&_wifly_pcint_cb);
+	pcint_register(MOTE_STATUS_PCINT,&_wifly_pcint_cb);
 	#endif
 	
 	kputs("Trying to enter command mode...");
@@ -89,6 +90,7 @@ void wifly_init() {
 void wifly_wake() {
 	MOTE_RX_RTSN = 0;
 	printf_P(PSTR("Waking Wifly %02X\n"),PINB);
+	LED1 = 1;
 	wifly_wake_status = 1;
 	if ( !mac_valid ) {
 		_delay_ms(250);
@@ -166,16 +168,17 @@ void _wifly_TCP_connect() {
 }
 
 void _wifly_pcint_cb() {
-	if ( MOTE_ASSOC_PIN && rdy_cb) {
+//	if ( MOTE_ASSOC_PIN && rdy_cb) {
 		kputs("Wifly ready!\n");
 		trying_to_connect = 0;
 		rdy_cb();
-	}
+//	}
 }
 
 void wifly_sleep() {
 	MOTE_RX_RTSN = 1;
 	kputs("Sleeping Wifly\n");
+	LED1 = 0;
 	trying_to_connect = 0;
 	#ifdef LOW_POWER
 		_delay_ms(250);
@@ -214,7 +217,7 @@ void wifly_tick() {
 	uint32_t curtime = rtctimer_read();
 	if ( trying_to_connect) {
 		if((curtime - try_connect) > WIFLY_CONNECT_TIMEOUT || curtime < try_connect ){
-			kputs("Timeout trying to TCP connect\n");
+			printf_P(PSTR("Timeout trying to TCP connect %02X\n"),PINB);
 			wifly_sleep();			
 		}	
 		else if ( !MOTE_STATUS_PIN && MOTE_ASSOC_PIN) {

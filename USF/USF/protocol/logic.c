@@ -77,8 +77,7 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	#endif
 	
 	scheduler_reset(); //removes all tasks
-	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 0, &task_led_blip_on);
-	//scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 100, &task_led_blip_off);
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, 0, &task_led_blip_on);
 	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,TASK_REPORTING, 0, &task_begin_report);
 
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING,0, &task_begin_report);
@@ -196,6 +195,8 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_print_report);
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &task_check_send_report);
 	scheduler_add_task(SCHEDULER_MONITOR_LIST,TASK_REPORTING, SCHEDULER_LAST_EVENTS, &report_poplast);
+	
+	scheduler_add_task(SCHEDULER_PERIODIC_SAMPLE_LIST,LED_BLIP_TASK_ID, SCHEDULER_LAST_EVENTS, &task_led_blip_off);
 }
 
 
@@ -365,9 +366,9 @@ void accel_orientation_cb(unsigned char orientation) {
 
 
 void task_led_blip_on(void) {
-	LED1 = 1;
+	LED2 = 1;
 }
 
 void task_led_blip_off(void) {
-	LED1 = 0;
+	LED2 = 0;
 }

@@ -132,10 +132,18 @@ void board_power_down_devices(void) {
 	LED1 = 0;
 	LED2 = 0;
 	
-	light_sleep(); 
-	gyro_sleep();
-	accel_sleep(); 
-	humid_sleep();
+	#ifdef REPORT_TYPE_LIGHT
+		light_sleep(); 
+	#endif
+	#ifdef REPORT_TYPE_GYRO
+		gyro_sleep();
+	#endif
+	#ifdef REPORT_TYPE_ACCEL
+		accel_sleep(); 
+	#endif
+	#ifdef REPORT_TYPE_HUMID
+		humid_sleep();
+	#endif
 	pir_sleep(); 
 	datalink_sleep();	
 #endif
@@ -149,12 +157,18 @@ void board_init_devices(void) {
 	
 	kputs("Initializing Devices... Light,");
 	light_init();
-	kputs("Gyro, ");
-	gyro_init();
-	kputs("Accell, ");
-	accel_init();
-	kputs("Humid, ");
-	humid_init();
+	#ifdef REPORT_TYPE_GYRO
+		kputs("Gyro, ");
+		gyro_init();
+	#endif
+	#ifdef REPORT_TYPE_ACCEL
+		kputs("Accell, ");
+		accel_init();
+	#endif
+	#ifdef REPORT_TYPE_HUMID
+		kputs("Humid, ");
+		humid_init();
+	#endif
 	kputs("PIR\n");
 	pir_init();	
 #elif defined POWER_STRIP_MONITOR

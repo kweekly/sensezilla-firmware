@@ -199,7 +199,19 @@ unsigned char i2c_readNak(void)
 
 }/* i2c_readNak */
 
-
+unsigned char i2c_readbytes(unsigned char addr, unsigned char nBytes, unsigned char * buf) {
+	unsigned char c = 0;
+	if ( i2c_start(addr + I2C_READ) ) return 1;
+	
+	while ( nBytes-- > 0) {
+		if ( nBytes == 0 )
+		buf[c++] = i2c_readNak();
+		else
+		buf[c++] = i2c_readAck();
+	}
+	i2c_stop();
+	return 0;	
+}
 
 unsigned char i2c_readreg(unsigned char addr, unsigned char reg, unsigned char nBytes, unsigned char * buf) {
 	unsigned char c = 0;

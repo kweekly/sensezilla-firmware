@@ -154,6 +154,12 @@
     <Compile Include="devices\door_sensors.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="devices\htu21d.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="devices\htu21d.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="devices\k20.c">
       <SubType>compile</SubType>
     </Compile>

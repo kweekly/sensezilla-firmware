@@ -15,7 +15,11 @@
 	#include "devices/amn41121.h" 
 	#include "devices/l3gd20.h"
 	#include "devices/lis3dh.h"
-	#include "devices/si7005.h"
+	#if HW_VERSION==1 || HW_VERSION==2
+		#include "devices/si7005.h"
+	#elif HW_VERSION==3
+		#include "devices/htu21d.h"
+	#endif
 	#include "devices/tsl2560.h"
 	#include "devices/door_sensors.h"
 #elif defined(POWER_STRIP_MONITOR)
