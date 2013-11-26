@@ -1,0 +1,59 @@
+# Adhoc Parameters ( none )
+# Broadcast Parameters
+set broadcast interval 0
+
+# Comm Parameters
+set comm $ $
+set comm close 0
+set comm open 0
+set comm remote 0
+set comm idle 0
+set comm match 0xa
+set comm size 1420
+set comm timer 10
+
+# dns parameters ( none )
+#set dns name sensezilla.berkeley.edu
+
+# ftp parameters ( none )
+# ip parameters
+set ip dhcp 3
+set ip flags 0x38
+#set ip host 192.168.0.197 #Kevin's laptop
+set ip host 128.32.189.129 # Sensezilla
+#set ip host 192.168.0.11
+set dns name sensezilla.berkeley.edu
+set ip protocol 0x8
+set ip remote 7602
+set ip localport 7602
+set ip tcp-mode 0x13
+
+# optional parameters
+set opt jointmr 1000
+set opt format 0
+set opt replace $
+set opt deviceid USF-WIFLY
+set opt password 0
+
+# System parameters
+set sys autoconn 255
+set sys iofunc 0x50 # use ASSOC and STATUS pins, no LED, no TCP trigger
+set sys mask 0x21d0 # defaults, input on TCP trigger
+set sys printlvl 0
+set sys trigger 0x22
+set sys wake 0
+
+# wlan parameters
+set wlan auth 3
+set wlan channel 0
+set wlan join 1
+set wlan linkmon 0
+set wlan phrase crest406bubble
+set wlan rate 3
+set wlan ssid crest-406
+set wlan tx 12
+
+# uart parameters
+set uart baud 57600
+set uart flow 1
+set uart mode 0x1A

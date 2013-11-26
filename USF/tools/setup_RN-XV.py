@@ -52,14 +52,20 @@ def cmdmode():
     fl();
 
 try:
-    print "Opening serial port at 115200"
-    ser = serial.Serial(SERIAL_PORT,115200, timeout=1);
-    cmdmode();
+    print "Opening serial port at 57600"
+    ser = serial.Serial(SERIAL_PORT,57600, timeout=1);
+    cmdmode();   
 except RNException:
-    ser.close()
-    print "Opening serial port at 9600"
-    ser = serial.Serial(SERIAL_PORT,9600, timeout=1);
-    cmdmode()
+    try:
+        ser.close()
+        print "Opening serial port at 115200"
+        ser = serial.Serial(SERIAL_PORT,115200, timeout=1);
+        cmdmode();
+    except RNException:
+        ser.close()
+        print "Opening serial port at 9600"
+        ser = serial.Serial(SERIAL_PORT,9600, timeout=1);
+        cmdmode()
     
     
 cmdmodetry = False

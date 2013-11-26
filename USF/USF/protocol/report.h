@@ -17,12 +17,11 @@ extern uint16_t report_fields_requested;
 	#define REPORT_TYPE_OCCUPANCY	 0x04
 	#define REPORT_TYPE_LIGHT		 0x08
 	
-	#if HW_VERSION == 1 || HW_VERSION == 2
-		#define REPORT_TYPE_ACCEL		 0x10
-		#define REPORT_TYPE_ORIENTATION_CHANGED	0x200
-		
+	#if HW_VERSION == 1 || HW_VERSION == 2		
 		#define REPORT_TYPE_GYRO		 0x20
 	#endif
+	#define REPORT_TYPE_ACCEL		 0x10
+	#define REPORT_TYPE_ORIENTATION_CHANGED	0x200
 	#define REPORT_TYPE_TEMP		 0x01
 	#define REPORT_TYPE_HUMID		 0x02
 	#define REPORT_TYPE_RSSI		 0x40

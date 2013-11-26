@@ -84,7 +84,7 @@ unsigned char i2c_start(unsigned char address)
 	if ( (twst != TW_MT_SLA_ACK) && (twst != TW_MR_SLA_ACK) ) {
 		i2c_stop();
 		return 1;
-	}		 
+	}
 
 	return 0;
 

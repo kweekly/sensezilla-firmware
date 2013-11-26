@@ -54,6 +54,6 @@ set wlan ssid crest-406
 set wlan tx 12
 
 # uart parameters
-set uart raw 115200
+set uart baud 57600
 set uart flow 1
 set uart mode 0x1A

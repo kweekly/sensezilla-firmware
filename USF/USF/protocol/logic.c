@@ -253,7 +253,6 @@ void send_over_datalink(void) {
 	uint8_t len8;
 	uint8_t * uidbuf;
 	uint8_t pbuf[32];
-	EXP_CSN = 1;
 
 	#ifdef USE_RECORDSTORE
 		datalink_get_ID(&uidbuf,&len8);
@@ -271,7 +270,6 @@ void send_over_datalink(void) {
 		_delay_ms(1);
 	} while (len--);
 	datalink_sleep();	
-	EXP_CSN = 0;
 }
 
 
