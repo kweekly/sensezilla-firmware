@@ -24,7 +24,7 @@
 #define SCL_CLOCK		100000L
 #define SCL_CLOCK_FAST  400000L
 
-#define I2C_TIMEOUT 5000 // in 1us increments
+#define I2C_TIMEOUT 10000 // in 1us increments
 
 /*************************************************************************
  Initialization of the I2C bus interface. Need to be called only once
@@ -35,6 +35,7 @@ void i2c_init(void)
   
   TWSR = 0;                         /* no prescaler */
   TWBR = ((F_CPU/SCL_CLOCK)-16)/2;  /* must be > 10 for stable operation */
+ // TWBR = ((F_CPU/50000)-16)/2;  /* must be > 10 for stable operation */
 
   // reset
   TWCR = 0;
@@ -58,6 +59,7 @@ unsigned char i2c_start(unsigned char address)
 	while(!(TWCR & (1<<TWINT)) && --tmout) { _delay_us(1); }
 	if ( !tmout ) {
 		kputs("I2C Timeout\n");
+		TWCR = 0;
 		return 1;
 	}
 
@@ -65,6 +67,7 @@ unsigned char i2c_start(unsigned char address)
 	twst = TW_STATUS & 0xF8;
 	if ( (twst != TW_START) && (twst != TW_REP_START)) {
 		 i2c_stop();
+		 TWCR = 0;
 		 return 1;
 	}		 
 
@@ -76,6 +79,7 @@ unsigned char i2c_start(unsigned char address)
 	while(!(TWCR & (1<<TWINT)) && --tmout) { _delay_us(1); }
 	if ( !tmout ) {
 		kputs("I2C Timeout\n");
+		TWCR = 0;
 		return 1;
 	}
 

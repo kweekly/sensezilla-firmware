@@ -8,8 +8,7 @@
 
 #if MOTE_TYPE == MOTE_WIFLY
 #define WIFLY_CMD_RESP_TIMEOUT 100 // in 100us
-#define WIFLY_WAKE_TIMEOUT 100
-#define WIFLY_CONNECT_TIMEOUT 3 // in seconds
+#define WIFLY_CONNECT_TIMEOUT 5 // in seconds
 
 #include "avrincludes.h"
 #include "protocol/report.h"
@@ -105,6 +104,9 @@ void wifly_wake() {
 	#ifdef MOTE_SLEEP
 		MOTE_SLEEP = 0;
 	#endif
+	#ifdef MOTE_CONNECT
+		MOTE_CONNECT = 1;
+	#endif
 	MOTE_RX_RTSN = 0;
 	printf_P(PSTR("Waking Wifly %02X\n"),PINB);
 	LED1 = 1;
@@ -198,6 +200,10 @@ void wifly_sleep() {
 	kputs("Sleeping Wifly\n");
 	trying_to_connect = 0;
 	#ifdef LOW_POWER
+		#ifdef MOTE_CONNECT
+			MOTE_CONNECT = 0;
+			_delay_ms(1000);
+		#endif
 		#ifdef MOTE_SLEEP
 			MOTE_SLEEP = 1;
 			_delay_ms(1);
@@ -207,7 +213,9 @@ void wifly_sleep() {
 			_delay_ms(250);
 			MOTE_UART_WRITE(3,"$$$");
 			_delay_ms(250);
-			MOTE_UART_WRITE(sizeof("\r\nclose\r\nsleep\r\n"),"\r\nclose\r\nsleep\r\n");
+			MOTE_UART_WRITE(sizeof("\r\nclose\r\n"),"\r\nclose\r\n");
+			_delay_ms(250);
+			MOTE_UART_WRITE(sizeof("sleep\r\n"),"sleep\r\n");
 		#endif
 		wifly_wake_status = 0;
 	#endif

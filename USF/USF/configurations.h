@@ -51,7 +51,6 @@ LOW = 0xC2 (valid)
 
 #if defined(CONFIG_CO2_SENSOR)
 	#define USE_K20
-	#define USE_SOFTSERIAL
 #endif
 
 #if defined(CONFIG_DOOR_OPEN_SENSOR)
@@ -62,7 +61,6 @@ LOW = 0xC2 (valid)
 #if defined(CONFIG_DOOR_AND_CO2)
 	#define USE_DOOR_SENSORS
 	#define USE_K20
-	#define USE_SOFTSERIAL
 #endif
 
 //#define USE_MACHXO2_PMCO2

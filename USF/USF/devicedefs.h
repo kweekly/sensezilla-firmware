@@ -241,9 +241,15 @@ typedef struct
 	
 	#ifdef USE_K20
 		#define K20_TASK_ID 0x80
-		#define SOFTSERIAL_TX		EXP_MOSI
-		#define SOFTSERIAL_RX_PIN	EXP_MISO_PIN
-		#define SOFTSERIAL_RX_PCINT EXP_MISO_PCINT
+		
+		#if HW_VERSION==1 || HW_VERSION==2
+			#define USE_SOFTSERIAL
+			#define SOFTSERIAL_TX		EXP_MOSI
+			#define SOFTSERIAL_RX_PIN	EXP_MISO_PIN
+			#define SOFTSERIAL_RX_PCINT EXP_MISO_PCINT
+		#else
+			#define K20_ADDR 0xD0 // 0x68 shifted one to the left
+		#endif
 	#endif
 #endif 
 

@@ -178,7 +178,11 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	#endif
 	
 	#ifdef USE_K20
-		k20_setup_reporting_schedule(250);
+		#ifdef USE_SOFTSERIAL
+			k20_setup_reporting_schedule(250);
+		#else
+			k20_setup_reporting_schedule(100);
+		#endif		
 	#endif
 	
 	#ifndef USE_RECORDSTORE
