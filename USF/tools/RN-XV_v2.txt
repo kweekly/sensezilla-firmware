@@ -19,10 +19,7 @@ set comm timer 10
 # ip parameters
 set ip dhcp 3
 set ip flags 0x38
-#set ip host 192.168.0.197 #Kevin's laptop
-set ip host 128.32.189.129 # Sensezilla
-#set ip host 192.168.0.11
-set dns name sensezilla.berkeley.edu
+set ip host 192.168.10.1
 set ip protocol 0x8
 set ip remote 7602
 set ip localport 7602
@@ -48,10 +45,11 @@ set wlan auth 3
 set wlan channel 0
 set wlan join 1
 set wlan linkmon 0
-set wlan phrase crest406bubble
+set wlan phrase pfdemo-xb123
 set wlan rate 3
-set wlan ssid crest-406
+set wlan ssid pfdemo
 set wlan tx 12
+
 
 # uart parameters
 set uart baud 57600

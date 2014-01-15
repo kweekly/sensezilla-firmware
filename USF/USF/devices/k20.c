@@ -100,7 +100,10 @@ void _k20_reporting_checkread() {
 			kputs("K20 I2C Checksum error\n");
 		}		
 		else if ( rbuf[0] & 0x01 ) { // completed
-			uint16_t co2val = ((uint16_t)rbuf[1]<<(uint16_t)8) | (uint16_t)rbuf[2];
+			uint16_t co2val = 0;
+			co2val |= rbuf[1] & 0xFF;
+			co2val = co2val << 8;
+			co2val |= rbuf[2] & 0xFF;
 			report_current()->co2 = co2val;
 			report_current()->fields |= REPORT_TYPE_CO2;	
 			LED1 = 0;		

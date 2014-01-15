@@ -19,7 +19,7 @@
 
 
 // Power mode
-#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532) && !defined(USE_MACHXO2_PMCO2) && !defined(USE_K20)
+#if defined(ENVIRONMENT_SENSOR) && !defined(USE_PN532) && !defined(USE_MACHXO2_PMCO2)
 #define LOW_POWER
 #else
 #define HIGH_POWER
@@ -103,7 +103,6 @@ typedef struct
 // Mote
 #if defined(ENVIRONMENT_SENSOR)
 	#define MOTE_TASK_ID	0x05
-	#define MOTE_SLEEP		REGISTER_BIT(PORTA,5)
 	#if HW_VERSION==1
 		#define MOTE_TIMEN		REGISTER_BIT(PORTA,3)
 		#define MOTE_TX_RTSN	REGISTER_BIT(PORTB,2)

@@ -20,6 +20,7 @@
 #include "devices/htu21d.h"
 #include "drivers/i2cmaster.h"
 #include "utils/scheduler.h"
+#include "utils/crc.h"
 
 #define CMD_TRIG_TEMP_HM 0xE3
 #define CMD_TRIG_TEMP_NHM 0xF3
@@ -41,9 +42,15 @@ void humid_wake(void) {
 
 }
 
+#define HUMID_CRC_POLY ((uint16_t)0x131)
+uint8_t _humid_crc(uint8_t * input, uint8_t len) {
+	return crc8(HUMID_CRC_POLY, input, len);
+}
+
 humid_reading_t humid_read(void) {
 	humid_reading_t retval;
 	unsigned char buf[3];
+	uint8_t crc;
 	
 	if ( i2c_writereg(HUMID_ADDR, CMD_TRIG_HUMID_NHM, 0, NULL) ) {
 		kputs("Error Starting humidity conversion");
@@ -56,7 +63,12 @@ humid_reading_t humid_read(void) {
 		kputs("Error reading humidity result");
 		return retval;
 	}
-	retval.humidity = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC); // CRC Not checked
+	crc = _humid_crc(buf,2);
+	if ( crc != buf[2] ) {
+		printf_P(PSTR("Humid CRC error. Expected %02X got %02X."),crc,buf[2]);
+		return retval;
+	}
+	retval.humidity = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC); 
 	
 	
 	if ( i2c_writereg(HUMID_ADDR, CMD_TRIG_TEMP_NHM, 0, NULL) ) {
@@ -70,7 +82,12 @@ humid_reading_t humid_read(void) {
 		kputs("Error reading temperature result");
 		return retval;
 	}
-	retval.temperature = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC); // CRC not checked
+	crc = _humid_crc(buf,2);
+	if ( crc != buf[2] ) {
+		printf_P(PSTR("Temp CRC error. Expected %02X got %02X."),crc,buf[2]);
+		return retval;
+	}
+	retval.temperature = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC); 
 	
 	return retval;
 }
@@ -96,6 +113,7 @@ void _humid_reporting_readh(void) {
 
 void _humid_reporting_readt(void){ // this saves the humidity as well
 	unsigned char buf[3];
+	uint8_t crc;
 	
 	report_t * r = report_current();
 	
@@ -105,7 +123,12 @@ void _humid_reporting_readt(void){ // this saves the humidity as well
 		kputs("Error reading humidity result");
 		return;
 	}
-	r->temphumid.humidity = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC); // CRC Not checked
+	crc = _humid_crc(buf,2);
+	if ( crc != buf[2] ) {
+		printf_P(PSTR("Humid CRC error. Expected %02X got %02X."),crc,buf[2]);
+		return;
+	}
+	r->temphumid.humidity = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC); 
 	r->fields |= REPORT_TYPE_HUMID;
 	
 	if ( i2c_writereg(HUMID_ADDR, CMD_TRIG_TEMP_NHM, 0, NULL) ) {
@@ -115,6 +138,7 @@ void _humid_reporting_readt(void){ // this saves the humidity as well
 }
 	
 void _humid_reporting_finish(void) {
+	uint8_t crc;
 	unsigned char buf[3];
 	
 	report_t * r = report_current();
@@ -123,12 +147,17 @@ void _humid_reporting_finish(void) {
 
 	if ( i2c_readbytes(HUMID_ADDR, 3, buf )  ){
 		kputs("Error reading temperature result");
-		return;
+		goto error;
 	}
-	r->temphumid.temperature = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC); // CRC not checked
-	
+	crc = _humid_crc(buf,2);
+	if ( crc != buf[2] ) {
+		printf_P(PSTR("Temp CRC error. Expected %02X got %02X."),crc,buf[2]);
+		goto error;
+	}
+	r->temphumid.temperature = ((uint16_t)buf[0] << 8) | (buf[1] & 0xFC);
 	r->fields |= REPORT_TYPE_TEMP;
 	
+	error:
 	humid_sleep();
 }
 
@@ -141,8 +170,8 @@ void humid_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str) {
 }
 
 uint8_t humid_convert_real(humid_reading_t * reading, float * flt) {
-	float rh = (reading->humidity) * 125.0 / (1L<<16) - 6.0;
-	float temp = (reading->temperature) *175.72 /(1L<16) - 46.85;
+	float rh = (reading->humidity) * 125.0 / DBL_16B - 6.0;
+	float temp = (reading->temperature) *175.72/ DBL_16B - 46.85;
 	flt[0] = rh;
 	flt[1] = temp;
 	return 2;

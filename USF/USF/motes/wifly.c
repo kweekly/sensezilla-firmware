@@ -40,6 +40,7 @@ void (*rdy_cb)(void);
 volatile uint8_t trying_to_connect;
 uint32_t try_connect;
 uint32_t try_sleep;
+uint8_t num_consecutive_Fails;
 
 void wifly_init() {
 	uint8_t success = 0;
@@ -54,7 +55,7 @@ void wifly_init() {
 	#endif
 	#ifdef MOTE_SLEEP
 		MOTE_SLEEP = 0;
-	#endif	
+	#endif
 	
 	MOTE_RESETN = 1;
 	MOTE_RX_RTSN = 0;
@@ -108,6 +109,8 @@ void wifly_wake() {
 		MOTE_CONNECT = 1;
 	#endif
 	MOTE_RX_RTSN = 0;
+	_delay_us(100);
+	MOTE_RX_RTSN = 1;
 	printf_P(PSTR("Waking Wifly %02X\n"),PINB);
 	LED1 = 1;
 	wifly_wake_status = 1;
@@ -190,6 +193,7 @@ void _wifly_TCP_connect() {
 void _wifly_pcint_cb() {
 	if ( trying_to_connect && MOTE_CONNECTED_PIN && rdy_cb) {
 		kputs("Wifly ready!\n");
+		num_consecutive_Fails = 0;
 		trying_to_connect = 0;
 		rdy_cb();
 	}
@@ -213,9 +217,9 @@ void wifly_sleep() {
 			_delay_ms(250);
 			MOTE_UART_WRITE(3,"$$$");
 			_delay_ms(250);
-			MOTE_UART_WRITE(sizeof("\r\nclose\r\n"),"\r\nclose\r\n");
+			MOTE_UART_WRITE(sizeof("\r\nclose\r\n")-1,"\r\nclose\r\n");
 			_delay_ms(250);
-			MOTE_UART_WRITE(sizeof("sleep\r\n"),"sleep\r\n");
+			MOTE_UART_WRITE(sizeof("sleep\r\n")-1,"sleep\r\n");
 		#endif
 		wifly_wake_status = 0;
 	#endif
@@ -252,6 +256,17 @@ void wifly_tick() {
 	if ( trying_to_connect) {
 		if((curtime - try_connect) > WIFLY_CONNECT_TIMEOUT || curtime < try_connect ){
 			printf_P(PSTR("Timeout trying to TCP connect %02X\n"),PINB);
+			#ifdef MOTE_CONNECT
+				MOTE_CONNECT = 0;
+			#endif
+			if (++num_consecutive_Fails == 3) {
+				#ifdef MOTE_RESETN
+					kputs("Resetting mote...\n");
+					MOTE_RESETN = 0;
+					_delay_ms(10);
+					MOTE_RESETN = 1;
+				#endif
+			}
 			wifly_sleep();
 		}	
 		else if ( !MOTE_ASSOCIATED_PIN && MOTE_CONNECTED_PIN) {

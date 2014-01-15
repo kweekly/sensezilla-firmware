@@ -12,15 +12,15 @@
 
 //#define CONFIG_DOORWAY_RFID_READER
 //#define CONFIG_SERIAL_RFID_READER
-//#define CONFIG_BATTERY_SENSOR_DEVEL
+#define CONFIG_BATTERY_SENSOR_DEVEL
 //#define CONFIG_BATTERY_SENSOR_DEPLOY
 //#define CONFIG_DOOR_OPEN_SENSOR
-#define CONFIG_CO2_SENSOR
+//#define CONFIG_CO2_SENSOR
 //#define CONFIG_DOOR_AND_CO2
 
 
 #define MOTE_TYPE MOTE_WIFLY
-#define HW_VERSION 3
+#define HW_VERSION 2
 /***************  ENVIRONMENT SENSOR ***********************/ 
 /*
 BODLEVEL = DISABLED
@@ -38,7 +38,6 @@ SUT_CKSEL = INTRCOSC_6CK_0MS
 EXTENDED = 0xFF (valid)
 HIGH = 0x99 (valid)
 LOW = 0xC2 (valid)
-
  */ 
 // Uncomment this line to activate this board
 #if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR) || defined(CONFIG_CO2_SENSOR) || defined(CONFIG_DOOR_AND_CO2)

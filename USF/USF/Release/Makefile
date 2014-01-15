@@ -68,6 +68,7 @@ C_SRCS +=  \
 ../protocol/report.c \
 ../protocol/sensor_packet.c \
 ../USF.c \
+../utils/crc.c \
 ../utils/scheduler.c
 
 
@@ -105,6 +106,7 @@ protocol/recordstore.o \
 protocol/report.o \
 protocol/sensor_packet.o \
 USF.o \
+utils/crc.o \
 utils/scheduler.o
 
 OBJS_AS_ARGS +=  \
@@ -135,6 +137,7 @@ protocol/recordstore.o \
 protocol/report.o \
 protocol/sensor_packet.o \
 USF.o \
+utils/crc.o \
 utils/scheduler.o
 
 C_DEPS +=  \
@@ -165,6 +168,7 @@ protocol/recordstore.d \
 protocol/report.d \
 protocol/sensor_packet.d \
 USF.d \
+utils/crc.d \
 utils/scheduler.d
 
 C_DEPS_AS_ARGS +=  \
@@ -195,6 +199,7 @@ protocol/recordstore.d \
 protocol/report.d \
 protocol/sensor_packet.d \
 USF.d \
+utils/crc.d \
 utils/scheduler.d
 
 OUTPUT_FILE_PATH +=USF.elf
@@ -208,6 +213,8 @@ OUTPUT_FILE_DEP:= ./makedep.mk
 LIB_DEP+= 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

@@ -307,6 +307,12 @@
     <Compile Include="utils\console_PSM.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="utils\crc.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="utils\crc.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="utils\scheduler.c">
       <SubType>compile</SubType>
     </Compile>

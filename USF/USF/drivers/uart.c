@@ -508,7 +508,6 @@ void uart_puts_p(const char *progmem_s )
  */
 #if defined( ATMEGA_USART1 )
 
-#include "devicedefs.h"
 
 ISR(UART1_RECEIVE_INTERRUPT)
 /*************************************************************************
