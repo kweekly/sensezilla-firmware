@@ -200,5 +200,5 @@ void board_init_devices(void) {
 void board_setup_reporting(void) {
 	kputs("Initializing Scheduler and tasks\n");
 	scheduler_init();
-	cmd_configure_sensor_cb(0, DEFAULT_FIELDS_TO_REPORT, DEFAULT_SAMPLE_INTERVAL); // this initiates scheduler
+	cmd_configure_sensor_cb(0x07, DEFAULT_FIELDS_TO_REPORT, DEFAULT_SAMPLE_INTERVAL, DEFAULT_RECORDSTORE_INTERVAL); // this initiates scheduler
 }

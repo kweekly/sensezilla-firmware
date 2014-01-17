@@ -18,6 +18,7 @@
 #define MT_RFID_DETECTION			0x04
 #define MT_RECORDSTORE				0x05
 #define MT_DEVICE_ID				0x06
+#define MT_CURRENT_CONFIG			0x07
 
 #if defined ENVIRONMENT_SENSOR
 	#define MY_BT BT_DUST_ENVIRONMENT_SENSOR
@@ -26,13 +27,13 @@
 #endif
 
 void (*timesync_cb)(uint32_t new_time);
-void (*configure_sensor_cb)(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval);
+void (*configure_sensor_cb)(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval);
 void (*actuate_cb)(uint16_t fields_to_affect, uint8_t * actuation_data);
 
 
 void packet_set_handlers(
 void (*a)(uint32_t new_time),
-void (*b)(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval),
+void (*b)(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval),
 void (*c)(uint16_t fields_to_affect, uint8_t * actuation_data)
 ) {
 	timesync_cb = a;
@@ -50,11 +51,19 @@ void packet_recieved(uint8_t * data,uint16_t packet_len) {
 				timesync_cb(*(uint32_t *)(&(data[2])));
 			break;
 		case MT_CONFIGURE_SENSOR:
-			if (timesync_cb)
-				configure_sensor_cb(data[2], *(uint16_t*)(data+3), *(uint16_t*)(data+5));
+			if (configure_sensor_cb) {
+				uint8_t mode = data[2];
+				uint16_t * wdat = (uint16_t*)(data+3);
+				size_t i = 0;
+				uint16_t fields_to_report = DEFAULT_FIELDS_TO_REPORT, sample_interval = DEFAULT_SAMPLE_INTERVAL, recordstore_interval = DEFAULT_RECORDSTORE_INTERVAL;
+				if (mode & CONFIGURE_FIELDS_TO_REPORT) fields_to_report = wdat[i++];
+				if ( mode & CONFIGURE_SAMPLE_INTERVAL ) sample_interval = wdat[i++];
+				if ( mode & CONFIGURE_RECORDSTORE_INTERVAL ) recordstore_interval = wdat[i++];
+				configure_sensor_cb(mode, fields_to_report, sample_interval, recordstore_interval);
+			}
 			break;
 		case MT_ACTUATE:
-			if (timesync_cb)
+			if (actuate_cb)
 				actuate_cb(*(uint16_t*)(data+2),data+4);
 			break;		
 	}
@@ -77,6 +86,16 @@ uint16_t packet_construct_device_id_header(uint8_t device_id_type, uint8_t * buf
 	buffer_out[1] = MT_DEVICE_ID;
 	buffer_out[2] = device_id_type;
 	return 3;
+}
+
+uint16_t packet_construct_current_configuration(uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval, uint8_t * buffer_out) {
+	buffer_out[0] = MY_BT;
+	buffer_out[1] = MT_CURRENT_CONFIG;
+	uint16_t *of = (uint16_t*)(buffer_out+2);
+	of[0] = fields_to_report;
+	of[1] = sample_interval;
+	of[2] = recordstore_interval;
+	return 2 + 2*3;
 }
 
 #ifdef USE_PN532

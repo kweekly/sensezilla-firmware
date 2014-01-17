@@ -16,10 +16,13 @@
 #define BT_PM_SENSOR				0x03
 #define BT_MACHXO2_PMCO2			0x04
 
+#define CONFIGURE_FIELDS_TO_REPORT 0x01
+#define CONFIGURE_SAMPLE_INTERVAL 0x02
+#define CONFIGURE_RECORDSTORE_INTERVAL 0x04
 
 void packet_set_handlers(
 	void (*timesync_cb)(uint32_t new_time),
-	void (*configure_sensor_cb)(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval),
+	void (*configure_sensor_cb)(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval),
 	void (*actuate_cb)(uint16_t fields_to_affect, uint8_t * actuation_data)
 );
 
@@ -33,6 +36,8 @@ uint16_t packet_construct_sensor_data_header_bt(uint8_t bt, uint32_t timestamp, 
 #define DEVID_TYPE_ASCII		0x40
 #define DEVID_TYPE_ASCII_TYPE_NUMBER	0x41
 uint16_t packet_construct_device_id_header(uint8_t device_id_type, uint8_t * buffer_out);
+
+uint16_t packet_construct_current_configuration(uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval, uint8_t * buffer_out);
 
 #ifdef USE_RECORDSTORE
 uint16_t packet_construct_recordstore_header(uint8_t * buffer_out);

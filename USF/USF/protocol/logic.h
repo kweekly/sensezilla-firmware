@@ -52,7 +52,7 @@ void light_detection_cb(uint8_t level);
 #endif
 
 void cmd_timesync_cb(uint32_t new_time);
-void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval);
+void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval);
 void cmd_actuate_cb(uint16_t fields_to_affect, uint8_t * actuation_data);
 
 #endif /* LOGIC_H_ */

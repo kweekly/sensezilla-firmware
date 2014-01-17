@@ -12,7 +12,7 @@
 #include "recordstore.h"
 
 #define MAX_RECORD_TYPES 16
-#define RECORDSTORE_MEMSIZE (37*120L)
+#define RECORDSTORE_MEMSIZE (100*120L)
 
 uint8_t * first_record_pointers[MAX_RECORD_TYPES];
 uint8_t first_record_pos;

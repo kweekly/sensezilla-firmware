@@ -92,3 +92,8 @@ MACHXO2_PMCO2/source/spi_master_slave
 
 build/
 dist/
+
+
+USF/tools/pycrc/*
+USF/tools/screamer/*
+USF/XVLoader/*
