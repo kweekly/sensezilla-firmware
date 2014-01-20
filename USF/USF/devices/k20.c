@@ -6,7 +6,6 @@
  */ 
 
 #include "devicedefs.h"
-#ifdef USE_K20
 #ifdef USE_SOFTSERIAL
 #include "avrincludes.h"
 #include "utils/scheduler.h"
@@ -116,5 +115,4 @@ void _k20_reporting_checkread() {
 
 
 
-#endif
 #endif

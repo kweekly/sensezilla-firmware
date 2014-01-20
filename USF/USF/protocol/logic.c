@@ -150,7 +150,20 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 		} else {
 			if ( !(fields_to_report & (REPORT_TYPE_LIGHT) ) ) light_sleep();
 		}
-	#endif	
+	#endif
+	
+		
+	#ifdef REPORT_TYPE_CO2
+		if ( fields_to_report & (REPORT_TYPE_CO2)) {
+			k20_init();
+			#ifdef USE_SOFTSERIAL
+			k20_setup_reporting_schedule(250);
+			#else
+			k20_setup_reporting_schedule(100);
+			#endif
+		} 
+	#endif
+	
 	#ifdef USE_DOOR_SENSORS
 		if ( fields_to_report & (REPORT_TYPE_DOOR_SENSORS)) {
 			door_sensors_setup_interrupt_schedule(1);
@@ -186,14 +199,6 @@ void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t s
 	
 	#ifdef USE_MACHXO2_PMCO2
 		machxo2_setup_reporting_schedule(1);
-	#endif
-	
-	#ifdef USE_K20
-		#ifdef USE_SOFTSERIAL
-			k20_setup_reporting_schedule(250);
-		#else
-			k20_setup_reporting_schedule(100);
-		#endif		
 	#endif
 	
 	#ifndef USE_RECORDSTORE

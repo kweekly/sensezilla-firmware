@@ -9,18 +9,11 @@
 #ifndef CONFIGURATIONS_H_
 #define CONFIGURATIONS_H_
 
-
-//#define CONFIG_DOORWAY_RFID_READER
 //#define CONFIG_SERIAL_RFID_READER
-#define CONFIG_BATTERY_SENSOR_DEVEL
-//#define CONFIG_BATTERY_SENSOR_DEPLOY
-//#define CONFIG_DOOR_OPEN_SENSOR
-//#define CONFIG_CO2_SENSOR
-//#define CONFIG_DOOR_AND_CO2
-
+#define CONFIG_WIRELESS_DEPLOY
 
 #define MOTE_TYPE MOTE_WIFLY
-#define HW_VERSION 2
+#define HW_VERSION 3
 /***************  ENVIRONMENT SENSOR ***********************/ 
 /*
 BODLEVEL = DISABLED
@@ -40,16 +33,12 @@ HIGH = 0x99 (valid)
 LOW = 0xC2 (valid)
  */ 
 // Uncomment this line to activate this board
-#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_BATTERY_SENSOR_DEVEL) || defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR) || defined(CONFIG_CO2_SENSOR) || defined(CONFIG_DOOR_AND_CO2)
+#if defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_WIRELESS_DEPLOY)
 	#define ENVIRONMENT_SENSOR
 #endif
 
-#if defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_SERIAL_RFID_READER)
+#if defined(CONFIG_SERIAL_RFID_READER)
 	#define USE_PN532
-#endif
-
-#if defined(CONFIG_CO2_SENSOR)
-	#define USE_K20
 #endif
 
 #if defined(CONFIG_DOOR_OPEN_SENSOR)
@@ -57,12 +46,7 @@ LOW = 0xC2 (valid)
 	#define USE_TOUCH_SENSORS
 #endif
 
-#if defined(CONFIG_DOOR_AND_CO2)
-	#define USE_DOOR_SENSORS
-	#define USE_K20
-#endif
 
-//#define USE_MACHXO2_PMCO2
 /***************  POWER STRIP MONITOR (v2) *******************/ 
 /* Fuse Settings:
 Extended: FF
@@ -85,26 +69,18 @@ Low D2
 	#define DEFAULT_FIELDS_TO_REPORT 0
 #endif
 
-// sample interval
-#if defined(CONFIG_BATTERY_SENSOR_DEVEL)
-#define DEFAULT_SAMPLE_INTERVAL 1
-#define DEFAULT_RECORDSTORE_INTERVAL 12
+// sample intervals
+#define DEFAULT_FIELDS_TO_REPORT 0x31F
+#define DEFAULT_SAMPLE_INTERVAL 2
+#define DEFAULT_RECORDSTORE_INTERVAL 15
 #define USE_RECORDSTORE
-#elif defined(CONFIG_BATTERY_SENSOR_DEPLOY) || defined(CONFIG_DOOR_OPEN_SENSOR)
-#define DEFAULT_SAMPLE_INTERVAL 5
-#define DEFAULT_RECORDSTORE_INTERVAL 150
-#define USE_RECORDSTORE
-#elif defined(CONFIG_DOORWAY_RFID_READER) || defined(CONFIG_CO2_SENSOR) || defined(CONFIG_DOOR_AND_CO2)
-#define DEFAULT_SAMPLE_INTERVAL 5
-#define DEFAULT_RECORDSTORE_INTERVAL 30
-#define USE_RECORDSTORE
-#elif defined(CONFIG_SERIAL_RFID_READER)
+
+#if defined(CONFIG_SERIAL_RFID_READER)
 #define DEFAULT_SAMPLE_INTERVAL 65535
 #endif
 
 #if defined(CONFIG_DOORWAY_RFID_READER)
 #define XBEE_MAX_RETRIES
 #endif
-
-
-#endif /* CONFIGURATIONS_H_ */
+ /* CONFIGURATIONS_H_ */
+ #endif
