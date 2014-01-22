@@ -12,6 +12,7 @@
 
 void wifly_init();
 void wifly_wake();
+void wifly_reset();
 void wifly_sleep();
 void wifly_tick();
 void wifly_wake_hook();

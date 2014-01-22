@@ -29,18 +29,21 @@
 uint16_t requested_report_interval;
 uint32_t last_periodic_report_taken;
 uint8_t using_monitor_list;
+uint8_t invalid_packets_recieved;
 
 #ifdef USE_RECORDSTORE
 uint16_t requested_recordstore_interval;
 uint32_t last_recordstore_sent;
 #endif
 
+#define ERROR_RETRY_INTERVAL	60
+#define ERROR_NUM_RETRIES		3
+uint8_t num_retries_remaining;
+uint32_t last_retry_tried;
 
 void logic_init() {		
 	datalink_set_rx_callback(&datalink_rx_callback);
 	packet_set_handlers(&cmd_timesync_cb, &cmd_configure_sensor_cb, &cmd_actuate_cb);
-
-	
 	
 	datalink_set_ready_callback(&_datalink_rdy_cb);
 #ifdef USE_RECORDSTORE
@@ -53,7 +56,7 @@ uint16_t report_interval_needed() {
 		return 1;
 	} else {
 		return requested_report_interval;
-	}	
+	}
 }
 
 void datalink_rx_callback(uint8_t * data, uint16_t len) {
@@ -62,7 +65,15 @@ void datalink_rx_callback(uint8_t * data, uint16_t len) {
 		printf_P(PSTR("%02X"),data[d]);
 	}
 	kputs("\n");
-	packet_recieved(data,len);
+	if (packet_recieved(data,len)) {
+		invalid_packets_recieved = 0;
+	} else {
+		invalid_packets_recieved++;
+		if ( invalid_packets_recieved >= 3 ) {
+			kputs("Too many invalid packets recieved, resetting...\n");
+			datalink_reset();
+		}
+	}
 }
 
 void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval) {
@@ -229,10 +240,18 @@ void rtc_timer_cb(void) {
 	#ifdef USE_RECORDSTORE
 	if ( curtime < last_recordstore_sent || curtime - last_recordstore_sent >= requested_recordstore_interval ) {
 		datalink_wake();
-	//	_datalink_rdy_cb();
 		last_recordstore_sent = curtime;
+		num_retries_remaining = ERROR_NUM_RETRIES;
+		last_retry_tried = curtime;
 	}
 	#endif
+	
+	if (num_retries_remaining > 0 && curtime - last_retry_tried >= ERROR_RETRY_INTERVAL && requested_recordstore_interval > 2*ERROR_RETRY_INTERVAL) {
+		printf_P(PSTR("Retrying transmission %d retries remaining.\n"),num_retries_remaining-1);
+		datalink_wake();
+		last_retry_tried = curtime;
+		num_retries_remaining--;		
+	}
 	
 	if ( using_monitor_list ) {
 		scheduler_start(SCHEDULER_MONITOR_LIST);
@@ -266,6 +285,7 @@ void task_check_send_report(void) {
 
 void _datalink_rdy_cb() {
 	send_over_datalink();
+	num_retries_remaining = 0;
 }
 
 void send_over_datalink(void) {

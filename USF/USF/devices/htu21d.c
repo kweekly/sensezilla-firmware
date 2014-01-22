@@ -164,16 +164,18 @@ void _humid_reporting_finish(void) {
 #define DBL_16B 65536.0
 
 void humid_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str) {
-	float rh = (reading->humidity) * 125.0 / DBL_16B - 6.0;
 	float temp = (reading->temperature) *175.72/ DBL_16B - 46.85;
+	float rh = (reading->humidity) * 125.0 / DBL_16B - 6.0;
+	
 	snprintf_P(str,maxlen,PSTR("RH=%5.2f%% T=%5.2fC"), rh,temp);
 }
 
 uint8_t humid_convert_real(humid_reading_t * reading, float * flt) {
-	float rh = (reading->humidity) * 125.0 / DBL_16B - 6.0;
 	float temp = (reading->temperature) *175.72/ DBL_16B - 46.85;
-	flt[0] = rh;
-	flt[1] = temp;
+	float rh = (reading->humidity) * 125.0 / DBL_16B - 6.0;
+	
+	flt[0] = temp;
+	flt[1] = rh;
 	return 2;
 }
 

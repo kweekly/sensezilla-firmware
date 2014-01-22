@@ -199,6 +199,17 @@ void _wifly_pcint_cb() {
 	}
 }
 
+void wifly_reset() {
+	#ifdef MOTE_RESETN
+		kputs("Resetting mote...\n");
+		MOTE_RESETN = 0;
+		_delay_ms(10);
+		MOTE_RESETN = 1;
+	#else
+		kputs("Not possible to reset mote\n");
+	#endif
+}
+
 void wifly_sleep() {
 	MOTE_RX_RTSN = 1;
 	kputs("Sleeping Wifly\n");
@@ -260,12 +271,7 @@ void wifly_tick() {
 				MOTE_CONNECT = 0;
 			#endif
 			if (++num_consecutive_Fails == 3) {
-				#ifdef MOTE_RESETN
-					kputs("Resetting mote...\n");
-					MOTE_RESETN = 0;
-					_delay_ms(10);
-					MOTE_RESETN = 1;
-				#endif
+				wifly_reset();
 			}
 			wifly_sleep();
 		}	

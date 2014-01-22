@@ -41,10 +41,13 @@ void (*c)(uint16_t fields_to_affect, uint8_t * actuation_data)
 	actuate_cb = c;
 }
 
-void packet_recieved(uint8_t * data,uint16_t packet_len) {
+uint8_t packet_recieved(uint8_t * data,uint16_t packet_len) {
 	uint8_t BT = data[0]; // board type
 	uint8_t MT = data[1]; // message type
-	if ( BT != BT_HOST ) return; // don't take anything from non-host soruce
+	if ( BT != BT_HOST ){
+		kputs("BT != 0, discarding message\n");
+		return 0; // don't take anything from non-host soruce
+	}
 	switch(MT) {
 		case MT_TIMESYNC:
 			if (timesync_cb)
@@ -66,7 +69,11 @@ void packet_recieved(uint8_t * data,uint16_t packet_len) {
 			if (actuate_cb)
 				actuate_cb(*(uint16_t*)(data+2),data+4);
 			break;		
+		default:
+			printf_P(PSTR("ERROR: Did not recognize MT=%02X\n"),MT);
+			return 0;
 	}
+	return 1;
 }
 
 uint16_t packet_construct_sensor_data_header_bt(uint8_t bt, uint32_t timestamp, uint16_t fields, uint8_t * buffer_out) {

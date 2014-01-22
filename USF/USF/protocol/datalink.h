@@ -26,6 +26,7 @@ void datalink_get_ID(uint8_t ** uid_buf, uint8_t * uid_len);
 
 void datalink_set_ready_callback(void (*rdy_cb)(void));
 
+void datalink_reset();
 void datalink_wake();
 void datalink_sleep();
 void datalink_sleep_hook();

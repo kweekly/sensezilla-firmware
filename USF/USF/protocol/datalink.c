@@ -163,6 +163,9 @@
 	inline void datalink_init() {
 		wifly_init();	
 	}
+	inline void datalink_reset() {
+		wifly_reset();
+	}
 
 	inline void datalink_send_packet_to_host(uint8_t * packetbuf, uint16_t len) {
 		wifly_send_packet(packetbuf, len);

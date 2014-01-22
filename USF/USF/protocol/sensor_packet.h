@@ -26,7 +26,7 @@ void packet_set_handlers(
 	void (*actuate_cb)(uint16_t fields_to_affect, uint8_t * actuation_data)
 );
 
-void packet_recieved(uint8_t * data,uint16_t packet_len);
+uint8_t packet_recieved(uint8_t * data,uint16_t packet_len);
 
 uint16_t packet_construct_sensor_data_header(uint32_t timestamp, uint16_t fields, uint8_t * buffer_out);
 uint16_t packet_construct_sensor_data_header_bt(uint8_t bt, uint32_t timestamp, uint16_t fields, uint8_t * buffer_out);

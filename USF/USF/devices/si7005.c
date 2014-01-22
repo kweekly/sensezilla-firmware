@@ -69,7 +69,7 @@ humid_reading_t humid_read(void) {
 	} while(b & 0x01);
 
 	i2c_readreg(HUMID_ADDR, DATAh, 2, buf );
-	retval.temperature = ((uint16_t)buf[0] << 8) | buf[1];
+	retval.temperature = ((uint16_t)buf[0] << 8) | (0xFF & buf[1]);
 	
 	return retval;
 }
@@ -134,27 +134,31 @@ void _humid_reporting_finish(void) {
 	} while(b & 0x01);
 	
 	i2c_readreg(HUMID_ADDR, DATAh, 2, buf );
-	r->temphumid.temperature = ((uint16_t)buf[0] << 8) | buf[1];
+	r->temphumid.temperature = ((uint16_t)buf[0] << 8) | (0xFF & buf[1]);
 	r->fields |= REPORT_TYPE_TEMP;
 	
 	humid_sleep();
 }
 
 void humid_fmt_reading(humid_reading_t * reading, uint8_t maxlen, char * str) {
+	double temp = (reading->temperature >> 2) / 32.0 - 50.0;
+	
 	double rh = (reading->humidity >> 4) / 16.0 - 24.0;
 	rh = rh - (rh*rh*-0.00393 + rh*0.4008 - 4.7844);
+	rh = rh + (temp - 30) * (rh*0.00237 + 0.1973);
 	
-	double temp = (reading->temperature >> 2) / 32.0 - 50.0;
 	snprintf_P(str,maxlen,PSTR("RH=%5.2f%% T=%5.2fC"), rh,temp);
 }
 
 uint8_t humid_convert_real(humid_reading_t * reading, float * flt) {
+	float temp = (reading->temperature >> 2) / 32.0 - 50.0;
+	
 	float rh = (reading->humidity >> 4) / 16.0 - 24.0;
 	rh = rh - (rh*rh*-0.00393 + rh*0.4008 - 4.7844);
+	rh = rh + (temp - 30) * (rh*0.00237 + 0.1973);
 	
-	float temp = (reading->temperature >> 2) / 32.0 - 50.0;
-	flt[0] = rh;
-	flt[1] = temp;
+	flt[0] = temp;
+	flt[1] = rh;
 	return 2;	
 }
 
