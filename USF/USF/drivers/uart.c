@@ -462,7 +462,7 @@ void uart_flush() {
 	if ( UART_NeedFlush ) {
 		while ( UART_TxHead != UART_TxTail || (UART0_CONTROL & _BV(UART0_UDRIE)) );
 		while ( 0 == (UART0_STATUS & _BV(6))); // transmit complete interrupt
-	}		
+	}
 	UART_NeedFlush = 0;
 }
 

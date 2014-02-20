@@ -158,12 +158,14 @@ typedef struct
 
 // LEDs
 #define LED_BLIP_TASK_ID 0x01
-#if defined(ENVIRONMENT_SENSOR)
+#ifndef NO_LEDS
+	#if defined(ENVIRONMENT_SENSOR)
 	#define LED1		REGISTER_BIT(PORTD,5)
 	#define LED2		REGISTER_BIT(PORTD,4)
-#elif defined(POWER_STRIP_MONITOR)
+	#elif defined(POWER_STRIP_MONITOR)
 	#define LED1		REGISTER_BIT(PORTA,0)
 	#define LED2		REGISTER_BIT(PORTA,1)
+	#endif
 #endif
 
 // PIR sensor

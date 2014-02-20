@@ -30,8 +30,10 @@
 #define CMD_READ_USR 0xE7
 #define CMD_RESET 0xFE
 
-void humid_init(void) { // nothing here since we cut power to the device normally	
-	
+void humid_init(void) { 
+	if ( i2c_writereg(HUMID_ADDR, CMD_RESET, 0, NULL) ) {
+		kputs("Error soft-resetting humidity sensor");
+	}
 }
 
 void humid_sleep(void) {

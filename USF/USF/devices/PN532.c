@@ -1012,7 +1012,9 @@ void rfid_setup_report_schedule(uint16_t starttime) {
 
 void _rfid_check_interrupt() {
 	uint8_t uidlen;
-	LED1 = 1;
+	#ifdef LED1
+		LED1 = 1;
+	#endif
 	uidlen = rfid_passive_scan();
 	if (uidlen && detection_cb) {
 		if ( memcmp(last_uid_detected, rfid_uid_buffer, uidlen) ) {
@@ -1024,7 +1026,9 @@ void _rfid_check_interrupt() {
 	} else {
 		memset(last_uid_detected, 0, sizeof(last_uid_detected));
 	}
-	LED1 = 0;
+	#ifdef LED1
+		LED1 = 0;
+	#endif
 }
 
 

@@ -13,6 +13,7 @@
 
 #define MAX_RECORD_TYPES 16
 #define RECORDSTORE_MEMSIZE (100*120L)
+//#define RECORDSTORE_MEMSIZE 0
 
 uint8_t * first_record_pointers[MAX_RECORD_TYPES];
 uint8_t first_record_pos;
@@ -22,6 +23,10 @@ uint8_t * memblock;
 uint8_t * memblock_pos;
 
 uint8_t * oldmemblock_end;
+
+uint16_t stat_records;
+uint16_t stat_uncompressed_size;
+uint16_t stat_compressed_size;
 
 void recordstore_init() {
 	recordstore_clear();
@@ -39,6 +44,7 @@ void recordstore_clear() {
 	for ( size_t c = 0; c < MAX_RECORD_TYPES; c++ ) {
 		first_record_pointers[c] = NULL;
 	}
+	stat_records = stat_compressed_size = stat_uncompressed_size = 0;
 }
 
 void recordstore_insert(uint8_t * data, uint8_t len) {
@@ -61,6 +67,9 @@ void recordstore_insert(uint8_t * data, uint8_t len) {
 		}
 	}
 	//printf_P(PSTR("Inserting %d byte record:"),len);
+	stat_uncompressed_size += len;
+	stat_records ++ ;
+	
 	if ( c == first_record_pos ) { // new first record
 		first_record_pointers[c] = memblock_pos;
 		memblock_pos[0] = 0x80 | len;
@@ -68,6 +77,7 @@ void recordstore_insert(uint8_t * data, uint8_t len) {
 		memblock_pos += len + 1;
 		first_record_pos++;
 		//printf_P(PSTR(" New record created 1 Byte overhead"));
+		stat_compressed_size += len + 1;
 	} else {
 		// look for differences in bytes
 		uint8_t * first_record = first_record_pointers[c] + 1;
@@ -93,12 +103,15 @@ void recordstore_insert(uint8_t * data, uint8_t len) {
 		// data already inserted
 		// ready for next record
 		memblock_pos = data_insert;
+		stat_compressed_size += bytes_total;
 		//printf_P(PSTR("%d bytes overhead, %d bytes saved, %d bytes total"),1+bdiff_size,bytes_saved,bytes_total);
 	}
+	//printf_P(PSTR("Recordstore stats: Records %d Uncompressed %6d Compressed %6d Efficiency %2d%%\n"),stat_records,stat_uncompressed_size,stat_compressed_size,100*stat_compressed_size/stat_uncompressed_size);
 	//printf_P(PSTR(" recordstore %d/%d bytes\n"),memblock_pos-memblock_raw,RECORDSTORE_MEMSIZE);
 }
 
 uint8_t * recordstore_dump(uint16_t * len) {
+	stat_compressed_size = stat_uncompressed_size = stat_records = 0;
 	*len = (uint16_t)(memblock_pos - memblock_raw);
 	return memblock_raw;
 }

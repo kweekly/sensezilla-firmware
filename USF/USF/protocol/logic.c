@@ -30,6 +30,7 @@ uint16_t requested_report_interval;
 uint32_t last_periodic_report_taken;
 uint8_t using_monitor_list;
 uint8_t invalid_packets_recieved;
+uint8_t first_init;
 
 #ifdef USE_RECORDSTORE
 uint16_t requested_recordstore_interval;
@@ -49,6 +50,8 @@ void logic_init() {
 #ifdef USE_RECORDSTORE
 	recordstore_init();
 #endif
+
+	first_init = 0;
 }
 
 uint16_t report_interval_needed() {
@@ -79,21 +82,22 @@ void datalink_rx_callback(uint8_t * data, uint16_t len) {
 void cmd_configure_sensor_cb(uint8_t mode, uint16_t fields_to_report, uint16_t sample_interval, uint16_t recordstore_interval) {
 	uint8_t fields_changed = 0;
 	printf_P(PSTR("Configuring sensor\n"));
-	if (mode & CONFIGURE_FIELDS_TO_REPORT && report_fields_requested != fields_to_report) {
+	if (mode & CONFIGURE_FIELDS_TO_REPORT && (report_fields_requested != fields_to_report || !first_init)) {
 		printf_P(PSTR("\tfields %02X => %02X\n"),report_fields_requested,fields_to_report);
 		report_fields_requested = fields_to_report;
 		fields_changed = 1;
 	}
-	if (mode & CONFIGURE_SAMPLE_INTERVAL && requested_report_interval != sample_interval) {
+	if (mode & CONFIGURE_SAMPLE_INTERVAL && (requested_report_interval != sample_interval || !first_init)) {
 		printf_P(PSTR("\tsample interval %d => %d\n"),requested_report_interval,sample_interval);
 		requested_report_interval = sample_interval;
 		last_periodic_report_taken = -1;
 	}
-	if ( mode & CONFIGURE_RECORDSTORE_INTERVAL && requested_recordstore_interval != recordstore_interval) {
+	if ( mode & CONFIGURE_RECORDSTORE_INTERVAL && (requested_recordstore_interval != recordstore_interval || first_init)) {
 		printf_P(PSTR("\trecordstore interval %d => %d\n"),requested_recordstore_interval,recordstore_interval);
 		requested_recordstore_interval = recordstore_interval;
 		last_recordstore_sent = -1;
 	}
+	first_init = 1;
 	using_monitor_list = 0;	
 	
 	if (!fields_changed ) return;
@@ -407,9 +411,13 @@ void accel_orientation_cb(unsigned char orientation) {
 
 
 void task_led_blip_on(void) {
-	LED2 = 1;
+	#ifdef LED2
+		LED2 = 1;
+	#endif
 }
 
 void task_led_blip_off(void) {
-	LED2 = 0;
+	#ifdef LED2
+		LED2 = 0;
+	#endif
 }

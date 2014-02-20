@@ -112,7 +112,9 @@ void wifly_wake() {
 	_delay_us(100);
 	MOTE_RX_RTSN = 1;
 	printf_P(PSTR("Waking Wifly %02X\n"),PINB);
-	LED1 = 1;
+	#ifdef LED1
+		LED1 = 1;
+	#endif
 	wifly_wake_status = 1;
 	if ( !mac_valid ) {
 		_delay_ms(250);
@@ -234,7 +236,9 @@ void wifly_sleep() {
 		#endif
 		wifly_wake_status = 0;
 	#endif
-	LED1 = 0;
+	#ifdef LED1
+		LED1 = 0;
+	#endif
 	try_sleep = rtctimer_read();
 }
 

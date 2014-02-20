@@ -97,6 +97,7 @@ void accel_sleep(void) {
 		kputs("Error turning off accel\n");
 	}
 	
+	
 }
 
 uint8_t accel_read_status(void) {

@@ -30,7 +30,9 @@ void k20_setup_reporting_schedule(uint16_t starttime) {
 
 void _k20_reporting_startread() {
 	softserial_write(sizeof(READCMD),READCMD);
-	LED1 = 1;
+	#ifdef LED1
+		LED1 = 1;
+	#endif
 	_k20_reporting_checkread();
 }
 
@@ -45,7 +47,9 @@ void _k20_reporting_checkread() {
 				co2val = ((uint16_t)softserial_read()<<(uint16_t)8) | (uint16_t)softserial_read();
 				report_current()->co2 = co2val;
 				report_current()->fields |= REPORT_TYPE_CO2;
-				LED1 = 0;
+				#ifdef LED1
+					LED1 = 0;
+				#endif
 				//EXP_CSN = 0;
 				return;
 			} else {
@@ -79,7 +83,9 @@ void _k20_reporting_startread() {
 	if ( i2c_writereg(K20_ADDR,0x22,3,b) ) {
 		kputs("Error starting K20 I2C Conversion\n");
 	}
-	LED1 = 1;
+	#ifdef LED1
+		LED1 = 1;
+	#endif
 	_delay_ms(20);
 	_k20_reporting_checkread();
 	_delay_ms(10);
@@ -104,8 +110,10 @@ void _k20_reporting_checkread() {
 			co2val = co2val << 8;
 			co2val |= rbuf[2] & 0xFF;
 			report_current()->co2 = co2val;
-			report_current()->fields |= REPORT_TYPE_CO2;	
-			LED1 = 0;		
+			report_current()->fields |= REPORT_TYPE_CO2;
+			#ifdef LED1	
+				LED1 = 0;		
+			#endif
 			return;
 		}
 		_delay_ms(10);

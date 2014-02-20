@@ -32,8 +32,10 @@ void board_setup_reporting(void);
 
 int main(void)
 {
+	
 	char wdrst = 0;
 	uint8_t mcusr;
+	
 	mcusr = MCUSR;
 	if ( mcusr & _BV(WDRF) ) {
 		wdrst = 1;
@@ -42,7 +44,9 @@ int main(void)
 	wdt_disable();
 	
 	cli();	
-	LED1 = 1;
+	#ifdef LED1
+		LED1 = 1;
+	#endif
 	uart_init(UART_BAUD_SELECT_DOUBLE_SPEED(115200,F_CPU));
 	stdout = &mystdout;
 	sei();
@@ -59,7 +63,27 @@ int main(void)
 	DDRC = DDRC_SETTING;
 	DDRD = DDRD_SETTING;
 	DIDR0 = 0;
-	DIDR1 = 0;
+	DIDR1 = 0;	
+	
+	wdt_disable();
+	LED1 = 0;
+	ACSR = 0x80;
+	ADCSRA = ADCSRA & 0b01111111 ;
+	MCUCR |= 0x10;
+	DIDR0 = 0xFF;
+	DIDR1 = 0xFF;
+	DDRA = DDRB = DDRC = DDRD = 0xFF;
+	PORTA = PORTB = PORTC = PORTD = 0xFF;
+		
+	PRR1 = 0xFF;
+	PRR0 = 0xFF;
+		
+	cli();
+	
+	while(1) {
+		avr_sleep();
+	}
+		
 	
 	kputs("Initializing PCINT\n");
 	pcint_init();
@@ -129,8 +153,10 @@ int main(void)
 // Only used if power-saving is needed
 void board_power_down_devices(void) {
 #ifdef ENVIRONMENT_SENSOR
-	LED1 = 0;
-	LED2 = 0;
+	#ifdef LED1
+		LED1 = 0;
+		LED2 = 0;
+	#endif
 	
 	#ifdef REPORT_TYPE_LIGHT
 		light_sleep(); 
