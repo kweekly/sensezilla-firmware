@@ -86,6 +86,7 @@ unsigned char i2c_start(unsigned char address)
 	// check value of TWI Status Register. Mask prescaler bits.
 	twst = TW_STATUS & 0xF8;
 	if ( (twst != TW_MT_SLA_ACK) && (twst != TW_MR_SLA_ACK) ) {
+		printf_P(PSTR("I2C slave did not ACK TWST=%02X\n"),twst);
 		i2c_stop();
 		return 1;
 	}

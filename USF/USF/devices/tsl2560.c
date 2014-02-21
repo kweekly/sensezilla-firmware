@@ -40,7 +40,9 @@ void light_init(void) {
 	
 	// configure integration rate and interrupt
 	b = 0b00000001; // 01 integ field, scale 0.252, time=101ms
-	i2c_writereg(LIGHT_ADDR, COMMAND_DEFAULT | TIMING, 1, &b);
+	if ( i2c_writereg(LIGHT_ADDR, COMMAND_DEFAULT | TIMING, 1, &b) ) {
+		kputs("Error configuring light sensor\n");
+	}
 }
 
 light_reading_t light_read() {

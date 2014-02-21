@@ -217,8 +217,7 @@ typedef struct
 	// Amb. Light
 	#define USE_TSL2560
 	#define LIGHT_TASK_ID 0x50
-	#define LIGHT_ADDR	0b01010010
-	//#define LIGHT_ADDR	0b01010110
+	#define LIGHT_ADDR	0b01010010 // CORRECT
 	#define LIGHT_INT_PCINT 6
 	#define LIGHT_INT	REGISTER_BIT(PORTA,6)
 	

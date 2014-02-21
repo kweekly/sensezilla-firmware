@@ -57,34 +57,44 @@ int main(void)
 	
 	wdt_enable(WDTO_8S);
 	wdt_reset();
-	kputs("Setting DDR registers\n");
+	kputs("\nSetting DDR registers\n");
 	DDRA = DDRA_SETTING;
 	DDRB = DDRB_SETTING;
 	DDRC = DDRC_SETTING;
 	DDRD = DDRD_SETTING;
 	DIDR0 = 0;
-	DIDR1 = 0;	
+	DIDR1 = 0;
+	/*
+	kputs("Hi i2c\n");
+	i2c_init();
+	kputs("Hi humid\n");
+	humid_init();
+	humid_sleep();
+	kputs("Hi accel\n");
+	accel_init();
+	accel_sleep();
+	kputs("Hi light\n");
+	light_init();
+	light_sleep();
+	kputs("Hi PIR\n");
+	pir_wake();
+	kputs("Hi RTC\n");
+	rtctimer_init();
+	kputs("Go away RTC\n");
+	DDRC &= 0x3F;
+	PORTC |= 0xC0;
 	
-	wdt_disable();
-	LED1 = 0;
-	ACSR = 0x80;
-	ADCSRA = ADCSRA & 0b01111111 ;
-	MCUCR |= 0x10;
-	DIDR0 = 0xFF;
-	DIDR1 = 0xFF;
-	DDRA = DDRB = DDRC = DDRD = 0xFF;
-	PORTA = PORTB = PORTC = PORTD = 0xFF;
-		
-	PRR1 = 0xFF;
-	PRR0 = 0xFF;
-		
+	kputs("Go to sleep\n");
+	uart_flush();
+	ACSR = (1<<ACD);
+	LED1 = LED2 = 0; 
 	cli();
-	
+	wdt_disable();	
+	SMCR = (2<<SM0) | (1<<SE);	 //Enable Power-Down Mode
 	while(1) {
-		avr_sleep();
+		asm volatile ("sleep"); // __sleep(); // Go to sleep
 	}
-		
-	
+*/
 	kputs("Initializing PCINT\n");
 	pcint_init();
 	

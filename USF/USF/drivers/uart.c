@@ -39,6 +39,8 @@ LICENSE:
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
+#include "devicedefs.h"
+#include <util/delay.h>
 #include "uart.h"
 
 
@@ -315,6 +317,7 @@ Purpose:  called when the UART is ready to transmit the next byte
     }else{
         /* tx buffer empty, disable UDRE interrupt */
         UART0_CONTROL &= ~_BV(UART0_UDRIE);
+		UART_NeedFlush = 0;
     }
 }
 
@@ -459,11 +462,8 @@ void uart_putc(unsigned char data)
 }/* uart_putc */
 
 void uart_flush() {
-	if ( UART_NeedFlush ) {
-		while ( UART_TxHead != UART_TxTail || (UART0_CONTROL & _BV(UART0_UDRIE)) );
-		while ( 0 == (UART0_STATUS & _BV(6))); // transmit complete interrupt
-	}
-	UART_NeedFlush = 0;
+	while (UART_NeedFlush) {};
+	_delay_us(100); // make sure "stop" bit goes
 }
 
 /*************************************************************************
@@ -565,6 +565,7 @@ Purpose:  called when the UART1 is ready to transmit the next byte
     }else{
         /* tx buffer empty, disable UDRE interrupt */
         UART1_CONTROL &= ~_BV(UART1_UDRIE);
+		UART1_NeedFlush = 0;
     }
 }
 
@@ -665,11 +666,8 @@ void uart1_putc(unsigned char data)
 }/* uart1_putc */
 
 void uart1_flush() {
-	if ( UART1_NeedFlush ) {
-		while( UART1_TxHead != UART1_TxTail || (UART1_CONTROL & _BV(UART1_UDRIE) ));
-		while ( 0 == (UART1_STATUS & _BV(6)) ); // transmit complete interrupt
-	}		
-	UART1_NeedFlush = 0;
+	while ( UART1_NeedFlush ) {}
+	_delay_us(100);
 }
 
 /*************************************************************************
