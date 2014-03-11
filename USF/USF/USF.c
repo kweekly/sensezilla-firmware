@@ -39,9 +39,12 @@ int main(void)
 	mcusr = MCUSR;
 	if ( mcusr & _BV(WDRF) ) {
 		wdrst = 1;
-	}	
+	}
 	MCUSR = 0;
 	wdt_disable();
+	
+	wdt_enable(WDTO_8S);
+	wdt_reset();
 	
 	cli();	
 	#ifdef LED1
@@ -55,8 +58,6 @@ int main(void)
 		kputs("\n***WATCHDOG RESET***\n");
 	}
 	
-	wdt_enable(WDTO_8S);
-	wdt_reset();
 	kputs("\nSetting DDR registers\n");
 	DDRA = DDRA_SETTING;
 	DDRB = DDRB_SETTING;

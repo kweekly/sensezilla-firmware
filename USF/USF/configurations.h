@@ -31,7 +31,7 @@ SUT_CKSEL = INTRCOSC_6CK_0MS
 
 EXTENDED = 0xFF (valid)
 HIGH = 0x99 (valid)
-LOW = 0xC2 (valid)
+LOW = 0xD2 (valid)
  */ 
 // Uncomment this line to activate this board
 #if defined(CONFIG_SERIAL_RFID_READER) || defined(CONFIG_WIRELESS_DEPLOY)
