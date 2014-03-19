@@ -72,6 +72,12 @@ uint16_t report_populate_real_data(report_t * rep, uint8_t * buf) {
 	}		
 	#endif
 	
+	#ifdef REPORT_TYPE_LIGHTRAW
+	if ( rep->fields & REPORT_TYPE_LIGHTRAW ) {
+		fltptr += light_convert_real_raw(&rep->light,fltptr);
+	}
+	#endif
+	
 	#ifdef REPORT_TYPE_OCCUPANCY_CHANGED
 	if ( rep->fields & REPORT_TYPE_OCCUPANCY_CHANGED ) {
 		*((int8_t *)fltptr) = rep->occupancy_state;
@@ -174,6 +180,14 @@ void report_print_human(report_t * rep) {
 	#ifdef REPORT_TYPE_RSSI	
 	if ( rep->fields & REPORT_TYPE_RSSI) {
 		datalink_fmt_reading(&(rep->rssi),sizeof(buf),buf);
+		uart_puts_P("; ");
+		uart_puts(buf);
+	}
+	#endif
+	
+	#ifdef REPORT_TYPE_LIGHTRAW
+	if ( rep->fields * REPORT_TYPE_LIGHTRAW ) {
+		light_fmt_reading_raw(&(rep->light),sizeof(buf),buf);
 		uart_puts_P("; ");
 		uart_puts(buf);
 	}

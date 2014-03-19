@@ -11,7 +11,7 @@
 
 //#define CONFIG_SERIAL_RFID_READER
 #define CONFIG_WIRELESS_DEPLOY
-//#define NO_LEDS
+#define NO_LEDS
 
 #define MOTE_TYPE MOTE_WIFLY
 #define HW_VERSION 3

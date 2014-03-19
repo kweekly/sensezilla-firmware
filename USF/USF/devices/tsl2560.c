@@ -126,7 +126,7 @@ void light_setup_reporting_schedule(uint16_t starttime) {
 
 void _light_reporting_finish(void) {
 	report_current()->light = light_read();
-	report_current()->fields |= REPORT_TYPE_LIGHT;
+	report_current()->fields |= REPORT_TYPE_LIGHT | REPORT_TYPE_LIGHTRAW;
 	light_sleep();
 }
 
@@ -156,6 +156,16 @@ uint8_t light_convert_real(light_reading_t * reading, float * fltptr) {
 	}
 	fltptr[0] = lux;
 	return 1;
+}
+void light_fmt_reading_raw(light_reading_t * reading, uint8_t maxlen, char * str) {
+	snprintf(str,maxlen,"lightraw=(%04d,%04d)",reading->ch0,reading->ch1);	
+}
+
+uint8_t light_convert_real_raw(light_reading_t * reading, float * fltptr) {
+	uint16_t * sptr = (uint16_t *)(fltptr);
+	sptr[0] = reading->ch0;
+	sptr[1] = reading->ch1;
+	return sizeof(float) / (2*sizeof(uint16_t));
 }
 
 #endif

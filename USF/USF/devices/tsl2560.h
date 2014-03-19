@@ -35,4 +35,7 @@ void _light_interrupt_finish();
 void light_fmt_reading(light_reading_t * reading, uint8_t maxlen, char * str);
 uint8_t light_convert_real(light_reading_t * reading, float * fltptr);
 
+void light_fmt_reading_raw(light_reading_t * reading, uint8_t maxlen, char * str);
+uint8_t light_convert_real_raw(light_reading_t * reading, float * fltptr);
+
 #endif /* TSL2560_H_ */

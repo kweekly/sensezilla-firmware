@@ -4,7 +4,7 @@
  * Created: 7/3/2013 2:26:55 PM
  *  Author: kweekly
  */
- #include "devicedefs.h"
+#include "devicedefs.h"
 
 #include "avrincludes.h"
 static FILE mystdout = FDEV_SETUP_STREAM(uart_putc, NULL, _FDEV_SETUP_WRITE);

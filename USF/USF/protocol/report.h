@@ -25,6 +25,7 @@ extern uint16_t report_fields_requested;
 	#define REPORT_TYPE_TEMP		 0x01
 	#define REPORT_TYPE_HUMID		 0x02
 	#define REPORT_TYPE_RSSI		 0x40
+	#define REPORT_TYPE_LIGHTRAW	 0x80
 	
 	#define REPORT_TYPE_OCCUPANCY_CHANGED	0x100
 	#define REPORT_TYPE_LIGHT_CHANGED		0x400
